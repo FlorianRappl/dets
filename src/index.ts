@@ -16,7 +16,8 @@ function generateDeclaration(
   const context: DeclVisitorContext = {
     refs: {},
     imports,
-    checker
+    checker,
+    ids: [],
   };
 
   const visit = (node: ts.Node) => {

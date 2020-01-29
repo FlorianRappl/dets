@@ -25,7 +25,8 @@ import {
   TypeModelIndex,
   TypeModelProp,
   TypeModelFunction,
-  DeclVisitorContext
+  DeclVisitorContext,
+  TypeModelAlias
 } from "./types";
 
 function getTypeParameters(context: DeclVisitorContext, type: Type) {
@@ -43,6 +44,25 @@ function getComment(checker: TypeChecker, symbol: Symbol) {
   return undefined;
 }
 
+function includeExternal(context: DeclVisitorContext, type: Type) {
+  const name = type.symbol.name;
+  const fn = type.symbol.declarations?.[0]?.parent?.getSourceFile()?.fileName;
+
+  if (isBaseLib(fn)) {
+    const typeName = name;
+    return includeRef(context, type, typeName);
+  }
+
+  // const parent = type.symbol.parent?.valueDeclaration?.parent;
+  // const fileName = parent?.getSourceFile()?.fileName;
+  const lib = getLib(fn, context.imports);
+
+  if (lib) {
+    const typeName = `${getRefName(lib)}.${name}`;
+    return includeRef(context, type, typeName);
+  }
+}
+
 export function includeType(
   context: DeclVisitorContext,
   type: Type
@@ -50,21 +70,16 @@ export function includeType(
   const name = type.symbol?.name;
 
   if (name) {
-    const fn = type.symbol?.declarations?.[0]?.parent?.getSourceFile()
-      ?.fileName;
+    const ext = includeExternal(context, type);
 
-    if (isBaseLib(fn)) {
-      const typeName = name;
-      return includeRef(context, type, typeName);
-    }
-
-    const parent = type.symbol.parent?.valueDeclaration?.parent;
-    const fileName = parent?.getSourceFile()?.fileName;
-    const lib = getLib(fileName, context.imports);
-
-    if (lib) {
-      const typeName = `${getRefName(lib)}.${name}`;
-      return includeRef(context, type, typeName);
+    if (ext) {
+      return ext;
+    } else if (name === "__type") {
+      return {
+        kind: "ref",
+        types: [],
+        refName: "any"
+      };
     } else if (!isAnonymousObject(type)) {
       return makeRef(context, type, name, includeObject);
     }
@@ -81,20 +96,32 @@ export function includeType(
   return includeAnonymous(context, type);
 }
 
-function makeAliasRef(context: DeclVisitorContext, type: Type, name: string): TypeModel {
+function makeAliasRef(
+  context: DeclVisitorContext,
+  type: Type,
+  name: string
+): TypeModel {
   const decl: any = type.aliasSymbol.declarations[0];
-  
-  context.refs[name] = {
-    kind: "alias",
-    comment: getComment(context.checker, decl.symbol),
-    types: decl.typeParameters?.map(t => includeType(context, t)) ?? [],
-    child: includeAnonymous(context, context.checker.getTypeAtLocation(decl))
-  };
-  
+
+  if (!(name in context.refs)) {
+    context.refs[name] = {
+      kind: "ref",
+      types: [],
+      refName: name
+    };
+
+    context.refs[name] = {
+      kind: "alias",
+      comment: getComment(context.checker, decl.symbol),
+      types: decl.typeParameters?.map(t => includeType(context, t)) ?? [],
+      child: includeAnonymous(context, context.checker.getTypeAtLocation(decl))
+    };
+  }
+
   return {
     kind: "ref",
-    types: [],
-    refName: context.checker.typeToString(type)
+    types: type.aliasTypeArguments?.map(t => includeType(context, t)) ?? [],
+    refName: name
   };
 }
 
@@ -104,76 +131,23 @@ function makeRef(
   name: string,
   cb: (context: DeclVisitorContext, type: Type) => TypeModel
 ) {
-  context.refs[name] = {
-    kind: "ref",
-    types: [],
-    refName: name
-  };
   const refType = type;
 
-  if (isObjectType(type) && isReferenceType(type)) {
-    type = type.target;
-  }
+  if (!(name in context.refs)) {
+    context.refs[name] = {
+      kind: "ref",
+      types: [],
+      refName: name
+    };
 
-  const result = cb(context, type);
-  context.refs[name] = result;
-  return includeRef(context, refType, name);
-}
-
-function includeTypeOld(context: DeclVisitorContext, type: Type): TypeModel {
-  const name = type.symbol?.name;
-
-  if (name) {
-    const fn = type.symbol?.declarations?.[0]?.parent?.getSourceFile()
-      ?.fileName;
-
-    if (!isBaseLib(fn)) {
-      const parent = type.symbol.parent?.valueDeclaration?.parent;
-      const fileName = parent?.getSourceFile()?.fileName;
-      const lib = getLib(fileName, context.imports);
-
-      if (lib) {
-        return includeRef(context, type, `${getRefName(lib)}.${name}`);
-      } else if (isTypeParameter(type)) {
-        return {
-          kind: "ref",
-          types: [],
-          refName: name
-        };
-      } else if (!isAnonymousObject(type)) {
-        const id = (<any>type).id;
-        const n = name === "__type" ? `Anonymous_${id}` : name;
-
-        if (!(n in context.refs)) {
-          context.refs[n] = {
-            kind: "ref",
-            types: [],
-            refName: n
-          };
-
-          if (isObjectType(type) && isReferenceType(type)) {
-            type = type.target;
-          }
-
-          context.refs[n] = includeAnonymous(context, type);
-        }
-
-        return includeRef(context, type, n);
-      } else if (name === "__type") {
-        return {
-          kind: "ref",
-          types: [],
-          refName: "any"
-        };
-      }
-
-      return includeAnonymous(context, type);
+    if (isObjectType(type) && isReferenceType(type)) {
+      type = type.target;
     }
 
-    return includeRef(context, type, name);
+    context.refs[name] = cb(context, type);
   }
 
-  return includeAnonymous(context, type);
+  return includeRef(context, refType, name);
 }
 
 function includeRef(
@@ -332,6 +306,23 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   }
 }
 
+function getAllExternals(context: DeclVisitorContext, type: Type) {
+  const decl: any = type?.symbol?.declarations?.[0];
+  const types = decl.heritageClauses?.[0]?.types || [];
+  const baseTypes = types.map(t => context.checker.getTypeAtLocation(t));
+
+  for (let i = baseTypes.length; i--; ) {
+    const t = baseTypes[i];
+    const ext = includeExternal(context, t);
+
+    if (!ext) {
+      baseTypes.splice(i, 1, ...getAllExternals(context, t));
+    }
+  }
+
+  return baseTypes;
+}
+
 function includeTypeParameter(
   context: DeclVisitorContext,
   type: Type
@@ -355,23 +346,38 @@ function includeTypeParameter(
   }
 }
 
+function getAllExternalProperties(externals) {
+  const externalsProperties = [];
+
+  for (const external of externals) {
+    externalsProperties.push(...external.getProperties());
+  }
+
+  return externalsProperties;
+}
+
 function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
   if (isObjectType(type)) {
+    const externals = getAllExternals(context, type);
+    const externalProperties = getAllExternalProperties(externals);
+    const targets = externalProperties.map(m => m.target.id);
     const props = type.getProperties();
-    const propsDescriptor: Array<TypeModelProp> = props.map(prop => {
-      const propType = context.checker.getTypeOfSymbolAtLocation(
-        prop,
-        prop.valueDeclaration
-      );
+    const propsDescriptor: Array<TypeModelProp> = props
+      .filter(m => !targets.includes(m.target?.id))
+      .map(prop => {
+        const propType = context.checker.getTypeOfSymbolAtLocation(
+          prop,
+          prop.valueDeclaration
+        );
 
-      return {
-        kind: "prop",
-        name: prop.name,
-        optional: !!(prop.flags & SymbolFlags.Optional),
-        comment: getComment(context.checker, prop),
-        valueType: includeType(context, propType)
-      };
-    });
+        return {
+          kind: "prop",
+          name: prop.name,
+          optional: !!(prop.flags & SymbolFlags.Optional),
+          comment: getComment(context.checker, prop),
+          valueType: includeType(context, propType)
+        };
+      });
 
     // index types
     const stringIndexType = type.getStringIndexType();
@@ -407,7 +413,7 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
         value: context.checker.signatureToString(sign),
         types:
           sign.typeParameters?.map(t => {
-            return includeAnonymous(context, t);
+            return includeType(context, t);
           }) ?? [],
         parameters: sign.getParameters().map(param => {
           const type = context.checker.getTypeAtLocation(
@@ -416,14 +422,24 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
           return {
             kind: "parameter",
             param: param.name,
-            type: { kind: "any" } //includeType(context, type)
+            type: includeType(context, type)
           };
         }),
-        returnType: { kind: "any" } //includeType(context, sign.getReturnType())
+        returnType: includeType(context, sign.getReturnType())
       })) ?? [];
+
+    const types = type.getBaseTypes();
+
+    if (types) {
+      for (const t of types) {
+        t.getCallSignatures()
+        console.log(t.getBaseTypes());
+      }
+    }
 
     return {
       kind: "object",
+      extends: externals.map(e => includeExternal(context, e)),
       comment: getComment(context.checker, type.symbol),
       props: propsDescriptor,
       calls: callsDescriptor,

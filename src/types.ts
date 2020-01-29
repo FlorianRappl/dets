@@ -8,6 +8,7 @@ declare module 'typescript' {
   interface Symbol {
     id?: number;
     parent?: ts.Symbol;
+    target?: any;
   }
 
   interface Type {
@@ -23,6 +24,7 @@ declare module 'typescript' {
 export interface DeclVisitorContext {
   checker: TypeChecker;
   refs: TypeRefs;
+  ids: Array<number>;
   imports: Array<string>;
 }
 
@@ -225,6 +227,7 @@ export interface TypeModelObject extends WithTypeArgs, WithTypeComments {
   readonly props: Array<TypeModelProp>;
   readonly calls: Array<TypeModelFunction>;
   readonly indices: Array<TypeModelIndex>;
+  readonly extends: Array<TypeModelRef>;
 }
 
 export interface TypeModelTuple extends WithTypeArgs {

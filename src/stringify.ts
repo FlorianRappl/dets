@@ -144,9 +144,13 @@ function stringifyNode(type: TypeModel) {
 function stringifyTopNode(name: string, type: TypeModel) {
   switch (type?.kind) {
     case "object":
+      const x =
+        type.extends.length > 0
+          ? ` extends ${type.extends.map(stringifyNode).join(", ")}`
+          : "";
       return `${stringifyComment(
         type
-      )}export interface ${name}${stringifyTypeArgs(type)} ${stringifyInterface(
+      )}export interface ${name}${stringifyTypeArgs(type)}${x} ${stringifyInterface(
         type
       )}`;
     case "alias":
@@ -161,5 +165,6 @@ function stringifyTopNode(name: string, type: TypeModel) {
 export function stringify(refs: TypeRefs) {
   return Object.keys(refs)
     .map(r => stringifyTopNode(r, refs[r]))
+    .filter(m => !!m)
     .join("\n\n");
 }
