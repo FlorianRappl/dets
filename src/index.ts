@@ -1,32 +1,51 @@
 import * as ts from "typescript";
 import { resolve } from "path";
-import { typeVisitor, TypeModel } from './visit';
+import { DeclVisitorContext } from "./types";
+import { stringify } from "./stringify";
+import { includeType } from "./visit";
+import { getRefName } from "./helpers";
 
-function generateDeclaration(root: string, entryFile: string) {
-  const program = ts.createProgram([resolve(root, entryFile)], {});
+function generateDeclaration(
+  name: string,
+  root: string,
+  entryFiles: Array<string>,
+  imports: Array<string> = []
+) {
+  const program = ts.createProgram(entryFiles, {});
   const checker = program.getTypeChecker();
-  const parts: Record<string, TypeModel> = {};
-  //const mods = program.getSourceFiles().map(m => m.fileName);
+  const context: DeclVisitorContext = {
+    refs: {},
+    imports,
+    checker
+  };
 
   const visit = (node: ts.Node) => {
-    // Only consider exported nodes
     if (ts.isInterfaceDeclaration(node) && node.name.text === "PiletApi") {
       const type = checker.getTypeAtLocation(node);
-      parts.PiletApi = typeVisitor(checker, type);
+      includeType(context, type);
     }
   };
 
   const sf = program.getSourceFile(
     resolve(root, "node_modules/piral-core/lib/types/api.d.ts")
   );
-
   ts.forEachChild(sf, visit);
-
-  console.dir(parts);
+  //TODO also include typings from package.json
+  const content = stringify(context.refs);
+  const preamble = imports
+    .map(lib => `import * as ${getRefName(lib)} from '${lib}';`)
+    .join("\n");
+  return `${preamble}\n\ndeclare module "${name}" {\n${content
+    .split("\n")
+    .join("\n  ")}\n}`;
 }
 
-//generateDeclaration([resolve(__dirname, "../example/index.d.ts")]);
-generateDeclaration(
-  resolve(__dirname, "../../../Piral-Playground/piral-010"),
-  "src/index.tsx"
+const root = resolve(__dirname, "../../../Temp/piral-instance-094");
+console.log(
+  generateDeclaration(
+    "piral-010",
+    root,
+    [resolve(root, "src/index.tsx")],
+    ["react", "react-dom", "react-router", "react-router-dom"]
+  )
 );
