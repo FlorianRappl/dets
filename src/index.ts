@@ -87,10 +87,7 @@ function generateDeclaration(
 }
 
 //const root = resolve(__dirname, "../../../Temp/piral-instance-094");
-const root = resolve(
-  __dirname,
-  "../../../Smapiot/piral/src/samples/sample-piral"
-);
+const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
 
 console.log(
   generateDeclaration(

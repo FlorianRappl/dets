@@ -1,5 +1,4 @@
 import * as ts from "typescript";
-import { TypeChecker } from "typescript";
 
 /**
  * Expose the internal TypeScript APIs that are used by TypeDoc
@@ -23,7 +22,7 @@ declare module "typescript" {
 
 export interface DeclVisitorContext {
   modules: Record<string, TypeRefs>;
-  checker: TypeChecker;
+  checker: ts.TypeChecker;
   refs: TypeRefs;
   ids: Array<number>;
   usedImports: Array<string>;
