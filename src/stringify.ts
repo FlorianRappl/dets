@@ -69,14 +69,12 @@ function toContent(lines: Array<string>, terminator: string) {
     .map(line => `${line}${terminator}`)
     .join("\n")
     .split("\n")
-    .map(line => `  ${line}`)
-    .join("\n");
+    .map(line => `  ${line}\n`)
+    .join("");
 }
 
 function toBlock(lines: Array<string>, terminator: string) {
-  return `{
-${toContent(lines, terminator)}
-}`;
+  return `{\n${toContent(lines, terminator)}}`;
 }
 
 function stringifyInterface(type: TypeModelObject) {
@@ -150,7 +148,7 @@ function stringifyNode(type: TypeModel) {
   return "";
 }
 
-function stringifyTopNode(name: string, type: TypeModel) {
+export function stringifyExport(name: string, type: TypeModel) {
   switch (type?.kind) {
     case "object":
       const x =
@@ -167,7 +165,7 @@ function stringifyTopNode(name: string, type: TypeModel) {
         type
       )} = ${stringifyNode(type.child)};`;
     case "enumLiteral":
-      const e = type.const ? 'const enum' : 'enum';
+      const e = type.const ? "const enum" : "enum";
       return `${stringifyComment(type)}export ${e} ${name} ${stringifyEnum(
         type.values
       )}`;
@@ -176,9 +174,18 @@ function stringifyTopNode(name: string, type: TypeModel) {
   return "";
 }
 
-export function stringify(refs: TypeRefs) {
+export function stringifyExports(refs: TypeRefs) {
   return Object.keys(refs)
-    .map(r => stringifyTopNode(r, refs[r]))
+    .map(r => stringifyExport(r, refs[r]))
     .filter(m => !!m)
     .join("\n\n");
+}
+
+export function stringifyModule(name: string, refs: TypeRefs) {
+  const content = stringifyExports(refs);
+  const formattedContent = content
+    .split("\n")
+    .map(line => `  ${line}\n`)
+    .join("");
+  return `declare module "${name}" {\n${formattedContent}}`;
 }

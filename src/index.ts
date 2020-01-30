@@ -1,9 +1,9 @@
 import * as ts from "typescript";
 import { resolve } from "path";
 import { DeclVisitorContext } from "./types";
-import { stringify } from "./stringify";
-import { includeType } from "./visit";
-import { getRefName } from "./helpers";
+import { stringifyModule } from "./stringify";
+import { includeExportedType } from "./visit";
+import { getRefName, isNodeExported } from "./helpers";
 
 function generateDeclaration(
   name: string,
@@ -11,35 +11,79 @@ function generateDeclaration(
   entryFiles: Array<string>,
   imports: Array<string> = []
 ) {
-  const program = ts.createProgram(entryFiles, {});
+  const { typings } = require(resolve(root, "package.json"));
+  const typingsPath = typings && resolve(root, typings);
+  const apiPath = resolve(root, "node_modules/piral-core/lib/types/api.d.ts");
+  const files = [...entryFiles, typingsPath].filter(m => !!m);
+  const program = ts.createProgram(files, {});
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
+    modules: {},
     refs: {},
     imports,
     checker,
-    ids: [],
+    ids: []
   };
 
-  const visit = (node: ts.Node) => {
+  const api = program.getSourceFile(apiPath);
+  context.modules[name] = context.refs;
+
+  const includeNode = (node: ts.Node) => {
+    const type = checker.getTypeAtLocation(node);
+    includeExportedType(context, type);
+  };
+
+  const includeApi = (node: ts.Node) => {
     if (ts.isInterfaceDeclaration(node) && node.name.text === "PiletApi") {
-      const type = checker.getTypeAtLocation(node);
-      includeType(context, type);
+      includeNode(node);
     }
   };
 
-  const sf = program.getSourceFile(
-    resolve(root, "node_modules/piral-core/lib/types/api.d.ts")
-  );
-  ts.forEachChild(sf, visit);
-  //TODO also include typings from package.json
-  console.dir(context.refs);
-  const content = stringify(context.refs);
+  const includeTypings = (node: ts.Node) => {
+    if (ts.isModuleDeclaration(node)) {
+      const moduleName = node.name.text;
+      const existing = context.modules[moduleName];
+      context.modules[moduleName] = context.refs = existing || {};
+      node.body.forEachChild(subNode => {
+        if (isNodeExported(subNode)) {
+          includeNode(subNode);
+        }
+      });
+    } else if (isNodeExported(node)) {
+      context.refs = context.modules[name];
+      includeNode(node);
+    }
+  };
+
+  if (api) {
+    ts.forEachChild(api, includeApi);
+
+    if (typingsPath) {
+      const tp = program.getSourceFile(typingsPath);
+
+      if (tp) {
+        ts.forEachChild(tp, includeTypings);
+      } else {
+        console.warn(
+          'Cannot find the provided typings. Check the "typings" field of your "package.json" for the correct path.'
+        );
+      }
+    }
+  } else {
+    console.error(
+      'Cannot find the "piral-core" module. Are you sure it exists? Please run "npm i" to install missing modules.'
+    );
+  }
+
+  const modules = Object.keys(context.modules)
+    .map(moduleName => stringifyModule(moduleName, context.modules[moduleName]))
+    .join("\n\n");
+
   const preamble = imports
     .map(lib => `import * as ${getRefName(lib)} from '${lib}';`)
     .join("\n");
-  return `${preamble}\n\ndeclare module "${name}" {\n${content
-    .split("\n")
-    .join("\n  ")}\n}`;
+
+  return `${preamble}\n\n${modules}`;
 }
 
 const root = resolve(__dirname, "../../../Temp/piral-instance-094");

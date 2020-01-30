@@ -22,6 +22,7 @@ declare module "typescript" {
 }
 
 export interface DeclVisitorContext {
+  modules: Record<string, TypeRefs>;
   checker: TypeChecker;
   refs: TypeRefs;
   ids: Array<number>;

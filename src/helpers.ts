@@ -15,6 +15,13 @@ import {
   TypeReference,
 } from 'typescript';
 
+export function isNodeExported(node: Node, alsoTopLevel = false): boolean {
+  return (
+    (getCombinedModifierFlags(node as Declaration) & ModifierFlags.Export) !== 0 ||
+    (alsoTopLevel && !!node.parent && node.parent.kind === SyntaxKind.SourceFile)
+  );
+}
+
 export function getLibName(fileName: string) {
   if (fileName) {
     if (fileName.indexOf('/node_modules/@types/') !== -1) {

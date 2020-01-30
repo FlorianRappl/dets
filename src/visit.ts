@@ -62,15 +62,20 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
   }
 }
 
-export function includeType(
+export function includeExportedType(context: DeclVisitorContext, type: Type) {
+  const name = type.symbol.name;
+  const node = includeType(context, type);
+
+  if (node.kind !== "ref") {
+    context.refs[name] = node;
+  }
+}
+
+function includeType(
   context: DeclVisitorContext,
   type: Type
 ): TypeModel {
   const name = type.symbol?.name;
-
-  if (name === "First") {
-    console.dir(type);
-  }
 
   if (name) {
     const ext = includeExternal(context, type);
