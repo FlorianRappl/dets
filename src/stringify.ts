@@ -1,3 +1,4 @@
+import { getRefName, makeIdentifier } from "./helpers";
 import {
   TypeRefs,
   TypeModel,
@@ -9,7 +10,8 @@ import {
   WithTypeArgs,
   TypeModelIndexedAccess,
   TypeModelTypeParameter,
-  WithTypeComments
+  WithTypeComments,
+  DeclVisitorContext
 } from "./types";
 
 function stringifyComment(type: WithTypeComments) {
@@ -28,7 +30,7 @@ function stringifyProp(type: TypeModelProp) {
   const target = type.valueType;
   const comment = stringifyComment(type);
   const isOpt = type.optional ? "?" : "";
-  const name = JSON.stringify(type.name);
+  const name = makeIdentifier(type.name);
 
   if (
     target.kind === "object" &&
@@ -188,4 +190,15 @@ export function stringifyModule(name: string, refs: TypeRefs) {
     .map(line => `  ${line}\n`)
     .join("");
   return `declare module "${name}" {\n${formattedContent}}`;
+}
+
+export function stringifyDeclaration(context: DeclVisitorContext) {
+  const modules = Object.keys(context.modules)
+    .map(moduleName => stringifyModule(moduleName, context.modules[moduleName]))
+    .join("\n\n");
+
+  const preamble = context.usedImports
+    .map(lib => `import * as ${getRefName(lib)} from '${lib}';`)
+    .join("\n");
+  return `${preamble}\n\n${modules}`;
 }

@@ -1,26 +1,34 @@
 import * as ts from "typescript";
 import { resolve } from "path";
-import { DeclVisitorContext } from "./types";
-import { stringifyModule } from "./stringify";
+import { stringifyDeclaration } from "./stringify";
 import { includeExportedType } from "./visit";
-import { getRefName, isNodeExported } from "./helpers";
+import {
+  isNodeExported,
+  findDeclaredTypings,
+  findPiralCoreApi
+} from "./helpers";
+import { DeclVisitorContext } from "./types";
+
+function logWarn(message: string) {
+  console.warn(message);
+}
 
 function generateDeclaration(
   name: string,
   root: string,
-  entryFiles: Array<string>,
-  imports: Array<string> = []
+  files: Array<string>,
+  availableImports: Array<string> = []
 ) {
-  const { typings } = require(resolve(root, "package.json"));
-  const typingsPath = typings && resolve(root, typings);
-  const apiPath = resolve(root, "node_modules/piral-core/lib/types/api.d.ts");
-  const files = [...entryFiles, typingsPath].filter(m => !!m);
-  const program = ts.createProgram(files, {});
+  const typingsPath = findDeclaredTypings(root);
+  const apiPath = findPiralCoreApi(root);
+  const rootNames = [...files, typingsPath].filter(m => !!m);
+  const program = ts.createProgram(rootNames, {});
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
     modules: {},
     refs: {},
-    imports,
+    availableImports,
+    usedImports: [],
     checker,
     ids: []
   };
@@ -64,32 +72,29 @@ function generateDeclaration(
       if (tp) {
         ts.forEachChild(tp, includeTypings);
       } else {
-        console.warn(
+        logWarn(
           'Cannot find the provided typings. Check the "typings" field of your "package.json" for the correct path.'
         );
       }
     }
   } else {
-    console.error(
+    throw new Error(
       'Cannot find the "piral-core" module. Are you sure it exists? Please run "npm i" to install missing modules.'
     );
   }
 
-  const modules = Object.keys(context.modules)
-    .map(moduleName => stringifyModule(moduleName, context.modules[moduleName]))
-    .join("\n\n");
-
-  const preamble = imports
-    .map(lib => `import * as ${getRefName(lib)} from '${lib}';`)
-    .join("\n");
-
-  return `${preamble}\n\n${modules}`;
+  return stringifyDeclaration(context);
 }
 
-const root = resolve(__dirname, "../../../Temp/piral-instance-094");
+//const root = resolve(__dirname, "../../../Temp/piral-instance-094");
+const root = resolve(
+  __dirname,
+  "../../../Smapiot/piral/src/samples/sample-piral"
+);
+
 console.log(
   generateDeclaration(
-    "piral-010",
+    "piral-sample",
     root,
     [resolve(root, "src/index.tsx")],
     ["react", "react-dom", "react-router", "react-router-dom"]
