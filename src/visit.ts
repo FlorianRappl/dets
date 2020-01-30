@@ -428,15 +428,6 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
         returnType: includeType(context, sign.getReturnType())
       })) ?? [];
 
-    const types = type.getBaseTypes();
-
-    if (types) {
-      for (const t of types) {
-        t.getCallSignatures()
-        console.log(t.getBaseTypes());
-      }
-    }
-
     return {
       kind: "object",
       extends: externals.map(e => includeExternal(context, e)),
