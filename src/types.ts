@@ -18,6 +18,10 @@ declare module "typescript" {
     symbol?: ts.Symbol;
     localSymbol?: ts.Symbol;
   }
+
+  interface Declaration {
+    questionToken?: ts.Token<ts.SyntaxKind.QuestionToken>;
+  }
 }
 
 export interface DeclVisitorContext {
@@ -121,6 +125,7 @@ export interface TypeModelFunctionParameter {
   readonly kind: "parameter";
   readonly param: string;
   readonly type: TypeModel;
+  readonly optional: boolean;
 }
 
 export interface TypeModelEnum extends WithTypeComments {
