@@ -149,6 +149,7 @@ export interface TypeModelBooleanLiteral {
 
 export interface TypeModelEnumLiteral extends WithTypeComments {
   readonly kind: "enumLiteral";
+  readonly const: boolean;
   readonly values: Array<TypeMemberModel>;
 }
 

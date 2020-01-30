@@ -167,7 +167,8 @@ function stringifyTopNode(name: string, type: TypeModel) {
         type
       )} = ${stringifyNode(type.child)};`;
     case "enumLiteral":
-      return `${stringifyComment(type)}export enum ${name} ${stringifyEnum(
+      const e = type.const ? 'const enum' : 'enum';
+      return `${stringifyComment(type)}export ${e} ${name} ${stringifyEnum(
         type.values
       )}`;
   }

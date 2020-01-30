@@ -229,6 +229,7 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   if (type.flags & TypeFlags.EnumLiteral && type.isUnion()) {
     return {
       kind: "enumLiteral",
+      const: type.symbol.flags === SymbolFlags.ConstEnum,
       comment: getComment(context.checker, type.symbol),
       values: type.types.map(t => includeMember(context, t))
     };
