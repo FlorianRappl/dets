@@ -9,7 +9,6 @@ import {
   WithTypeArgs,
   TypeModelIndexedAccess,
   TypeModelTypeParameter,
-  TypeModelAlias,
   WithTypeComments
 } from "./types";
 
@@ -65,23 +64,33 @@ function stringifyIndexedAccess(type: TypeModelIndexedAccess) {
   return `${back}[${front}]`;
 }
 
+function toContent(lines: Array<string>, terminator: string) {
+  return lines
+    .map(line => `${line}${terminator}`)
+    .join("\n")
+    .split("\n")
+    .map(line => `  ${line}`)
+    .join("\n");
+}
+
+function toBlock(lines: Array<string>, terminator: string) {
+  return `{
+${toContent(lines, terminator)}
+}`;
+}
+
 function stringifyInterface(type: TypeModelObject) {
   const lines: Array<string> = [
     ...type.props.map(p => stringifyProp(p)),
     ...type.calls.map(c => stringifySignatures(c)),
     ...type.indices.map(i => stringifyIndex(i))
   ];
+  return toBlock(lines, ";");
+}
 
-  const content = lines
-    .map(line => `${line};`)
-    .join("\n")
-    .split("\n")
-    .map(line => `  ${line}`)
-    .join("\n");
-
-  return `{
-${content}
-}`;
+function stringifyEnum(values: Array<TypeModel>) {
+  const lines: Array<string> = values.map(p => stringifyNode(p));
+  return toBlock(lines, ",");
 }
 
 function stringifyTypeArgs(type: WithTypeArgs) {
@@ -111,6 +120,10 @@ function stringifyNode(type: TypeModel) {
       return type.types.map(stringifyNode).join(" | ");
     case "intersection":
       return type.types.map(stringifyNode).join(" & ");
+    case "member":
+      return `${stringifyComment(type)}${type.name} = ${stringifyNode(
+        type.value
+      )}`;
     case "any":
     case "null":
     case "void":
@@ -146,13 +159,17 @@ function stringifyTopNode(name: string, type: TypeModel) {
           : "";
       return `${stringifyComment(
         type
-      )}export interface ${name}${stringifyTypeArgs(type)}${x} ${stringifyInterface(
+      )}export interface ${name}${stringifyTypeArgs(
         type
-      )}`;
+      )}${x} ${stringifyInterface(type)}`;
     case "alias":
       return `${stringifyComment(type)}export type ${name}${stringifyTypeArgs(
         type
       )} = ${stringifyNode(type.child)};`;
+    case "enumLiteral":
+      return `${stringifyComment(type)}export enum ${name} ${stringifyEnum(
+        type.values
+      )}`;
   }
 
   return "";

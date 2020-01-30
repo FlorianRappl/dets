@@ -1,10 +1,10 @@
-import * as ts from 'typescript';
-import { TypeChecker } from 'typescript';
+import * as ts from "typescript";
+import { TypeChecker } from "typescript";
 
 /**
  * Expose the internal TypeScript APIs that are used by TypeDoc
  */
-declare module 'typescript' {
+declare module "typescript" {
   interface Symbol {
     id?: number;
     parent?: ts.Symbol;
@@ -40,6 +40,7 @@ export interface WithTypeComments {
 
 export type TypeModel =
   | TypeModelString
+  | TypeMemberModel
   | TypeModelProp
   | TypeModelBoolean
   | TypeModelNumber
@@ -77,154 +78,160 @@ export type TypeModel =
 export interface TypeModelProp extends WithTypeComments {
   readonly name: string;
   readonly optional: boolean;
-  readonly kind: 'prop';
+  readonly kind: "prop";
   readonly valueType: TypeModel;
   readonly id: number;
 }
 
 export interface TypeModelRef extends WithTypeArgs {
-  readonly kind: 'ref';
+  readonly kind: "ref";
   readonly refName: string;
   readonly external?: ts.Type;
 }
 
 export interface TypeModelAny {
-  readonly kind: 'any';
+  readonly kind: "any";
 }
 
 export interface TypeModelUnknown {
-  readonly kind: 'unknown';
+  readonly kind: "unknown";
 }
 
 export interface TypeModelString {
-  readonly kind: 'string';
+  readonly kind: "string";
 }
 
 export interface TypeModelNumber {
-  readonly kind: 'number';
+  readonly kind: "number";
 }
 
 export interface TypeModelBoolean {
-  readonly kind: 'boolean';
+  readonly kind: "boolean";
 }
 
 export interface TypeModelFunction extends WithTypeArgs {
-  readonly kind: 'function';
+  readonly kind: "function";
   readonly comment?: string;
   readonly parameters: Array<TypeModelFunctionParameter>;
   readonly returnType: TypeModel;
 }
 
 export interface TypeModelFunctionParameter {
-  readonly kind: 'parameter';
+  readonly kind: "parameter";
   readonly param: string;
   readonly type: TypeModel;
 }
 
-export interface TypeModelEnum {
-  readonly kind: 'enum';
+export interface TypeModelEnum extends WithTypeComments {
+  readonly kind: "enum";
   readonly comment?: string;
-  readonly values: Array<TypeModel>;
+  readonly values: Array<TypeMemberModel>;
 }
 
 export interface TypeModelBigInt {
-  readonly kind: 'bigint';
+  readonly kind: "bigint";
 }
 
 export interface TypeModelStringLiteral {
-  readonly kind: 'stringLiteral';
+  readonly kind: "stringLiteral";
   readonly value: string;
 }
 
 export interface TypeModelNumberLiteral {
-  readonly kind: 'numberLiteral';
+  readonly kind: "numberLiteral";
   readonly value: number;
 }
 
 export interface TypeModelBooleanLiteral {
-  readonly kind: 'booleanLiteral';
+  readonly kind: "booleanLiteral";
   readonly value: boolean;
 }
 
-export interface TypeModelEnumLiteral {
-  readonly kind: 'enumLiteral';
-  readonly values: TypeModel[];
+export interface TypeModelEnumLiteral extends WithTypeComments {
+  readonly kind: "enumLiteral";
+  readonly values: Array<TypeMemberModel>;
+}
+
+export interface TypeMemberModel extends WithTypeComments {
+  readonly kind: "member";
+  readonly name: string;
+  readonly value: TypeModel;
 }
 
 export interface TypeModelBigIntLiteral {
-  readonly kind: 'bigintLiteral';
+  readonly kind: "bigintLiteral";
   readonly value: ts.PseudoBigInt;
 }
 
 export interface TypeModelESSymbol {
-  readonly kind: 'esSymbol';
+  readonly kind: "esSymbol";
 }
 
 export interface TypeModelUniqueESSymbol {
-  readonly kind: 'uniqueEsSymbol';
+  readonly kind: "uniqueEsSymbol";
 }
 
 export interface TypeModelVoid {
-  readonly kind: 'void';
+  readonly kind: "void";
 }
 
 export interface TypeModelUndefined {
-  readonly kind: 'undefined';
+  readonly kind: "undefined";
 }
 
 export interface TypeModelNull {
-  readonly kind: 'null';
+  readonly kind: "null";
 }
 
 export interface TypeModelNever {
-  readonly kind: 'never';
+  readonly kind: "never";
 }
 
 export interface TypeModelTypeParameter {
-  readonly kind: 'typeParameter';
+  readonly kind: "typeParameter";
   readonly typeName: string;
   readonly constraint?: TypeModel;
 }
 
 export interface TypeModelUnion extends WithTypeArgs {
-  readonly kind: 'union';
+  readonly kind: "union";
 }
 
 export interface TypeModelIntersection extends WithTypeArgs {
-  readonly kind: 'intersection';
+  readonly kind: "intersection";
 }
 
 export interface TypeModelIndex {
-  readonly kind: 'index';
+  readonly kind: "index";
   readonly keyName: string;
   readonly keyType: TypeModelUnion | TypeModelString | TypeModelNumber;
   readonly valueType: TypeModel;
 }
 
 export interface TypeModelIndexedAccess {
-  readonly kind: 'indexedAccess';
+  readonly kind: "indexedAccess";
   readonly index: TypeModel;
   readonly object: TypeModel;
 }
 
 export interface TypeModelConditional {
-  readonly kind: 'conditional';
+  readonly kind: "conditional";
 }
 
 export interface TypeModelSubstitution {
-  readonly kind: 'substitution';
+  readonly kind: "substitution";
 }
 
 export interface TypeModelNonPrimitive {
-  readonly kind: 'nonPrimitive';
+  readonly kind: "nonPrimitive";
 }
 
 export interface TypeModelUnidentified {
-  readonly kind: 'unidentified';
+  readonly kind: "unidentified";
 }
 
 export interface TypeModelObject extends WithTypeArgs, WithTypeComments {
-  readonly kind: 'object';
+  readonly kind: "object";
   readonly props: Array<TypeModelProp>;
   readonly calls: Array<TypeModelFunction>;
   readonly indices: Array<TypeModelIndex>;
@@ -232,12 +239,12 @@ export interface TypeModelObject extends WithTypeArgs, WithTypeComments {
 }
 
 export interface TypeModelTuple extends WithTypeArgs {
-  readonly kind: 'tuple';
+  readonly kind: "tuple";
 }
 
 export interface TypeModelAlias extends WithTypeArgs, WithTypeComments {
-  readonly kind: 'alias';
+  readonly kind: "alias";
   readonly child: TypeModel;
 }
 
-export type TypeModelKinds = TypeModel['kind'];
+export type TypeModelKinds = TypeModel["kind"];

@@ -26,7 +26,8 @@ import {
   TypeModelProp,
   TypeModelFunction,
   DeclVisitorContext,
-  TypeModelRef
+  TypeModelRef,
+  TypeMemberModel
 } from "./types";
 
 function getTypeParameters(context: DeclVisitorContext, type: Type) {
@@ -53,8 +54,6 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
     return includeRef(context, type, typeName, type);
   }
 
-  // const parent = type.symbol.parent?.valueDeclaration?.parent;
-  // const fileName = parent?.getSourceFile()?.fileName;
   const lib = getLib(fn, context.imports);
 
   if (lib) {
@@ -69,6 +68,10 @@ export function includeType(
 ): TypeModel {
   const name = type.symbol?.name;
 
+  if (name === "First") {
+    console.dir(type);
+  }
+
   if (name) {
     const ext = includeExternal(context, type);
 
@@ -81,7 +84,7 @@ export function includeType(
         refName: "any"
       };
     } else if (!isAnonymousObject(type)) {
-      return makeRef(context, type, name, includeObject);
+      return makeRef(context, type, name, includeNamed);
     }
 
     return includeObject(context, type);
@@ -167,6 +170,18 @@ function includeRef(
   };
 }
 
+function includeMember(
+  context: DeclVisitorContext,
+  type: Type
+): TypeMemberModel {
+  return {
+    kind: "member",
+    name: type.symbol.name,
+    value: includeAnonymous(context, type),
+    comment: getComment(context.checker, type.symbol)
+  };
+}
+
 function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   // We're not handling things SomethingLike cause there're unions of flags
   // and would be handled anyway into more specific types
@@ -214,7 +229,16 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   if (type.flags & TypeFlags.EnumLiteral && type.isUnion()) {
     return {
       kind: "enumLiteral",
-      values: type.types.map(t => includeType(context, t))
+      comment: getComment(context.checker, type.symbol),
+      values: type.types.map(t => includeMember(context, t))
+    };
+  }
+
+  if (type.flags & TypeFlags.Enum && type.isUnion()) {
+    return {
+      kind: "enum",
+      comment: getComment(context.checker, type.symbol),
+      values: type.types.map(t => includeMember(context, t))
     };
   }
 
@@ -240,13 +264,6 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   if (type.flags & TypeFlags.Number) {
     return {
       kind: "number"
-    };
-  }
-
-  if (type.flags & TypeFlags.Enum && type.isUnion()) {
-    return {
-      kind: "enum",
-      values: type.types.map(t => includeType(context, t))
     };
   }
 
@@ -426,7 +443,8 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
     const callsDescriptor: Array<TypeModelFunction> =
       callSignatures?.map(sign => ({
         kind: "function",
-        types: sign.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [],
+        types:
+          sign.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [],
         parameters: sign.getParameters().map(param => ({
           kind: "parameter",
           param: param.name,
@@ -488,11 +506,14 @@ function includeCombinator(context: DeclVisitorContext, type: Type): TypeModel {
   }
 }
 
+function includeNamed(context: DeclVisitorContext, type: Type): TypeModel {
+  return includeObject(context, type) ?? includeBasic(context, type);
+}
+
 function includeAnonymous(context: DeclVisitorContext, type: Type): TypeModel {
   return (
-    includeBasic(context, type) ??
+    includeNamed(context, type) ??
     includeTypeParameter(context, type) ??
-    includeObject(context, type) ??
     includeCombinator(context, type) ?? {
       kind: "unidentified"
     }

@@ -32,6 +32,7 @@ function generateDeclaration(
   );
   ts.forEachChild(sf, visit);
   //TODO also include typings from package.json
+  console.dir(context.refs);
   const content = stringify(context.refs);
   const preamble = imports
     .map(lib => `import * as ${getRefName(lib)} from '${lib}';`)
