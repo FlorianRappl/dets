@@ -79,11 +79,13 @@ export interface TypeModelProp extends WithTypeComments {
   readonly optional: boolean;
   readonly kind: 'prop';
   readonly valueType: TypeModel;
+  readonly id: number;
 }
 
 export interface TypeModelRef extends WithTypeArgs {
   readonly kind: 'ref';
   readonly refName: string;
+  readonly external?: ts.Type;
 }
 
 export interface TypeModelAny {
@@ -109,7 +111,6 @@ export interface TypeModelBoolean {
 export interface TypeModelFunction extends WithTypeArgs {
   readonly kind: 'function';
   readonly comment?: string;
-  readonly value?: string;
   readonly parameters: Array<TypeModelFunctionParameter>;
   readonly returnType: TypeModel;
 }

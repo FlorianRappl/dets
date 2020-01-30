@@ -48,14 +48,10 @@ function stringifyParameter(param: TypeModelFunctionParameter) {
 }
 
 function stringifySignatures(type: TypeModelFunction) {
-  if (!type.value) {
-    const parameters = type.parameters.map(stringifyParameter).join(", ");
-    const ta = stringifyTypeArgs(type);
-    const rt = stringifyNode(type.returnType);
-    return `${ta}(${parameters}): ${rt}`;
-  }
-
-  return type.value;
+  const parameters = type.parameters.map(stringifyParameter).join(", ");
+  const ta = stringifyTypeArgs(type);
+  const rt = stringifyNode(type.returnType);
+  return `${ta}(${parameters}): ${rt}`;
 }
 
 function stringifyIndex(type: TypeModelIndex) {

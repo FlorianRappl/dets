@@ -26,7 +26,7 @@ import {
   TypeModelProp,
   TypeModelFunction,
   DeclVisitorContext,
-  TypeModelAlias
+  TypeModelRef
 } from "./types";
 
 function getTypeParameters(context: DeclVisitorContext, type: Type) {
@@ -50,7 +50,7 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
 
   if (isBaseLib(fn)) {
     const typeName = name;
-    return includeRef(context, type, typeName);
+    return includeRef(context, type, typeName, type);
   }
 
   // const parent = type.symbol.parent?.valueDeclaration?.parent;
@@ -59,7 +59,7 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
 
   if (lib) {
     const typeName = `${getRefName(lib)}.${name}`;
-    return includeRef(context, type, typeName);
+    return includeRef(context, type, typeName, type);
   }
 }
 
@@ -102,8 +102,11 @@ function makeAliasRef(
   name: string
 ): TypeModel {
   const decl: any = type.aliasSymbol.declarations[0];
+  const ext = includeExternal(context, decl);
 
-  if (!(name in context.refs)) {
+  if (ext && ext.kind === "ref") {
+    name = ext.refName;
+  } else if (!(name in context.refs)) {
     context.refs[name] = {
       kind: "ref",
       types: [],
@@ -153,12 +156,14 @@ function makeRef(
 function includeRef(
   context: DeclVisitorContext,
   type: Type,
-  refName: string
+  refName: string,
+  external?: Type
 ): TypeModel {
   return {
     kind: "ref",
     types: getTypeParameters(context, type),
-    refName
+    refName,
+    external
   };
 }
 
@@ -306,21 +311,13 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   }
 }
 
-function getAllExternals(context: DeclVisitorContext, type: Type) {
+function includeInheritedTypes(context: DeclVisitorContext, type: Type) {
   const decl: any = type?.symbol?.declarations?.[0];
   const types = decl.heritageClauses?.[0]?.types || [];
-  const baseTypes = types.map(t => context.checker.getTypeAtLocation(t));
-
-  for (let i = baseTypes.length; i--; ) {
-    const t = baseTypes[i];
-    const ext = includeExternal(context, t);
-
-    if (!ext) {
-      baseTypes.splice(i, 1, ...getAllExternals(context, t));
-    }
-  }
-
-  return baseTypes;
+  return types.map(t => {
+    const type = context.checker.getTypeAtLocation(t);
+    return includeType(context, type);
+  });
 }
 
 function includeTypeParameter(
@@ -346,24 +343,42 @@ function includeTypeParameter(
   }
 }
 
-function getAllExternalProperties(externals) {
-  const externalsProperties = [];
+function getAllPropIds(
+  context: DeclVisitorContext,
+  types: Array<TypeModelRef>
+) {
+  const propIds: Array<number> = [];
 
-  for (const external of externals) {
-    externalsProperties.push(...external.getProperties());
+  for (const type of types) {
+    const baseType = context.refs[type.refName];
+
+    if (baseType && baseType.kind === "object") {
+      for (const prop of baseType.props) {
+        if (prop.id) {
+          propIds.push(prop.id);
+        }
+      }
+
+      propIds.push(...getAllPropIds(context, baseType.extends));
+    } else if (type.external) {
+      const props = type.external.getProperties() || [];
+
+      for (const prop of props) {
+        propIds.push(prop.id || prop.target?.id);
+      }
+    }
   }
 
-  return externalsProperties;
+  return propIds;
 }
 
 function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
   if (isObjectType(type)) {
-    const externals = getAllExternals(context, type);
-    const externalProperties = getAllExternalProperties(externals);
-    const targets = externalProperties.map(m => m.target.id);
+    const inherited = includeInheritedTypes(context, type);
+    const targets = getAllPropIds(context, inherited);
     const props = type.getProperties();
     const propsDescriptor: Array<TypeModelProp> = props
-      .filter(m => !targets.includes(m.target?.id))
+      .filter(prop => !targets.includes(prop.id || prop.target?.id))
       .map(prop => {
         const propType = context.checker.getTypeOfSymbolAtLocation(
           prop,
@@ -373,6 +388,7 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
         return {
           kind: "prop",
           name: prop.name,
+          id: prop.id || prop.target?.id,
           optional: !!(prop.flags & SymbolFlags.Optional),
           comment: getComment(context.checker, prop),
           valueType: includeType(context, propType)
@@ -410,27 +426,21 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
     const callsDescriptor: Array<TypeModelFunction> =
       callSignatures?.map(sign => ({
         kind: "function",
-        value: context.checker.signatureToString(sign),
-        types:
-          sign.typeParameters?.map(t => {
-            return includeType(context, t);
-          }) ?? [],
-        parameters: sign.getParameters().map(param => {
-          const type = context.checker.getTypeAtLocation(
-            param.valueDeclaration
-          );
-          return {
-            kind: "parameter",
-            param: param.name,
-            type: includeType(context, type)
-          };
-        }),
+        types: sign.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [],
+        parameters: sign.getParameters().map(param => ({
+          kind: "parameter",
+          param: param.name,
+          type: includeType(
+            context,
+            context.checker.getTypeAtLocation(param.valueDeclaration)
+          )
+        })),
         returnType: includeType(context, sign.getReturnType())
       })) ?? [];
 
     return {
       kind: "object",
-      extends: externals.map(e => includeExternal(context, e)),
+      extends: inherited,
       comment: getComment(context.checker, type.symbol),
       props: propsDescriptor,
       calls: callsDescriptor,
