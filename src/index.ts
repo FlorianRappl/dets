@@ -22,7 +22,9 @@ function generateDeclaration(
   const typingsPath = findDeclaredTypings(root);
   const apiPath = findPiralCoreApi(root);
   const rootNames = [...files, typingsPath].filter(m => !!m);
-  const program = ts.createProgram(rootNames, {});
+  const program = ts.createProgram(rootNames, {
+    allowJs: true,
+  });
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
     modules: {},
@@ -60,6 +62,16 @@ function generateDeclaration(
     } else if (isNodeExported(node)) {
       context.refs = context.modules[name];
       includeNode(node);
+    } else if (ts.isExportDeclaration(node)) {
+      const moduleName = node.moduleSpecifier.text;
+      const fileName = node.getSourceFile().resolvedModules?.get(moduleName)?.resolvedFileName;
+
+      if (fileName) {
+        // maybe for later (undefined if *, i.e., all):
+        // --> const selected = node.exportClause?.elements.map(m => m.name);
+        const newFile = program.getSourceFile(fileName);
+        ts.forEachChild(newFile, includeTypings);
+      }
     }
   };
 
@@ -87,7 +99,8 @@ function generateDeclaration(
 }
 
 //const root = resolve(__dirname, "../../../Temp/piral-instance-094");
-const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
+//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
+const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
 
 console.log(
   generateDeclaration(
