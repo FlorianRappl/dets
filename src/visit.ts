@@ -40,17 +40,14 @@ function getTypeArguments(context: DeclVisitorContext, type: Type) {
 
 function getTypeParameters(context: DeclVisitorContext, type: Type) {
   const typeRef = type as InterfaceType;
-  return typeRef.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [];
+  return (
+    typeRef.typeParameters?.map(t => includeTypeParameter(context, t)) ?? []
+  );
 }
 
 function getComment(checker: TypeChecker, symbol: Symbol) {
   const doc = symbol.getDocumentationComment(checker);
-
-  if (doc) {
-    return doc.map(item => item.text).join("\n");
-  }
-
-  return undefined;
+  return doc?.map(item => item.text).join("\n");
 }
 
 function includeExternal(context: DeclVisitorContext, type: Type) {
