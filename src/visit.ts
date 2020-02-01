@@ -372,25 +372,53 @@ function includeInheritedTypes(context: DeclVisitorContext, type: Type) {
   });
 }
 
+function includeConstraint(context: DeclVisitorContext, type: Type): TypeModel {
+  const symbol = type.getSymbol();
+  const decl: any = symbol.declarations?.[0];
+  const constraint = decl?.constraint?.type ?? type.getConstraint();
+  const name = constraint?.typeName?.text;
+
+  if (name) {
+    return {
+      kind: "ref",
+      refName: `keyof ${name}`,
+      types: []
+    };
+  } else if (constraint) {
+    return includeType(context, constraint);
+  }
+
+  return undefined;
+}
+
+function includeDefaultTypeArgument(
+  context: DeclVisitorContext,
+  type: Type
+): TypeModel {
+  const symbol = type.getSymbol();
+  const decl: any = symbol.declarations?.[0];
+  const defaultNode = decl?.default;
+
+  if (defaultNode) {
+    const defaultType = context.checker.getTypeAtLocation(defaultNode);
+    return includeType(context, defaultType);
+  }
+
+  return undefined;
+}
+
 function includeTypeParameter(
   context: DeclVisitorContext,
   type: Type
 ): TypeModel {
   if (isTypeParameter(type)) {
     const symbol = type.getSymbol();
-    const decl: any = symbol.declarations?.[0];
-    const constraint = decl?.constraint?.type ?? type.getConstraint();
-    const name = constraint?.typeName?.text;
+
     return {
       kind: "typeParameter",
       typeName: symbol.name,
-      constraint: name
-        ? {
-            kind: "ref",
-            refName: `keyof ${name}`,
-            types: []
-          }
-        : constraint && includeType(context, constraint)
+      constraint: includeConstraint(context, type),
+      default: includeDefaultTypeArgument(context, type)
     };
   }
 }

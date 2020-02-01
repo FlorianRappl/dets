@@ -12,6 +12,7 @@ declare module "typescript" {
 
   interface Type {
     id?: number;
+    typeName?: ts.Identifier;
   }
 
   interface Node {
@@ -206,6 +207,7 @@ export interface TypeModelTypeParameter {
   readonly kind: "typeParameter";
   readonly typeName: string;
   readonly constraint?: TypeModel;
+  readonly default?: TypeModel;
 }
 
 export interface TypeModelUnion extends WithTypeArgs {
