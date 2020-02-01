@@ -6,7 +6,8 @@ import {
   ObjectFlags,
   TypeReference,
   Symbol,
-  InterfaceTypeWithDeclaredMembers
+  InterfaceTypeWithDeclaredMembers,
+  InterfaceType
 } from "typescript";
 import {
   getLib,
@@ -32,9 +33,14 @@ import {
   TypeMemberModel
 } from "./types";
 
-function getTypeParameters(context: DeclVisitorContext, type: Type) {
+function getTypeArguments(context: DeclVisitorContext, type: Type) {
   const typeRef = type as TypeReference;
   return typeRef.typeArguments?.map(t => includeType(context, t)) ?? [];
+}
+
+function getTypeParameters(context: DeclVisitorContext, type: Type) {
+  const typeRef = type as InterfaceType;
+  return typeRef.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [];
 }
 
 function getComment(checker: TypeChecker, symbol: Symbol) {
@@ -198,7 +204,7 @@ function includeRef(
 ): TypeModel {
   return {
     kind: "ref",
-    types: getTypeParameters(context, type),
+    types: getTypeArguments(context, type),
     refName,
     external
   };
