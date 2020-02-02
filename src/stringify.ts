@@ -139,6 +139,8 @@ function stringifyNode(type: TypeModel) {
     case "never":
     case "string":
       return type.kind;
+    case "nonPrimitive":
+      return type.name || 'object';
     case "esSymbol":
       return "symbol";
     case "unidentified":

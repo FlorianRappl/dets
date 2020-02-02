@@ -13,15 +13,20 @@ declare module "typescript" {
   interface Type {
     id?: number;
     typeName?: ts.Identifier;
+    intrinsicName?: string;
+    parent?: ts.Type;
+    typeParameters?: Array<ts.TypeParameter>;
   }
 
   interface Node {
     symbol?: ts.Symbol;
     localSymbol?: ts.Symbol;
+    type?: ts.Type;
   }
 
   interface Declaration {
     questionToken?: ts.Token<ts.SyntaxKind.QuestionToken>;
+    default?: ts.Node;
   }
 
   interface Expression {
@@ -29,7 +34,7 @@ declare module "typescript" {
   }
 
   interface SourceFile {
-    resolvedModules: Map<ts.ResolvedModule>;
+    resolvedModules: ts.Map<ts.ResolvedModule>;
   }
 }
 
@@ -241,6 +246,7 @@ export interface TypeModelSubstitution {
 
 export interface TypeModelNonPrimitive {
   readonly kind: "nonPrimitive";
+  readonly name?: string;
 }
 
 export interface TypeModelUnidentified {
