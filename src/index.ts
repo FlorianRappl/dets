@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import { resolve } from "path";
 import { stringifyDeclaration } from "./stringify";
-import { includeExportedType } from "./visit";
+import { includeExportedType, includeExportedVariable } from "./visit";
 import {
   isNodeExported,
   findDeclaredTypings,
@@ -23,7 +23,7 @@ function generateDeclaration(
   const apiPath = findPiralCoreApi(root);
   const rootNames = [...files, typingsPath].filter(m => !!m);
   const program = ts.createProgram(rootNames, {
-    allowJs: true,
+    allowJs: true
   });
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
@@ -39,8 +39,23 @@ function generateDeclaration(
   context.modules[name] = context.refs;
 
   const includeNode = (node: ts.Node) => {
-    const type = checker.getTypeAtLocation(node);
-    includeExportedType(context, type);
+    if (node) {
+      const type = checker.getTypeAtLocation(node);
+
+      if (type.flags !== ts.TypeFlags.Any) {
+        includeExportedType(context, type);
+      } else if (ts.isVariableStatement(node)) {
+        node.declarationList.declarations.forEach(decl => {
+          includeExportedVariable(context, decl);
+        });
+      } else {
+        logWarn(
+          `Could not resolve type at position ${node.pos} of "${
+            node.getSourceFile()?.fileName
+          }".`
+        );
+      }
+    }
   };
 
   const includeApi = (node: ts.Node) => {
@@ -63,14 +78,26 @@ function generateDeclaration(
       context.refs = context.modules[name];
       includeNode(node);
     } else if (ts.isExportDeclaration(node)) {
-      const moduleName = node.moduleSpecifier.text;
-      const fileName = node.getSourceFile().resolvedModules?.get(moduleName)?.resolvedFileName;
+      const moduleName = node.moduleSpecifier?.text;
+      const elements = node.exportClause?.elements;
 
-      if (fileName) {
-        // maybe for later (undefined if *, i.e., all):
-        // --> const selected = node.exportClause?.elements.map(m => m.name);
-        const newFile = program.getSourceFile(fileName);
-        ts.forEachChild(newFile, includeTypings);
+      if (elements) {
+        // selected exports here
+        elements.forEach(el => {
+          if (el.symbol) {
+            const original = context.checker.getAliasedSymbol(el.symbol);
+            includeNode(original?.declarations?.[0]);
+          }
+        });
+      } else if (moduleName) {
+        // * exports from a module
+        const fileName = node.getSourceFile().resolvedModules?.get(moduleName)
+          ?.resolvedFileName;
+
+        if (fileName) {
+          const newFile = program.getSourceFile(fileName);
+          ts.forEachChild(newFile, includeTypings);
+        }
       }
     }
   };
@@ -100,7 +127,7 @@ function generateDeclaration(
 
 //const root = resolve(__dirname, "../../../Temp/piral-instance-094");
 //const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
-const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
+const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
 
 console.log(
   generateDeclaration(

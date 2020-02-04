@@ -7,7 +7,8 @@ import {
   TypeReference,
   Symbol,
   InterfaceTypeWithDeclaredMembers,
-  InterfaceType
+  InterfaceType,
+  VariableDeclaration
 } from "typescript";
 import {
   getLib,
@@ -144,6 +145,17 @@ export function includeExportedType(context: DeclVisitorContext, type: Type) {
   if (node.kind !== "ref") {
     context.refs[name] = node;
   }
+}
+
+export function includeExportedVariable(
+  context: DeclVisitorContext,
+  variable: VariableDeclaration
+) {
+  const name = (variable.name as any).text;
+  const type = variable.type
+    ? context.checker.getTypeFromTypeNode(variable.type)
+    : context.checker.getTypeAtLocation(variable.initializer);
+  context.refs[name] = includeType(context, type);
 }
 
 function includeType(context: DeclVisitorContext, type: Type): TypeModel {
