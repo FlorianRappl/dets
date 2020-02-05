@@ -107,8 +107,8 @@ function stringifyTypeParameter(type: TypeModelTypeParameter) {
   const name = type.typeName;
   const constraint = stringifyNode(type.constraint);
   const defaults = stringifyNode(type.default);
-  const constraintClause = constraint ? ` extends ${constraint}` : '';
-  const defaultsClause = defaults ? ` = ${defaults}` : '';
+  const constraintClause = constraint ? ` extends ${constraint}` : "";
+  const defaultsClause = defaults ? ` = ${defaults}` : "";
   return `${name}${constraintClause}${defaultsClause}`;
 }
 
@@ -140,7 +140,7 @@ function stringifyNode(type: TypeModel) {
     case "string":
       return type.kind;
     case "nonPrimitive":
-      return type.name || 'object';
+      return type.name || "object";
     case "esSymbol":
       return "symbol";
     case "unidentified":
@@ -177,6 +177,8 @@ export function stringifyExport(name: string, type: TypeModel) {
       return `${stringifyComment(type)}export ${e} ${name} ${stringifyEnum(
         type.values
       )}`;
+    case "intersection":
+    case "union":
     case "stringLiteral":
     case "booleanLiteral":
     case "numberLiteral":
@@ -217,6 +219,7 @@ export function stringifyModule(name: string, refs: TypeRefs) {
 
 export function stringifyDeclaration(context: DeclVisitorContext) {
   const modules = Object.keys(context.modules)
+    .filter(moduleName => Object.keys(context.modules[moduleName]).length > 0)
     .map(moduleName => stringifyModule(moduleName, context.modules[moduleName]))
     .join("\n\n");
 

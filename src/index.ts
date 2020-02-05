@@ -1,7 +1,11 @@
 import * as ts from "typescript";
 import { resolve } from "path";
 import { stringifyDeclaration } from "./stringify";
-import { includeExportedType, includeExportedVariable } from "./visit";
+import {
+  includeExportedType,
+  includeExportedVariable,
+  includeExportedTypeAlias
+} from "./visit";
 import {
   isNodeExported,
   findDeclaredTypings,
@@ -40,20 +44,26 @@ function generateDeclaration(
 
   const includeNode = (node: ts.Node) => {
     if (node) {
-      const type = checker.getTypeAtLocation(node);
-
-      if (type.flags !== ts.TypeFlags.Any) {
-        includeExportedType(context, type);
-      } else if (ts.isVariableStatement(node)) {
-        node.declarationList.declarations.forEach(decl => {
-          includeExportedVariable(context, decl);
-        });
+      if (ts.isTypeAliasDeclaration(node)) {
+        includeExportedTypeAlias(context, node);
       } else {
-        logWarn(
-          `Could not resolve type at position ${node.pos} of "${
-            node.getSourceFile()?.fileName
-          }".`
-        );
+        const type = checker.getTypeAtLocation(node);
+
+        if (ts.isVariableDeclaration(node)) {
+          includeExportedVariable(context, node);
+        } else if (ts.isVariableStatement(node)) {
+          node.declarationList.declarations.forEach(decl => {
+            includeExportedVariable(context, decl);
+          });
+        } else if (type.flags !== ts.TypeFlags.Any) {
+          includeExportedType(context, type);
+        } else {
+          logWarn(
+            `Could not resolve type at position ${node.pos} of "${
+              node.getSourceFile()?.fileName
+            }".`
+          );
+        }
       }
     }
   };
@@ -68,14 +78,15 @@ function generateDeclaration(
     if (ts.isModuleDeclaration(node)) {
       const moduleName = node.name.text;
       const existing = context.modules[moduleName];
+      const before = context.refs;
       context.modules[moduleName] = context.refs = existing || {};
       node.body.forEachChild(subNode => {
         if (isNodeExported(subNode)) {
           includeNode(subNode);
         }
       });
+      context.refs = before;
     } else if (isNodeExported(node)) {
-      context.refs = context.modules[name];
       includeNode(node);
     } else if (ts.isExportDeclaration(node)) {
       const moduleName = node.moduleSpecifier?.text;
@@ -127,13 +138,26 @@ function generateDeclaration(
 
 //const root = resolve(__dirname, "../../../Temp/piral-instance-094");
 //const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
-const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
+//const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
+//const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
+//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-cross-fx");
+const root = resolve(__dirname, "../../../Temp/shell-mwe-original");
 
 console.log(
   generateDeclaration(
     "piral-sample",
     root,
     [resolve(root, "src/index.tsx")],
-    ["react", "react-dom", "react-router", "react-router-dom"]
+    [
+      "vue",
+      "react",
+      "angular",
+      "inferno",
+      "preact",
+      "react-router",
+      "@libre/atom",
+      "riot"
+    ]
+    //["react", "react-dom", "react-router", "react-router-dom"]
   )
 );
