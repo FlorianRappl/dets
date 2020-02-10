@@ -157,6 +157,15 @@ export function isReferenceType(type: ObjectType): type is TypeReference {
   return !!(type.objectFlags & ObjectFlags.Reference);
 }
 
+export function isTupleType(type: ObjectType): type is TypeReference {
+  return (
+    isReferenceType(type) &&
+    type.target.objectFlags & ObjectFlags.Tuple &&
+    !!type.typeArguments &&
+    type.typeArguments.length > 0
+  );
+}
+
 export function isTypeParameter(type: Type) {
   return !!(type.flags & TypeFlags.TypeParameter);
 }

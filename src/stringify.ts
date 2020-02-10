@@ -177,25 +177,8 @@ export function stringifyExport(name: string, type: TypeModel) {
       return `${stringifyComment(type)}export ${e} ${name} ${stringifyEnum(
         type.values
       )}`;
-    case "intersection":
-    case "union":
-    case "stringLiteral":
-    case "booleanLiteral":
-    case "numberLiteral":
-    case "any":
-    case "null":
-    case "void":
-    case "undefined":
-    case "boolean":
-    case "unknown":
-    case "bigint":
-    case "number":
-    case "never":
-    case "string":
-    case "nonPrimitive":
-    case "esSymbol":
-    case "unidentified":
-      return `export declare const ${name}: ${stringifyNode(type)};`;
+    case "const":
+      return `export const ${name}: ${stringifyNode(type.type)};`;
   }
 
   return "";

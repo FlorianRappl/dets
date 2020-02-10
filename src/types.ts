@@ -8,6 +8,7 @@ declare module "typescript" {
     id?: number;
     parent?: ts.Symbol;
     target?: any;
+    declaredType?: ts.Type;
   }
 
   interface Type {
@@ -63,6 +64,7 @@ export type TypeModel =
   | TypeModelProp
   | TypeModelBoolean
   | TypeModelNumber
+  | TypeModelVariable
   | TypeModelObject
   | TypeModelUnidentified
   | TypeModelAny
@@ -100,6 +102,11 @@ export interface TypeModelProp extends WithTypeComments {
   readonly kind: "prop";
   readonly valueType: TypeModel;
   readonly id: number;
+}
+
+export interface TypeModelVariable {
+  readonly kind: "const";
+  readonly type: TypeModel;
 }
 
 export interface TypeModelRef extends WithTypeArgs {

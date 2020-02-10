@@ -9,7 +9,11 @@ import {
   InterfaceTypeWithDeclaredMembers,
   InterfaceType,
   VariableDeclaration,
-  TypeAliasDeclaration
+  TypeAliasDeclaration,
+  ObjectType,
+  isIdentifier,
+  isInterfaceDeclaration,
+  isClassDeclaration
 } from "typescript";
 import {
   getLib,
@@ -23,7 +27,8 @@ import {
   getKeyName,
   isIndexType,
   isGlobal,
-  getGlobalName
+  getGlobalName,
+  isTupleType
 } from "./helpers";
 import {
   TypeModel,
@@ -154,7 +159,13 @@ export function includeExportedTypeAlias(
 ) {
   const name = (variable.name as any).text;
   const type = context.checker.getTypeFromTypeNode(variable.type);
-  context.refs[name] = includeAnonymous(context, type);
+  context.refs[name] = {
+    kind: "alias",
+    comment: getComment(context.checker, variable.symbol),
+    types:
+      variable.typeParameters?.map(t => includeType(context, t.type)) ?? [],
+    child: includeAnonymous(context, type)
+  };
 }
 
 export function includeExportedVariable(
@@ -165,7 +176,10 @@ export function includeExportedVariable(
   const type = variable.type
     ? context.checker.getTypeFromTypeNode(variable.type)
     : context.checker.getTypeAtLocation(variable.initializer);
-  context.refs[name] = includeAnonymous(context, type);
+  context.refs[name] = {
+    kind: "const",
+    type: includeAnonymous(context, type)
+  };
 }
 
 function includeType(context: DeclVisitorContext, type: Type): TypeModel {
@@ -432,12 +446,30 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
 }
 
 function includeInheritedTypes(context: DeclVisitorContext, type: Type) {
-  const decl: any = type?.symbol?.declarations?.[0];
-  const types = decl?.heritageClauses?.[0]?.types || [];
-  return types.map(t => {
-    const type = context.checker.getTypeAtLocation(t);
-    return includeType(context, type);
-  });
+  const decl = type?.symbol?.declarations?.[0];
+
+  if (decl && (isInterfaceDeclaration(decl) || isClassDeclaration(decl))) {
+    const types = decl?.heritageClauses?.[0]?.types;
+    return (
+      types?.map(t => {
+        const ti = context.checker.getTypeAtLocation(t as any);
+        const res = includeType(context, ti) as TypeModelRef;
+
+        if (res.kind !== "ref" && isIdentifier(t.expression)) {
+          return {
+            kind: "ref",
+            refName: t.expression.text,
+            types: [],
+            external: ti
+          } as TypeModelRef;
+        }
+
+        return res;
+      }) ?? []
+    );
+  }
+
+  return [];
 }
 
 function includeConstraint(context: DeclVisitorContext, type: Type): TypeModel {
@@ -602,27 +634,30 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
 
 function includeCombinator(context: DeclVisitorContext, type: Type): TypeModel {
   // Tuple special handling
-  if (
-    isObjectType(type) &&
-    isReferenceType(type) &&
-    type.target.objectFlags & ObjectFlags.Tuple &&
-    !!type.typeArguments &&
-    type.typeArguments.length > 0
-  ) {
-    return {
-      kind: "tuple",
-      types: type.typeArguments.map(t => includeType(context, t))
-    };
+  if (isObjectType(type)) {
+    if (isTupleType(type)) {
+      return {
+        kind: "tuple",
+        types: type.typeArguments.map(t => includeType(context, t))
+      };
+    } else if (isReferenceType(type)) {
+      return {
+        kind: "ref",
+        refName: type.symbol.name,
+        types: getTypeArguments(context, type),
+        external: type
+      };
+    }
   }
 
-  if (type.isUnion()) {
+  if (typeof type.isUnion === "function" && type.isUnion()) {
     return {
       kind: "union",
       types: type.types.map(t => includeType(context, t))
     };
   }
 
-  if (type.isIntersection()) {
+  if (typeof type.isIntersection === "function" && type.isIntersection()) {
     return {
       kind: "intersection",
       types: type.types.map(t => includeType(context, t))
@@ -632,21 +667,21 @@ function includeCombinator(context: DeclVisitorContext, type: Type): TypeModel {
   if (isIndexType(type)) {
     return {
       kind: "indexedAccess",
-      index: includeType(context, type.indexType),
-      object: includeType(context, type.objectType)
+      index: type.indexType && includeType(context, type.indexType),
+      object: type.objectType && includeType(context, type.objectType)
     };
   }
 }
 
 function includeNamed(context: DeclVisitorContext, type: Type): TypeModel {
-  return includeObject(context, type) ?? includeBasic(context, type);
+  return includeBasic(context, type) ?? includeObject(context, type);
 }
 
 function includeAnonymous(context: DeclVisitorContext, type: Type): TypeModel {
   return (
+    includeCombinator(context, type) ??
     includeNamed(context, type) ??
-    includeTypeParameter(context, type) ??
-    includeCombinator(context, type) ?? {
+    includeTypeParameter(context, type) ?? {
       kind: "unidentified"
     }
   );
