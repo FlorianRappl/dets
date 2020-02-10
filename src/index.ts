@@ -157,7 +157,8 @@ console.log(
       "preact",
       "react-router",
       "@libre/atom",
-      "riot"
+      "riot",
+      "styled-components"
     ]
     //["react", "react-dom", "react-router", "react-router-dom"]
   )

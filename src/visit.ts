@@ -3,14 +3,12 @@ import {
   Type,
   TypeFlags,
   SymbolFlags,
-  ObjectFlags,
   TypeReference,
   Symbol,
   InterfaceTypeWithDeclaredMembers,
   InterfaceType,
   VariableDeclaration,
   TypeAliasDeclaration,
-  ObjectType,
   isIdentifier,
   isInterfaceDeclaration,
   isClassDeclaration
@@ -19,7 +17,6 @@ import {
   getLib,
   getRefName,
   isBaseLib,
-  isTypeParameter,
   isAnonymousObject,
   isObjectType,
   isReferenceType,
@@ -185,6 +182,10 @@ export function includeExportedVariable(
 function includeType(context: DeclVisitorContext, type: Type): TypeModel {
   const alias = type.aliasSymbol?.name;
 
+  if (alias === "NonReactStatics") {
+    debugger;
+  }
+
   if (alias) {
     // special case: enums are also "alias" types, but we do
     // actually want only the alias if its a "real" alias!
@@ -228,7 +229,8 @@ function makeAliasRef(
     context.refs[name] = {
       kind: "alias",
       comment: getComment(context.checker, decl.symbol),
-      types: decl.typeParameters?.map(t => includeType(context, t)) ?? [],
+      types:
+        decl.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [],
       child: includeAnonymous(context, context.checker.getTypeAtLocation(decl))
     };
   }
@@ -473,9 +475,9 @@ function includeInheritedTypes(context: DeclVisitorContext, type: Type) {
 }
 
 function includeConstraint(context: DeclVisitorContext, type: Type): TypeModel {
-  const symbol = type.getSymbol();
+  const symbol = type.symbol;
   const decl: any = symbol.declarations?.[0];
-  const constraint = decl?.constraint?.type ?? type.getConstraint();
+  const constraint = decl?.constraint?.type ?? type.getConstraint?.();
   const name = constraint?.typeName?.text;
 
   if (name) {
@@ -495,7 +497,7 @@ function includeDefaultTypeArgument(
   context: DeclVisitorContext,
   type: Type
 ): TypeModel {
-  const symbol = type.getSymbol();
+  const symbol = type.symbol;
   const decl: any = symbol.declarations?.[0];
   const defaultNode = decl?.default;
 
@@ -511,15 +513,17 @@ function includeTypeParameter(
   context: DeclVisitorContext,
   type: Type
 ): TypeModel {
-  if (isTypeParameter(type)) {
-    const symbol = type.getSymbol();
+  const symbol = type.symbol;
 
+  if (symbol) {
     return {
       kind: "typeParameter",
       typeName: symbol.name,
       constraint: includeConstraint(context, type),
       default: includeDefaultTypeArgument(context, type)
     };
+  } else {
+    debugger;
   }
 }
 
@@ -680,8 +684,7 @@ function includeNamed(context: DeclVisitorContext, type: Type): TypeModel {
 function includeAnonymous(context: DeclVisitorContext, type: Type): TypeModel {
   return (
     includeCombinator(context, type) ??
-    includeNamed(context, type) ??
-    includeTypeParameter(context, type) ?? {
+    includeNamed(context, type) ?? {
       kind: "unidentified"
     }
   );

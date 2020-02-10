@@ -77,7 +77,11 @@ function toContent(lines: Array<string>, terminator: string) {
 }
 
 function toBlock(lines: Array<string>, terminator: string) {
-  return `{\n${toContent(lines, terminator)}}`;
+  if (lines.length > 0) {
+    return `{\n${toContent(lines, terminator)}}`;
+  }
+  
+  return '{}';
 }
 
 function stringifyInterface(type: TypeModelObject) {
