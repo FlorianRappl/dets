@@ -175,16 +175,12 @@ export function includeExportedVariable(
     : context.checker.getTypeAtLocation(variable.initializer);
   context.refs[name] = {
     kind: "const",
-    type: includeAnonymous(context, type)
+    type: includeType(context, type)
   };
 }
 
 function includeType(context: DeclVisitorContext, type: Type): TypeModel {
   const alias = type.aliasSymbol?.name;
-
-  if (alias === "NonReactStatics") {
-    debugger;
-  }
 
   if (alias) {
     // special case: enums are also "alias" types, but we do
@@ -637,21 +633,20 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
 }
 
 function includeCombinator(context: DeclVisitorContext, type: Type): TypeModel {
-  // Tuple special handling
-  if (isObjectType(type)) {
-    if (isTupleType(type)) {
-      return {
-        kind: "tuple",
-        types: type.typeArguments.map(t => includeType(context, t))
-      };
-    } else if (isReferenceType(type)) {
-      return {
-        kind: "ref",
-        refName: type.symbol.name,
-        types: getTypeArguments(context, type),
-        external: type
-      };
-    }
+  if (isTupleType(type)) {
+    return {
+      kind: "tuple",
+      types: type.typeArguments.map(t => includeType(context, t))
+    };
+  }
+
+  if (isReferenceType(type)) {
+    return {
+      kind: "ref",
+      refName: type.symbol.name,
+      types: getTypeArguments(context, type),
+      external: type
+    };
   }
 
   if (typeof type.isUnion === "function" && type.isUnion()) {
