@@ -46,7 +46,8 @@ function stringifyProp(type: TypeModelProp) {
 
 function stringifyParameter(param: TypeModelFunctionParameter) {
   const isOpt = param.optional ? "?" : "";
-  return `${param.param}${isOpt}: ${stringifyNode(param.type)}`;
+  const spread = param.spread ? "..." : "";
+  return `${spread}${param.param}${isOpt}: ${stringifyNode(param.type)}`;
 }
 
 function stringifySignatures(type: TypeModelFunction) {
@@ -80,8 +81,8 @@ function toBlock(lines: Array<string>, terminator: string) {
   if (lines.length > 0) {
     return `{\n${toContent(lines, terminator)}}`;
   }
-  
-  return '{}';
+
+  return "{}";
 }
 
 function stringifyInterface(type: TypeModelObject) {

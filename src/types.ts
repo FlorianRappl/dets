@@ -27,6 +27,7 @@ declare module "typescript" {
 
   interface Declaration {
     questionToken?: ts.Token<ts.SyntaxKind.QuestionToken>;
+    dotDotDotToken?: ts.Token<ts.SyntaxKind.DotDotDotToken>;
     default?: ts.Node;
   }
 
@@ -147,6 +148,7 @@ export interface TypeModelFunctionParameter {
   readonly param: string;
   readonly type: TypeModel;
   readonly optional: boolean;
+  readonly spread: boolean;
 }
 
 export interface TypeModelEnum extends WithTypeComments {

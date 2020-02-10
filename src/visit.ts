@@ -518,8 +518,6 @@ function includeTypeParameter(
       constraint: includeConstraint(context, type),
       default: includeDefaultTypeArgument(context, type)
     };
-  } else {
-    debugger;
   }
 }
 
@@ -580,7 +578,7 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
     const numberIndexType = type.getNumberIndexType();
     const indicesDescriptor: Array<TypeModelIndex> = [];
 
-    if (numberIndexType) {
+    if (numberIndexType && !inherited.some(m => m.external?.getNumberIndexType() === numberIndexType)) {
       const info = (<InterfaceTypeWithDeclaredMembers>type)
         .declaredNumberIndexInfo;
       indicesDescriptor.push({
@@ -591,7 +589,7 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
       });
     }
 
-    if (stringIndexType) {
+    if (stringIndexType && !inherited.some(m => m.external?.getStringIndexType() === stringIndexType)) {
       const info = (<InterfaceTypeWithDeclaredMembers>type)
         .declaredStringIndexInfo;
       indicesDescriptor.push({
@@ -611,6 +609,7 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
         parameters: sign.getParameters().map(param => ({
           kind: "parameter",
           param: param.name,
+          spread: param.valueDeclaration.dotDotDotToken !== undefined,
           optional: param.valueDeclaration.questionToken !== undefined,
           type: includeType(
             context,
