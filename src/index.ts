@@ -4,7 +4,8 @@ import { stringifyDeclaration } from "./stringify";
 import {
   includeExportedType,
   includeExportedVariable,
-  includeExportedTypeAlias
+  includeExportedTypeAlias,
+  includeExportedFunction
 } from "./visit";
 import {
   isNodeExported,
@@ -55,6 +56,8 @@ function generateDeclaration(
           node.declarationList.declarations.forEach(decl => {
             includeExportedVariable(context, decl);
           });
+        } else if (ts.isFunctionDeclaration(node)) {
+          includeExportedFunction(context, node);
         } else if (type.flags !== ts.TypeFlags.Any) {
           includeExportedType(context, type);
         } else {
@@ -141,8 +144,8 @@ function generateDeclaration(
 //const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
 //const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
 //const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-cross-fx");
-//const root = resolve(__dirname, "../../../Temp/shell-mwe-original");
-const root = resolve(__dirname, "../../../Piral-Playground/shell-mwe");
+//const root = resolve(__dirname, "../../../Piral-Playground/shell-mwe");
+const root = resolve(__dirname, "../../../Temp/shell-mwe");
 
 console.log(
   generateDeclaration(
