@@ -769,8 +769,9 @@ function includeNamed(context: DeclVisitorContext, type: Type): TypeModel {
 
 function includeAnonymous(context: DeclVisitorContext, type: Type): TypeModel {
   return (
+    includeBasic(context, type) ?? 
     includeCombinator(context, type) ??
-    includeNamed(context, type) ?? {
+    includeObject(context, type) ?? {
       kind: "unidentified"
     }
   );
