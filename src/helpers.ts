@@ -14,7 +14,9 @@ import {
   TypeFlags,
   ObjectFlags,
   TypeReference,
-  Symbol
+  Symbol,
+  ExportAssignment,
+  isExportAssignment
 } from "typescript";
 
 const globalIndicator = "__global";
@@ -57,13 +59,18 @@ export function getGlobalName(symbol: Symbol) {
   return name;
 }
 
+export function isDefaultExport(node: Node): node is ExportAssignment {
+  return node.symbol?.name === "default";
+}
+
 export function isNodeExported(node: Node, alsoTopLevel = false): boolean {
   return (
+    isExportAssignment(node) ||
     (getCombinedModifierFlags(node as Declaration) & ModifierFlags.Export) !==
       0 ||
-    (alsoTopLevel &&
-      !!node.parent &&
-      node.parent.kind === SyntaxKind.SourceFile)
+      (alsoTopLevel &&
+        !!node.parent &&
+        node.parent.kind === SyntaxKind.SourceFile)
   );
 }
 

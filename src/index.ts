@@ -5,12 +5,14 @@ import {
   includeExportedType,
   includeExportedVariable,
   includeExportedTypeAlias,
-  includeExportedFunction
+  includeExportedFunction,
+  includeDefaultExport
 } from "./visit";
 import {
   isNodeExported,
   findDeclaredTypings,
-  findPiralCoreApi
+  findPiralCoreApi,
+  isDefaultExport
 } from "./helpers";
 import { DeclVisitorContext } from "./types";
 
@@ -47,6 +49,8 @@ function generateDeclaration(
     if (node) {
       if (ts.isTypeAliasDeclaration(node)) {
         includeExportedTypeAlias(context, node);
+      } else if (isDefaultExport(node)) {
+        includeDefaultExport(context, node);
       } else {
         const type = checker.getTypeAtLocation(node);
 
