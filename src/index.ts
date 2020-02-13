@@ -5,12 +5,14 @@ import {
   includeExportedType,
   includeExportedVariable,
   includeExportedTypeAlias,
-  includeExportedFunction
+  includeExportedFunction,
+  includeDefaultExport
 } from "./visit";
 import {
   isNodeExported,
   findDeclaredTypings,
-  findPiralCoreApi
+  findPiralCoreApi,
+  isDefaultExport
 } from "./helpers";
 import { DeclVisitorContext } from "./types";
 
@@ -47,6 +49,8 @@ function generateDeclaration(
     if (node) {
       if (ts.isTypeAliasDeclaration(node)) {
         includeExportedTypeAlias(context, node);
+      } else if (isDefaultExport(node)) {
+        includeDefaultExport(context, node);
       } else {
         const type = checker.getTypeAtLocation(node);
 
@@ -100,7 +104,9 @@ function generateDeclaration(
         elements.forEach(el => {
           if (el.symbol) {
             const original = context.checker.getAliasedSymbol(el.symbol);
-            includeNode(original?.declarations?.[0]);
+            const decl = (original?.declarations ??
+              el.symbol.declarations)?.[0];
+            includeNode(decl);
           }
         });
       } else if (moduleName) {
@@ -144,8 +150,8 @@ function generateDeclaration(
 //const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
 //const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
 //const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-cross-fx");
-//const root = resolve(__dirname, "../../../Piral-Playground/shell-mwe");
-const root = resolve(__dirname, "../../../Temp/shell-mwe");
+const root = resolve(__dirname, "../../../Piral-Playground/shell-mwe");
+//const root = resolve(__dirname, "../../../Temp/shell-mwe");
 
 console.log(
   generateDeclaration(

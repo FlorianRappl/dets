@@ -188,6 +188,10 @@ export function stringifyExport(name: string, type: TypeModel) {
       return `${stringifyComment(type)}export ${e} ${name} ${stringifyEnum(
         type.values
       )}`;
+    case "default":
+      return `${stringifyComment(type)}export default ${stringifyNode(
+        type.value
+      )};`;
     case "const":
       return `${stringifyComment(type)}export const ${name}: ${stringifyNode(
         type.type

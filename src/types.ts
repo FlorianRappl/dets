@@ -62,6 +62,7 @@ export interface WithTypeComments {
 export type TypeModel =
   | TypeModelString
   | TypeMemberModel
+  | TypeModelDefault
   | TypeModelProp
   | TypeModelBoolean
   | TypeModelNumber
@@ -104,6 +105,11 @@ export interface TypeModelProp extends WithTypeComments {
   readonly kind: "prop";
   readonly valueType: TypeModel;
   readonly id: number;
+}
+
+export interface TypeModelDefault extends WithTypeComments {
+  readonly kind: "default";
+  readonly value: TypeModel;
 }
 
 export interface TypeModelVariable extends WithTypeComments {

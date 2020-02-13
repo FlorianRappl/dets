@@ -15,7 +15,11 @@ import {
   FunctionDeclaration,
   Signature,
   isTypeOperatorNode,
-  SyntaxKind
+  SyntaxKind,
+  Node,
+  ExportAssignment,
+  TypeNode,
+  isTypeReferenceNode
 } from "typescript";
 import {
   getLib,
@@ -84,10 +88,7 @@ function getFunctionType(
       param: param.name,
       spread: param.valueDeclaration.dotDotDotToken !== undefined,
       optional: param.valueDeclaration.questionToken !== undefined,
-      type: includeType(
-        context,
-        context.checker.getTypeAtLocation(param.valueDeclaration)
-      )
+      type: getParameterType(context, param.valueDeclaration.type as any)
     })),
     returnType: includeType(context, sign.getReturnType())
   };
@@ -100,6 +101,34 @@ function getKeyOfType(context: DeclVisitorContext, type: Type): TypeModelKeyOf {
   };
 }
 
+function getParameterType(
+  context: DeclVisitorContext,
+  type: TypeNode
+): TypeModel {
+  if (isTypeReferenceNode(type) && isIdentifier(type.typeName)) {
+    const t = context.checker.getTypeAtLocation(type);
+    return makeRef(context, t, type.typeName.text, includeNamed);
+  } else if (
+    isTypeOperatorNode(type) &&
+    type.operator === SyntaxKind.KeyOfKeyword
+  ) {
+    return getKeyOfType(
+      context,
+      context.checker.getTypeFromTypeNode(type.type)
+    );
+  } else {
+    return includeAnonymous(context, context.checker.getTypeFromTypeNode(type));
+  }
+}
+
+function getPropType(context: DeclVisitorContext, prop: Symbol) {
+  const propType = context.checker.getTypeOfSymbolAtLocation(
+    prop,
+    prop.valueDeclaration
+  );
+  return includeType(context, propType);
+}
+
 function normalizeTypeParameters(
   context: DeclVisitorContext,
   type: Type,
@@ -107,7 +136,7 @@ function normalizeTypeParameters(
   types: Array<TypeModel>
 ) {
   const typeParameterIds =
-    decl.typeParameters?.map(t => getDefaultTypeId(context, t)) ?? [];
+    decl?.typeParameters?.map(t => getDefaultTypeId(context, t)) ?? [];
   const typeArgumentIds = type.aliasTypeArguments?.map(t => t.id) ?? [];
 
   for (let i = typeParameterIds.length; i--; ) {
@@ -183,28 +212,51 @@ export function includeExportedType(context: DeclVisitorContext, type: Type) {
   }
 }
 
+export function includeDefaultExport(
+  context: DeclVisitorContext,
+  node: ExportAssignment
+) {
+  const type = context.checker.getTypeAtLocation(node.expression);
+  const symbol = context.checker.getSymbolAtLocation(node.expression);
+
+  if (symbol) {
+    if (symbol.flags === SymbolFlags.TypeAlias) {
+      includeExportedTypeAlias(context, symbol.declarations[0] as any);
+    } else if (symbol.flags === SymbolFlags.Function) {
+      includeExportedFunction(context, symbol.valueDeclaration as any);
+    } else {
+      includeExportedVariable(context, symbol.valueDeclaration as any);
+    }
+
+    context.refs.default = {
+      kind: "default",
+      comment: getComment(context.checker, node.symbol),
+      value: includeRef(context, type, symbol.name)
+    };
+  } else {
+    context.refs._default = {
+      kind: "const",
+      type: includeAnonymous(context, type)
+    };
+    context.refs.default = {
+      kind: "default",
+      comment: getComment(context.checker, node.symbol),
+      value: includeRef(context, type, "_default")
+    };
+  }
+}
+
 export function includeExportedTypeAlias(
   context: DeclVisitorContext,
   variable: TypeAliasDeclaration
 ) {
   const name = (variable.name as any).text;
-  const child =
-    isTypeOperatorNode(variable.type) &&
-    variable.type.operator === SyntaxKind.KeyOfKeyword
-      ? getKeyOfType(
-          context,
-          context.checker.getTypeFromTypeNode(variable.type.type)
-        )
-      : includeAnonymous(
-          context,
-          context.checker.getTypeFromTypeNode(variable.type)
-        );
 
   context.refs[name] = {
     kind: "alias",
     comment: getComment(context.checker, variable.symbol),
     types: getTypeParameters(context, variable as any),
-    child
+    child: getParameterType(context, variable.type)
   };
 }
 
@@ -330,7 +382,7 @@ function includeRef(
   refName: string,
   external?: Type
 ): TypeModel {
-  const decl: any = type.symbol.declarations[0];
+  const decl: any = type.symbol?.declarations[0];
   const types = getTypeArguments(context, type);
 
   return {
@@ -616,18 +668,13 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
     const propsDescriptor: Array<TypeModelProp> = props
       .filter(prop => !targets.includes(prop.id || prop.target?.id))
       .map(prop => {
-        const propType = context.checker.getTypeOfSymbolAtLocation(
-          prop,
-          prop.valueDeclaration
-        );
-
         return {
           kind: "prop",
           name: prop.name,
           id: prop.id || prop.target?.id,
           optional: !!(prop.flags & SymbolFlags.Optional),
           comment: getComment(context.checker, prop),
-          valueType: includeType(context, propType)
+          valueType: getPropType(context, prop)
         };
       });
 
