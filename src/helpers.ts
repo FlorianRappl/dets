@@ -23,7 +23,6 @@ import {
   isTypeReferenceNode,
   TypeReferenceNode
 } from "typescript";
-import { type } from "os";
 
 const globalIndicator = "__global";
 const modulesRoot = "/node_modules/";
