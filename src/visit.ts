@@ -14,12 +14,8 @@ import {
   isClassDeclaration,
   FunctionDeclaration,
   Signature,
-  isTypeOperatorNode,
-  SyntaxKind,
-  Node,
   ExportAssignment,
-  TypeNode,
-  isTypeReferenceNode
+  TypeNode
 } from "typescript";
 import {
   getLib,
@@ -33,7 +29,9 @@ import {
   isIndexType,
   isGlobal,
   getGlobalName,
-  isTupleType
+  isTupleType,
+  isKeyOfType,
+  isIdentifierType
 } from "./helpers";
 import {
   TypeModel,
@@ -76,6 +74,37 @@ function getComment(checker: TypeChecker, symbol: Symbol) {
   return doc?.map(item => item.text).join("\n");
 }
 
+function getTypeModel(context: DeclVisitorContext, type: Type, name?: string) {
+  if (name) {
+    const ext = includeExternal(context, type);
+
+    if (ext) {
+      return ext;
+    } else if (name !== "__type" && !isAnonymousObject(type)) {
+      return makeRef(context, type, name, includeNamed);
+    }
+  }
+
+  return includeAnonymous(context, type);
+}
+
+function getParameterType(
+  context: DeclVisitorContext,
+  type: TypeNode
+): TypeModel {
+  if (isIdentifierType(type)) {
+    const t = context.checker.getTypeAtLocation(type);
+    return getTypeModel(context, t, (type.typeName as any).text);
+  } else if (isKeyOfType(type)) {
+    return getKeyOfType(
+      context,
+      context.checker.getTypeFromTypeNode(type.type)
+    );
+  } else {
+    return includeAnonymous(context, context.checker.getTypeFromTypeNode(type));
+  }
+}
+
 function getFunctionType(
   context: DeclVisitorContext,
   sign: Signature
@@ -101,32 +130,23 @@ function getKeyOfType(context: DeclVisitorContext, type: Type): TypeModelKeyOf {
   };
 }
 
-function getParameterType(
-  context: DeclVisitorContext,
-  type: TypeNode
-): TypeModel {
-  if (isTypeReferenceNode(type) && isIdentifier(type.typeName)) {
-    const t = context.checker.getTypeAtLocation(type);
-    return makeRef(context, t, type.typeName.text, includeNamed);
-  } else if (
-    isTypeOperatorNode(type) &&
-    type.operator === SyntaxKind.KeyOfKeyword
-  ) {
-    return getKeyOfType(
-      context,
-      context.checker.getTypeFromTypeNode(type.type)
-    );
-  } else {
-    return includeAnonymous(context, context.checker.getTypeFromTypeNode(type));
-  }
-}
-
-function getPropType(context: DeclVisitorContext, prop: Symbol) {
+function getPropType(context: DeclVisitorContext, prop: Symbol): TypeModelProp {
   const propType = context.checker.getTypeOfSymbolAtLocation(
     prop,
     prop.valueDeclaration
   );
-  return includeType(context, propType);
+  const type = prop.valueDeclaration?.type;
+  const valueType = isKeyOfType(type)
+    ? getKeyOfType(context, context.checker.getTypeFromTypeNode(type.type))
+    : includeType(context, propType);
+  return {
+    kind: "prop",
+    name: prop.name,
+    id: prop.id || prop.target?.id,
+    optional: !!(prop.flags & SymbolFlags.Optional),
+    comment: getComment(context.checker, prop),
+    valueType
+  };
 }
 
 function normalizeTypeParameters(
@@ -153,14 +173,14 @@ function normalizeTypeParameters(
 }
 
 function includeExternal(context: DeclVisitorContext, type: Type) {
-  const name = type.symbol.name;
+  const name = type.symbol?.name;
 
   if (isGlobal(type.symbol)) {
     const name = getGlobalName(type.symbol);
     return includeRef(context, type, name);
   }
 
-  const fn = type.symbol.declarations?.[0]?.parent?.getSourceFile()?.fileName;
+  const fn = type.symbol?.declarations?.[0]?.parent?.getSourceFile()?.fileName;
 
   if (isBaseLib(fn)) {
     // Include items from the ts core lib (no need to ref. them)
@@ -179,7 +199,7 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
       // Right now this catches the JSXElementConstructor; but
       // I guess this code should be made "more robust" and also
       // more generic.
-      const parent = type.symbol?.declarations?.[0]?.parent;
+      const parent: any = type.symbol?.declarations?.[0]?.parent;
       const hiddenType = parent?.type?.parent?.parent?.parent;
       const hiddenTypeName = hiddenType?.symbol?.name;
 
@@ -192,7 +212,7 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
               hiddenType.typeParameters?.map(() => ({
                 flags: TypeFlags.Any
               })) || []
-          } as any,
+          },
           `${getRefName(lib)}.${hiddenTypeName}`
         );
       }
@@ -300,19 +320,7 @@ function includeType(context: DeclVisitorContext, type: Type): TypeModel {
     }
   }
 
-  const name = type.symbol?.name;
-
-  if (name) {
-    const ext = includeExternal(context, type);
-
-    if (ext) {
-      return ext;
-    } else if (name !== "__type" && !isAnonymousObject(type)) {
-      return makeRef(context, type, name, includeNamed);
-    }
-  }
-
-  return includeAnonymous(context, type);
+  return getTypeModel(context, type, type.symbol?.name);
 }
 
 function makeAliasRef(
@@ -667,16 +675,7 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
     const props = type.getProperties();
     const propsDescriptor: Array<TypeModelProp> = props
       .filter(prop => !targets.includes(prop.id || prop.target?.id))
-      .map(prop => {
-        return {
-          kind: "prop",
-          name: prop.name,
-          id: prop.id || prop.target?.id,
-          optional: !!(prop.flags & SymbolFlags.Optional),
-          comment: getComment(context.checker, prop),
-          valueType: getPropType(context, prop)
-        };
-      });
+      .map(prop => getPropType(context, prop));
 
     // index types
     const stringIndexType = type.getStringIndexType();
@@ -773,8 +772,9 @@ function includeNamed(context: DeclVisitorContext, type: Type): TypeModel {
 
 function includeAnonymous(context: DeclVisitorContext, type: Type): TypeModel {
   return (
+    includeBasic(context, type) ??
     includeCombinator(context, type) ??
-    includeNamed(context, type) ?? {
+    includeObject(context, type) ?? {
       kind: "unidentified"
     }
   );

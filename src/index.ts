@@ -30,7 +30,11 @@ function generateDeclaration(
   const apiPath = findPiralCoreApi(root);
   const rootNames = [...files, typingsPath].filter(m => !!m);
   const program = ts.createProgram(rootNames, {
-    allowJs: true
+    allowJs: true,
+    esModuleInterop: true,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeJs,
+    jsx: ts.JsxEmit.React
   });
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
@@ -103,10 +107,31 @@ function generateDeclaration(
         // selected exports here
         elements.forEach(el => {
           if (el.symbol) {
-            const original = context.checker.getAliasedSymbol(el.symbol);
-            const decl = (original?.declarations ??
-              el.symbol.declarations)?.[0];
-            includeNode(decl);
+            if (el.propertyName) {
+              // renamed selected export
+              const symbol = context.checker.getExportSpecifierLocalTargetSymbol(
+                el
+              );
+
+              if (symbol) {
+                const newName = el.symbol.name;
+                const oldName = el.propertyName.text;
+                const decl = symbol?.declarations?.[0];
+                includeNode(decl);
+
+                if (oldName !== "default") {
+                  context.refs[newName] = context.refs[oldName];
+                  delete context.refs[oldName];
+                } else {
+                  context.refs[newName] = context.refs._default;
+                  delete context.refs._default;
+                  delete context.refs.default;
+                }
+              }
+            } else {
+              const original = context.checker.getAliasedSymbol(el.symbol);
+              includeNode(original?.declarations?.[0]);
+            }
           }
         });
       } else if (moduleName) {
