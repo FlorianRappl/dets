@@ -85,6 +85,13 @@ function generateDeclaration(
     }
   };
 
+  const swapName = (newName: string, oldName: string) => {
+    if (oldName !== newName) {
+      context.refs[newName] = context.refs[oldName];
+      delete context.refs[oldName];
+    }
+  };
+
   const includeTypings = (node: ts.Node) => {
     if (ts.isModuleDeclaration(node)) {
       const moduleName = node.name.text;
@@ -120,17 +127,16 @@ function generateDeclaration(
                 includeNode(decl);
 
                 if (oldName !== "default") {
-                  context.refs[newName] = context.refs[oldName];
-                  delete context.refs[oldName];
+                  swapName(newName, oldName);
                 } else {
-                  context.refs[newName] = context.refs._default;
-                  delete context.refs._default;
+                  swapName(newName, '_default');
                   delete context.refs.default;
                 }
               }
             } else {
               const original = context.checker.getAliasedSymbol(el.symbol);
               includeNode(original?.declarations?.[0]);
+              swapName(el.symbol.name, original.name);
             }
           }
         });
