@@ -31,7 +31,8 @@ import {
   getGlobalName,
   isTupleType,
   isKeyOfType,
-  isIdentifierType
+  isIdentifierType,
+  isConditionalType
 } from "./helpers";
 import {
   TypeModel,
@@ -81,7 +82,7 @@ function getTypeModel(context: DeclVisitorContext, type: Type, name?: string) {
         return makeAliasRef(context, type, name);
       }
     }
-    
+
     const ext = includeExternal(context, type);
 
     if (ext) {
@@ -538,9 +539,16 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
     };
   }
 
-  if (type.flags & TypeFlags.Conditional) {
+  if (isConditionalType(type)) {
     return {
-      kind: "conditional"
+      kind: "conditional",
+      condition: {
+        kind: "typeParameter",
+        typeName: type.root.checkType.symbol.name,
+        constraint: includeType(context, type.root.extendsType)
+      },
+      primary: includeType(context, type.root.trueType),
+      alternate: includeType(context, type.root.falseType)
     };
   }
 

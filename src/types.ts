@@ -265,6 +265,9 @@ export interface TypeModelIndexedAccess {
 
 export interface TypeModelConditional {
   readonly kind: "conditional";
+  readonly condition: TypeModel;
+  readonly primary: TypeModel;
+  readonly alternate: TypeModel;
 }
 
 export interface TypeModelSubstitution {

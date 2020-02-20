@@ -11,7 +11,8 @@ import {
   TypeModelIndexedAccess,
   TypeModelTypeParameter,
   WithTypeComments,
-  DeclVisitorContext
+  DeclVisitorContext,
+  TypeModelConditional
 } from "./types";
 
 function stringifyComment(type: WithTypeComments) {
@@ -121,6 +122,13 @@ function stringifyTypeParameter(type: TypeModelTypeParameter) {
   return `${name}${constraintClause}${defaultsClause}`;
 }
 
+function stringifyTernary(type: TypeModelConditional) {
+  const cond = stringifyNode(type.condition);
+  const primary = stringifyNode(type.primary);
+  const alt = stringifyNode(type.alternate);
+  return `${cond} ? ${primary} : ${alt}`;
+}
+
 function stringifyNode(type: TypeModel) {
   switch (type?.kind) {
     case "object":
@@ -137,6 +145,8 @@ function stringifyNode(type: TypeModel) {
       return `${stringifyComment(type)}${type.name} = ${stringifyNode(
         type.value
       )}`;
+    case "conditional":
+      return stringifyTernary(type);
     case "keyof":
       return `keyof ${stringifyNode(type.value)}`;
     case "any":
