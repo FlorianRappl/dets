@@ -76,6 +76,12 @@ function getComment(checker: TypeChecker, symbol: Symbol) {
 
 function getTypeModel(context: DeclVisitorContext, type: Type, name?: string) {
   if (name) {
+    if (type.aliasSymbol) {
+      if (!type.symbol || type.aliasSymbol.id !== type.symbol.id) {
+        return makeAliasRef(context, type, name);
+      }
+    }
+    
     const ext = includeExternal(context, type);
 
     if (ext) {
@@ -311,16 +317,7 @@ export function includeExportedFunction(
 
 function includeType(context: DeclVisitorContext, type: Type): TypeModel {
   const alias = type.aliasSymbol?.name;
-
-  if (alias) {
-    // special case: enums are also "alias" types, but we do
-    // actually want only the alias if its a "real" alias!
-    if (!type.symbol || type.aliasSymbol.id !== type.symbol.id) {
-      return makeAliasRef(context, type, alias);
-    }
-  }
-
-  return getTypeModel(context, type, type.symbol?.name);
+  return getTypeModel(context, type, alias || type.symbol?.name);
 }
 
 function makeAliasRef(
