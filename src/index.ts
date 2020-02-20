@@ -1,5 +1,4 @@
 import * as ts from "typescript";
-import { resolve } from "path";
 import { stringifyDeclaration } from "./stringify";
 import {
   includeExportedType,
@@ -20,7 +19,7 @@ function logWarn(message: string) {
   console.warn(message);
 }
 
-function generateDeclaration(
+export function generateDeclaration(
   name: string,
   root: string,
   files: Array<string>,
@@ -90,7 +89,7 @@ function generateDeclaration(
       const isdef = oldName === "default";
 
       if (isdef) {
-        oldName = '_default';
+        oldName = "_default";
       }
 
       context.refs[newName] = context.refs[oldName];
@@ -125,7 +124,7 @@ function generateDeclaration(
         elements.forEach(el => {
           if (el.symbol) {
             const original = context.checker.getAliasedSymbol(el.symbol);
-            
+
             if (original) {
               includeNode(original.declarations?.[0]);
               swapName(el.symbol.name, original.name);
@@ -180,31 +179,3 @@ function generateDeclaration(
 
   return stringifyDeclaration(context);
 }
-
-//const root = resolve(__dirname, "../../../Temp/piral-instance-094");
-//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
-//const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
-//const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
-//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-cross-fx");
-//const root = resolve(__dirname, "../../../Piral-Playground/shell-mwe");
-const root = resolve(__dirname, "../../../Temp/shell-mwe");
-
-console.log(
-  generateDeclaration(
-    "piral-sample",
-    root,
-    [resolve(root, "src/index.tsx")],
-    [
-      "vue",
-      "react",
-      "angular",
-      "inferno",
-      "preact",
-      "react-router",
-      "@libre/atom",
-      "riot",
-      "styled-components"
-    ]
-    //["react", "react-dom", "react-router", "react-router-dom"]
-  )
-);
