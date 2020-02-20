@@ -238,7 +238,7 @@ export interface TypeModelNever {
 
 export interface TypeModelTypeParameter {
   readonly kind: "typeParameter";
-  readonly typeName: string;
+  readonly type: TypeModel;
   readonly constraint?: TypeModel;
   readonly default?: TypeModel;
 }

@@ -127,7 +127,7 @@ function stringifyTypeArgs(type: WithTypeArgs) {
 }
 
 function stringifyTypeParameter(type: TypeModelTypeParameter) {
-  const name = type.typeName;
+  const name = stringifyNode(type.type);
   const constraint = stringifyNode(type.constraint);
   const defaults = stringifyNode(type.default);
   const constraintClause = constraint ? ` extends ${constraint}` : "";

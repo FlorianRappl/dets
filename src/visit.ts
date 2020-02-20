@@ -563,7 +563,7 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
       kind: "conditional",
       condition: {
         kind: "typeParameter",
-        typeName: type.root.checkType.symbol.name,
+        type: includeType(context, type.root.checkType),
         constraint: includeType(context, type.root.extendsType)
       },
       primary: includeType(context, type.root.trueType),
@@ -656,7 +656,11 @@ function includeTypeParameter(
   if (symbol) {
     return {
       kind: "typeParameter",
-      typeName: symbol.name,
+      type: {
+        kind: "ref",
+        refName: symbol.name,
+        types: [],
+      },
       constraint: includeConstraint(context, type),
       default: includeDefaultTypeArgument(context, type)
     };
