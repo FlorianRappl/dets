@@ -15,7 +15,9 @@ import {
   FunctionDeclaration,
   Signature,
   ExportAssignment,
-  TypeNode
+  TypeNode,
+  ObjectFlags,
+  IndexInfo
 } from "typescript";
 import {
   getLib,
@@ -42,7 +44,9 @@ import {
   DeclVisitorContext,
   TypeModelRef,
   TypeMemberModel,
-  TypeModelKeyOf
+  TypeModelKeyOf,
+  TypeModelObject,
+  TypeModelIndexKey
 } from "./types";
 
 function getTypeArguments(context: DeclVisitorContext, type: Type) {
@@ -153,6 +157,21 @@ function getPropType(context: DeclVisitorContext, prop: Symbol): TypeModelProp {
     optional: !!(prop.flags & SymbolFlags.Optional),
     comment: getComment(context.checker, prop),
     valueType
+  };
+}
+
+function getIndexType(
+  context: DeclVisitorContext,
+  type: Type,
+  keyType: TypeModelIndexKey,
+  info: IndexInfo
+): TypeModelIndex {
+  return {
+    kind: "index",
+    keyType,
+    optional: false,
+    keyName: getKeyName(info),
+    valueType: includeType(context, type)
   };
 }
 
@@ -673,61 +692,112 @@ function getAllPropIds(
   return propIds;
 }
 
+function includeStandardObject(
+  context: DeclVisitorContext,
+  type: Type
+): TypeModelObject {
+  const inherited = includeInheritedTypes(context, type);
+  const targets = getAllPropIds(context, inherited);
+  const props = type.getProperties();
+  const propsDescriptor: Array<TypeModelProp> = props
+    .filter(prop => !targets.includes(prop.id || prop.target?.id))
+    .map(prop => getPropType(context, prop));
+
+  // index types
+  const stringIndexType = type.getStringIndexType();
+  const numberIndexType = type.getNumberIndexType();
+  const indicesDescriptor: Array<TypeModelIndex> = [];
+
+  if (
+    numberIndexType &&
+    !inherited.some(m => m.external?.getNumberIndexType() === numberIndexType)
+  ) {
+    indicesDescriptor.push(
+      getIndexType(
+        context,
+        numberIndexType,
+        { kind: "number" },
+        (<InterfaceTypeWithDeclaredMembers>type).declaredNumberIndexInfo
+      )
+    );
+  }
+
+  if (
+    stringIndexType &&
+    !inherited.some(m => m.external?.getStringIndexType() === stringIndexType)
+  ) {
+    indicesDescriptor.push(
+      getIndexType(
+        context,
+        stringIndexType,
+        { kind: "string" },
+        (<InterfaceTypeWithDeclaredMembers>type).declaredStringIndexInfo
+      )
+    );
+  }
+
+  const callSignatures = type.getCallSignatures();
+  const callsDescriptor: Array<TypeModelFunction> =
+    callSignatures?.map(sign => getFunctionType(context, sign)) ?? [];
+
+  return {
+    kind: "object",
+    extends: inherited,
+    comment: getComment(context.checker, type.symbol),
+    props: propsDescriptor,
+    calls: callsDescriptor,
+    types: getTypeParameters(context, type),
+    indices: indicesDescriptor
+  };
+}
+
+function includeMappedObject(
+  context: DeclVisitorContext,
+  type: Type
+): TypeModelObject {
+  const parent: any = type.typeParameter.symbol.declarations[0].parent;
+  const index = parent.typeParameter;
+  const declType: any = type.symbol.declarations[0].type;
+  const valueType = context.checker.getTypeFromTypeNode(declType);
+  return {
+    kind: "object",
+    calls: [],
+    extends: [],
+    indices: [],
+    props: [],
+    types: [],
+    comment: getComment(context.checker, type.symbol),
+    mapped: {
+      kind: "mapped",
+      name: index.symbol.name,
+      constraint: includeConstraint(context, index),
+      optional: parent.questionToken !== undefined,
+      value: includeType(context, valueType)
+    }
+  };
+}
+
 function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
   if (isObjectType(type)) {
-    const inherited = includeInheritedTypes(context, type);
-    const targets = getAllPropIds(context, inherited);
-    const props = type.getProperties();
-    const propsDescriptor: Array<TypeModelProp> = props
-      .filter(prop => !targets.includes(prop.id || prop.target?.id))
-      .map(prop => getPropType(context, prop));
-
-    // index types
-    const stringIndexType = type.getStringIndexType();
-    const numberIndexType = type.getNumberIndexType();
-    const indicesDescriptor: Array<TypeModelIndex> = [];
-
-    if (
-      numberIndexType &&
-      !inherited.some(m => m.external?.getNumberIndexType() === numberIndexType)
-    ) {
-      const info = (<InterfaceTypeWithDeclaredMembers>type)
-        .declaredNumberIndexInfo;
-      indicesDescriptor.push({
-        kind: "index",
-        keyType: { kind: "number" },
-        keyName: getKeyName(info),
-        valueType: includeType(context, numberIndexType)
-      });
+    switch (type.objectFlags) {
+      case ObjectFlags.Mapped:
+        return includeMappedObject(context, type);
+      default:
+        return includeStandardObject(context, type);
     }
+  }
 
-    if (
-      stringIndexType &&
-      !inherited.some(m => m.external?.getStringIndexType() === stringIndexType)
-    ) {
-      const info = (<InterfaceTypeWithDeclaredMembers>type)
-        .declaredStringIndexInfo;
-      indicesDescriptor.push({
-        kind: "index",
-        keyType: { kind: "string" },
-        keyName: getKeyName(info),
-        valueType: includeType(context, stringIndexType)
-      });
-    }
+  return undefined;
+}
 
-    const callSignatures = type.getCallSignatures();
-    const callsDescriptor: Array<TypeModelFunction> =
-      callSignatures?.map(sign => getFunctionType(context, sign)) ?? [];
-
-    return {
-      kind: "object",
-      extends: inherited,
-      comment: getComment(context.checker, type.symbol),
-      props: propsDescriptor,
-      calls: callsDescriptor,
-      types: getTypeParameters(context, type),
-      indices: indicesDescriptor
-    };
+function includeIndex(context: DeclVisitorContext, type: Type): TypeModel {
+  switch (type?.flags) {
+    case TypeFlags.TypeParameter:
+      return includeType(context, type);
+    case TypeFlags.Index:
+      return getKeyOfType(context, (type as any).type);
+    default:
+      return undefined;
   }
 }
 
@@ -765,7 +835,7 @@ function includeCombinator(context: DeclVisitorContext, type: Type): TypeModel {
   if (isIndexType(type)) {
     return {
       kind: "indexedAccess",
-      index: type.indexType && includeType(context, type.indexType),
+      index: includeIndex(context, type.indexType),
       object: type.objectType && includeType(context, type.objectType)
     };
   }

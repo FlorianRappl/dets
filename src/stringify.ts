@@ -12,7 +12,8 @@ import {
   TypeModelTypeParameter,
   WithTypeComments,
   DeclVisitorContext,
-  TypeModelConditional
+  TypeModelConditional,
+  TypeModelMapped
 } from "./types";
 
 function stringifyComment(type: WithTypeComments) {
@@ -63,8 +64,15 @@ function stringifySignature(type: TypeModelFunction) {
 }
 
 function stringifyIndex(type: TypeModelIndex) {
+  const isOpt = type.optional ? "?" : "";
   const index = `${type.keyName}: ${stringifyNode(type.keyType)}`;
-  return `[${index}]: ${stringifyNode(type.valueType)}`;
+  return `[${index}]${isOpt}: ${stringifyNode(type.valueType)}`;
+}
+
+function stringifyMapped(type: TypeModelMapped) {
+  const isOpt = type.optional ? "?" : "";
+  const index = `${type.name} in ${stringifyNode(type.constraint)}`;
+  return `[${index}]${isOpt}: ${stringifyNode(type.value)}`;
 }
 
 function stringifyIndexedAccess(type: TypeModelIndexedAccess) {
@@ -96,6 +104,11 @@ function stringifyInterface(type: TypeModelObject) {
     ...type.calls.map(c => stringifySignature(c)),
     ...type.indices.map(i => stringifyIndex(i))
   ];
+
+  if (type.mapped) {
+    lines.push(stringifyMapped(type.mapped));
+  }
+
   return toBlock(lines, ";");
 }
 

@@ -17,6 +17,7 @@ declare module "typescript" {
     intrinsicName?: string;
     parent?: ts.Type;
     typeParameters?: Array<ts.TypeParameter>;
+    typeParameter?: ts.TypeParameter;
   }
 
   interface Node {
@@ -250,11 +251,14 @@ export interface TypeModelIntersection extends WithTypeArgs {
   readonly kind: "intersection";
 }
 
+export type TypeModelIndexKey = TypeModelUnion | TypeModelString | TypeModelNumber;
+
 export interface TypeModelIndex {
   readonly kind: "index";
   readonly keyName: string;
-  readonly keyType: TypeModelUnion | TypeModelString | TypeModelNumber;
+  readonly keyType: TypeModelIndexKey;
   readonly valueType: TypeModel;
+  readonly optional: boolean;
 }
 
 export interface TypeModelIndexedAccess {
@@ -283,12 +287,21 @@ export interface TypeModelUnidentified {
   readonly kind: "unidentified";
 }
 
+export interface TypeModelMapped {
+  readonly kind: "mapped";
+  readonly name: string;
+  readonly constraint: TypeModel;
+  readonly optional: boolean;
+  readonly value: TypeModel;
+}
+
 export interface TypeModelObject extends WithTypeArgs, WithTypeComments {
   readonly kind: "object";
   readonly props: Array<TypeModelProp>;
   readonly calls: Array<TypeModelFunction>;
   readonly indices: Array<TypeModelIndex>;
   readonly extends: Array<TypeModelRef>;
+  readonly mapped?: TypeModelMapped;
 }
 
 export interface TypeModelTuple extends WithTypeArgs {
