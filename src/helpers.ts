@@ -22,7 +22,9 @@ import {
   TypeOperatorNode,
   isTypeReferenceNode,
   TypeReferenceNode,
-  ConditionalType
+  ConditionalType,
+  isInferTypeNode,
+  InferTypeNode
 } from "typescript";
 
 const globalIndicator = "__global";
@@ -94,6 +96,10 @@ export function isKeyOfType(type: Node): type is TypeOperatorNode {
 
 export function isIdentifierType(type: Node): type is TypeReferenceNode {
   return type && isTypeReferenceNode(type) && isIdentifier(type.typeName);
+}
+
+export function isInferType(type: Node): type is InferTypeNode {
+  return type && isInferTypeNode(type);
 }
 
 export function findDeclaredTypings(root: string) {
