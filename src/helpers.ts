@@ -24,7 +24,8 @@ import {
   TypeReferenceNode,
   ConditionalType,
   isInferTypeNode,
-  InferTypeNode
+  InferTypeNode,
+  SubstitutionType
 } from "typescript";
 
 const globalIndicator = "__global";
@@ -69,6 +70,10 @@ export function getGlobalName(symbol: Symbol) {
 
 export function isConditionalType(type: Type): type is ConditionalType {
   return (type.flags & TypeFlags.Conditional) !== 0;
+}
+
+export function isSubstitutionType(type: Type): type is SubstitutionType {
+  return (type.flags & TypeFlags.Substitution) !== 0;
 }
 
 export function isDefaultExport(node: Node): node is ExportAssignment {
