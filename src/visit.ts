@@ -346,7 +346,7 @@ function includeType(context: DeclVisitorContext, type: Type): TypeModel {
   if (ta.stringsOnly === false) {
     return {
       kind: "keyof",
-      value: includeType(context, ta.type),
+      value: includeType(context, ta.type)
     };
   } else {
     const alias = type.aliasSymbol?.name;
@@ -588,7 +588,7 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   if (isSubstitutionType(type)) {
     return {
       kind: "substitution",
-      variable: includeType(context, type.typeVariable),
+      variable: includeType(context, type.typeVariable)
     };
   }
 
@@ -632,19 +632,15 @@ function includeConstraint(context: DeclVisitorContext, type: Type): TypeModel {
   const decl: any = symbol.declarations?.[0];
   const c = decl?.constraint;
   const constraint = c?.type ?? type.getConstraint?.();
-  const name = constraint?.typeName?.text;
 
-  if (name) {
-    return {
-      kind: "ref",
-      refName: `keyof ${name}`,
-      types: []
-    };
-  } else if (constraint) {
-    return includeType(context, constraint);
+  if (isKeyOfType(c)) {
+    const ct = context.checker.getTypeAtLocation(c.type)
+    return getKeyOfType(context, ct);
   } else if (c) {
     const ct = context.checker.getTypeAtLocation(c);
     return includeType(context, ct);
+  } else if (constraint) {
+    return includeType(context, constraint);
   }
 
   return undefined;
@@ -878,7 +874,7 @@ function includeAnonymousNode(
       context.checker.getTypeFromTypeNode(type.type)
     );
   }
-  
+
   return includeAnonymous(context, context.checker.getTypeFromTypeNode(type));
 }
 
