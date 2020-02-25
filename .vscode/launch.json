@@ -11,7 +11,7 @@
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/node_modules/.bin/ts-node",
       "cwd": "${workspaceFolder}",
-      "args": ["src/app.ts"],
+      "args": ["example/app.ts"],
       "outFiles": ["${workspaceFolder}/**/*.js"]
     }
   ]
