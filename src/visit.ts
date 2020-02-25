@@ -89,12 +89,14 @@ function getTypeModel(context: DeclVisitorContext, type: Type, name?: string) {
       }
     }
 
-    const ext = includeExternal(context, type);
+    if (name !== "__type" && !isAnonymousObject(type)) {
+      const ext = includeExternal(context, type);
 
-    if (ext) {
-      return ext;
-    } else if (name !== "__type" && !isAnonymousObject(type)) {
-      return makeRef(context, type, name, includeNamed);
+      if (ext) {
+        return ext;
+      } else {
+        return makeRef(context, type, name, includeNamed);
+      }
     }
   }
 
@@ -634,7 +636,7 @@ function includeConstraint(context: DeclVisitorContext, type: Type): TypeModel {
   const constraint = c?.type ?? type.getConstraint?.();
 
   if (isKeyOfType(c)) {
-    const ct = context.checker.getTypeAtLocation(c.type)
+    const ct = context.checker.getTypeAtLocation(c.type);
     return getKeyOfType(context, ct);
   } else if (c) {
     const ct = context.checker.getTypeAtLocation(c);
