@@ -6,9 +6,18 @@
   "typings": "lib/index.d.ts",
   "scripts": {
     "start": "ts-node src/app.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["typescript", "declaration", "bundler", "tds", "file", "generate", "types"],
+  "keywords": [
+    "typescript",
+    "declaration",
+    "bundler",
+    "tds",
+    "file",
+    "generate",
+    "types"
+  ],
   "author": "Florian Rappl <mail@florian-rappl.de>",
   "license": "MIT",
   "engines": {
@@ -21,12 +30,15 @@
   "bugs": {
     "url": "https://github.com/FlorianRappl/dets/issues"
   },
+  "bin": {
+    "dets": "./lib/cli.js"
+  },
   "dependencies": {
     "typescript": "^3.7.4",
     "yargs": "^15.1.0"
   },
   "devDependencies": {
-    "@types/node": "^12.12.21",
+    "@types/node": "^12.12.28",
     "@types/yargs": "^15.0.4",
     "ts-node": "^8.5.4"
   }
