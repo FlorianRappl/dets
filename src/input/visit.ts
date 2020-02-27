@@ -21,7 +21,6 @@ import {
 } from 'typescript';
 import {
   getLib,
-  getRefName,
   isBaseLib,
   isAnonymousObject,
   isObjectType,
@@ -51,6 +50,7 @@ import {
   TypeModelObject,
   TypeModelIndexKey,
 } from '../types';
+import { createBinding } from './utils';
 
 function getTypeArguments(context: DeclVisitorContext, type: Type) {
   const typeRef = type as TypeReference;
@@ -88,12 +88,14 @@ function getTypeModel(context: DeclVisitorContext, type: Type, name?: string) {
       }
     }
 
-    const ext = includeExternal(context, type);
+    if (!isAnonymousObject(type)) {
+      const ext = includeExternal(context, type);
 
-    if (ext) {
-      return ext;
-    } else if (!isAnonymous(name) && !isAnonymousObject(type)) {
-      return makeRef(context, type, name, includeNamed);
+      if (ext) {
+        return ext;
+      } else if (!isAnonymous(name)) {
+        return makeRef(context, type, name, includeNamed);
+      }
     }
   }
 
@@ -186,27 +188,23 @@ function normalizeTypeParameters(context: DeclVisitorContext, type: Type, decl: 
 }
 
 function includeExternal(context: DeclVisitorContext, type: Type) {
+  if (isGlobal(type.symbol)) {
+    const globalName = getGlobalName(type.symbol);
+    return includeRef(context, type, globalName);
+  }
+
   const name = type.symbol?.name;
   const fn = type.symbol?.declarations?.[0]?.parent?.getSourceFile()?.fileName;
-  const anonymous = isAnonymous(name);
 
-  if (!anonymous) {
-    if (isGlobal(type.symbol)) {
-      const name = getGlobalName(type.symbol);
-      return includeRef(context, type, name);
-    } else if (isBaseLib(fn)) {
-      // Include items from the ts core lib (no need to ref. them)
-      return includeRef(context, type, name, type);
-    }
+  if (isBaseLib(fn)) {
+    // Include items from the ts core lib (no need to ref. them)
+    return includeRef(context, type, name, type);
   }
 
   const lib = getLib(fn, context.availableImports);
 
   if (lib) {
-    // if we did not use the given lib yet, add it to the used libs
-    if (!context.usedImports.includes(lib)) {
-      context.usedImports.push(lib);
-    }
+    const anonymous = isAnonymous(name);
 
     if (anonymous) {
       // Right now this catches the JSXElementConstructor; but
@@ -226,12 +224,12 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
                 flags: TypeFlags.Any,
               })) || [],
           },
-          `${getRefName(lib)}.${hiddenTypeName}`,
+          createBinding(context, lib, hiddenTypeName),
         );
       }
+    } else {
+      return includeRef(context, type, createBinding(context, lib, name), type);
     }
-
-    return includeRef(context, type, `${getRefName(lib)}.${name}`, type);
   }
 }
 

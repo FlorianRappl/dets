@@ -4,9 +4,7 @@ test('should handle imports from externals (deox)', () => {
   const result = runTestFor('deox.ts', {
     imports: ['deox'],
   });
-  expect(result).toBe(`import * as Deox from 'deox';
-
-declare module "test" {
+  expect(result).toBe(`declare module "test" {
   export const ACTION: "ACTION";
 
   export const action1: {
