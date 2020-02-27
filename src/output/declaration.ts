@@ -9,5 +9,10 @@ export function stringifyDeclaration(context: DeclVisitorContext) {
     .join('\n\n');
 
   const preamble = context.usedImports.map(lib => `import * as ${getRefName(lib)} from '${lib}';`).join('\n');
-  return `${preamble}\n\n${modules}`;
+
+  if (preamble) {
+    return `${preamble}\n\n${modules}`;
+  }
+
+  return modules;
 }

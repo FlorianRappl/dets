@@ -7,7 +7,7 @@
   "scripts": {
     "start": "ts-node src/app.ts",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [
     "typescript",
@@ -40,8 +40,11 @@
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
+    "@types/jest": "^25.1.3",
     "@types/node": "^12.12.28",
     "@types/yargs": "^15.0.4",
+    "jest": "^25.1.0",
+    "ts-jest": "^25.2.1",
     "ts-node": "^8.5.4"
   }
 }

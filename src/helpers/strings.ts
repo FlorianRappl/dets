@@ -6,13 +6,16 @@ export function makeIdentifier(identifier: string) {
   return checkIdentifier.test(identifier) ? identifier : JSON.stringify(identifier);
 }
 
-export function toContent(lines: Array<string>, terminator: string) {
-  return lines
-    .map(line => `${line}${terminator}`)
-    .join('\n')
+export function formatContent(content: string) {
+  return content
     .split('\n')
-    .map(line => `  ${line}\n`)
+    .map(line => (line ? `  ${line}\n` : '\n'))
     .join('');
+}
+
+export function toContent(lines: Array<string>, terminator: string) {
+  const content = lines.map(line => `${line}${terminator}`).join('\n');
+  return formatContent(content);
 }
 
 export function toBlock(lines: Array<string>, terminator: string) {
