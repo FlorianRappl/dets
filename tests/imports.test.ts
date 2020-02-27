@@ -86,3 +86,18 @@ declare module "test" {
   export const MyComponent: React.FunctionComponent<{}>;
 }`);
 });
+
+test('should handle keyof operator correctly (react)', () => {
+  const result = runTestFor('react2.ts', {
+    imports: ['react'],
+  });
+  expect(result).toBe(`import * as React from 'react';
+
+declare module "test" {
+  export type NonReactStatics<S extends React.ComponentType<any>, C extends {
+    [index: string]: true;
+  } = {}> = {
+    [key in Exclude<keyof S, S extends React.MemoExoticComponent<any> ? keyof C : S extends React.ForwardRefExoticComponent<any> ? keyof C : keyof C>]: S[key];
+  };
+}`);
+});
