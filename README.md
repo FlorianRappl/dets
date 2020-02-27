@@ -36,7 +36,21 @@ Here we use a glob pattern for the input files and an explicit path for the outp
 
 The available command line arguments are:
 
-(tbd)
+```plain
+Options:
+  --help     Show help                                                 [boolean]
+  --version  Show version number                                       [boolean]
+  --name     Sets the name of the module                                [string]
+  --files    Sets the files referenced by TypeScript       [array] [default: []]
+  --types    Sets the type entry modules to export via their file path
+                                                           [array] [default: []]
+  --apis     Sets the interfaces to include using "InterfaceName:FilePath"
+             syntax                                        [array] [default: []]
+  --imports  Sets the imports to avoid bundling in via their package names
+                                                           [array] [default: []]
+  --out      Sets the path to the output file
+                                         [string] [default: "./dist/index.d.ts"]
+```
 
 ### From Node Applications
 
