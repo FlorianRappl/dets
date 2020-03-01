@@ -1,10 +1,17 @@
 # dets
 
+[![Build Status](https://florianrappl.visualstudio.com/dets/_apis/build/status/FlorianRappl.dets?branchName=master)](https://florianrappl.visualstudio.com/dets/_build/latest?definitionId=23&branchName=master)
+[![npm](https://img.shields.io/npm/v/dets.svg)](https://www.npmjs.com/package/dets)
+[![GitHub tag](https://img.shields.io/github/tag/FlorianRappl/dets.svg)](https://github.com/FlorianRappl/dets/releases)
+[![GitHub issues](https://img.shields.io/github/issues/FlorianRappl/dets.svg)](https://github.com/FlorianRappl/dets/issues)
+
 (pronounced: *deee - ts*)
 
 > A TypeScript declaration file bundler.
 
-dets is a small utility to generate single-file TypeScript declaration files. It can operate in multiple modes.
+*dets* is a small utility to generate single-file TypeScript declaration files. It can operate in multiple modes.
+
+It is best used if you want to selectively export an API or if you want to build an isolated *d.ts* file that does not depend on any other declaration packages.
 
 ## Installation
 
@@ -75,6 +82,8 @@ This is effectively the same call as the example in the CLI section.
 (tbd)
 
 ## Development
+
+Right now *dets* is fully in development. So things may change in the (near) future.
 
 Any ideas, issues, or enhancements are much appreciated!
 
