@@ -88,14 +88,12 @@ function getTypeModel(context: DeclVisitorContext, type: Type, name?: string) {
       }
     }
 
-    if (!isAnonymousObject(type)) {
-      const ext = includeExternal(context, type);
+    const ext = includeExternal(context, type);
 
-      if (ext) {
-        return ext;
-      } else if (!isAnonymous(name)) {
-        return makeRef(context, type, name, includeNamed);
-      }
+    if (ext) {
+      return ext;
+    } else if (!isAnonymous(name) && !isAnonymousObject(type)) {
+      return makeRef(context, type, name, includeNamed);
     }
   }
 
@@ -227,7 +225,7 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
           createBinding(context, lib, hiddenTypeName),
         );
       }
-    } else {
+    } else if (!isAnonymousObject(type)) {
       return includeRef(context, type, createBinding(context, lib, name), type);
     }
   }
