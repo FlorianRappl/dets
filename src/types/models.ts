@@ -1,10 +1,18 @@
 import { PseudoBigInt, Type } from 'typescript';
-import { WithTypeArgs, WithTypeComments } from './helper';
+import { WithTypeArgs, WithTypeComments, WithTypeExtends } from './helper';
 import { TypeModel } from './model';
 
 export interface TypeModelDefault extends WithTypeComments {
   readonly kind: 'default';
   readonly value: TypeModel;
+}
+
+export interface TypeModelClass extends WithTypeComments, WithTypeArgs, WithTypeExtends {
+  readonly kind: 'class';
+  readonly props: Array<TypeModelProp>;
+  readonly calls: Array<TypeModelFunction>;
+  readonly ctors: Array<TypeModelFunction>;
+  readonly indices: Array<TypeModelIndex>;
 }
 
 export interface TypeModelProp extends WithTypeComments {
@@ -202,12 +210,11 @@ export interface TypeModelMapped {
   readonly value: TypeModel;
 }
 
-export interface TypeModelObject extends WithTypeArgs, WithTypeComments {
+export interface TypeModelObject extends WithTypeArgs, WithTypeComments, WithTypeExtends {
   readonly kind: 'object';
   readonly props: Array<TypeModelProp>;
   readonly calls: Array<TypeModelFunction>;
   readonly indices: Array<TypeModelIndex>;
-  readonly extends: Array<TypeModelRef>;
   readonly mapped?: TypeModelMapped;
 }
 

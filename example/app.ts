@@ -1,7 +1,7 @@
 import { resolve } from 'path';
 import { generateDeclaration } from '../src';
 
-const piralCoreRoot = 'piral-core/lib/types/api';
+const piralCoreRoot = 'piral-base/lib/types';
 
 function findPiralCoreApi(root: string) {
   try {
@@ -18,26 +18,23 @@ function findPiralCoreApi(root: string) {
 function findDeclaredTypings(root: string) {
   try {
     const { typings } = require(resolve(root, 'package.json'));
-    return typings && resolve(root, typings);
-  } catch {
-    return undefined;
-  }
+
+    if (typings) {
+      return [resolve(root, typings)];
+    }
+  } catch {}
+
+  return [];
 }
 
-//const root = resolve(__dirname, "../../../Temp/piral-instance-094");
-//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
-//const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
-//const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
-//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-cross-fx");
-//const root = resolve(__dirname, '../../../Piral-Playground/shell-mwe');
-const root = resolve(__dirname, "../../../Temp/shell-mwe");
+const root = resolve('/mnt/d/Code/Smapiot/piral/src/samples/sample-piral-core');
 
 console.log(
   generateDeclaration({
-    name: 'piral-sample',
+    name: 'sample-piral-core',
     root,
     files: ['src/index.tsx'],
-    types: [findDeclaredTypings(root)],
+    types: findDeclaredTypings(root),
     apis: [
       {
         file: findPiralCoreApi(root),
@@ -45,15 +42,43 @@ console.log(
       },
     ],
     imports: [
-      'vue',
       'react',
-      'angular',
-      'inferno',
-      'preact',
       'react-router',
       '@libre/atom',
-      'riot',
-      'styled-components',
     ],
   }),
 );
+
+//const root = resolve(__dirname, "../../../Temp/piral-instance-094");
+//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-piral");
+//const root = resolve(__dirname, "../../../Piral-Playground/piral-010");
+//const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
+//const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-cross-fx");
+//const root = resolve(__dirname, '../../../Piral-Playground/shell-mwe');
+//const root = resolve(__dirname, "../../../Temp/shell-mwe");
+
+// console.log(
+//   generateDeclaration({
+//     name: 'piral-sample',
+//     root,
+//     files: ['src/index.tsx'],
+//     types: [findDeclaredTypings(root)],
+//     apis: [
+//       {
+//         file: findPiralCoreApi(root),
+//         name: 'PiletApi',
+//       },
+//     ],
+//     imports: [
+//       'vue',
+//       'react',
+//       'angular',
+//       'inferno',
+//       'preact',
+//       'react-router',
+//       '@libre/atom',
+//       'riot',
+//       'styled-components',
+//     ],
+//   }),
+// );

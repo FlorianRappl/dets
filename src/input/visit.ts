@@ -49,6 +49,7 @@ import {
   TypeModelKeyOf,
   TypeModelObject,
   TypeModelIndexKey,
+  TypeModelClass,
 } from '../types';
 import { createBinding } from './utils';
 
@@ -703,6 +704,18 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
   };
 }
 
+function includeClassObject(context: DeclVisitorContext, type: Type): TypeModelClass {
+  const obj = includeStandardObject(context, type);
+  const ctorSignatures = type.getConstructSignatures();
+  const ctorsDescriptor: Array<TypeModelFunction> = ctorSignatures?.map(sign => getFunctionType(context, sign)) ?? [];
+
+  return {
+    ...obj,
+    ctors: ctorsDescriptor,
+    kind: 'class',
+  };
+}
+
 function includeMappedObject(context: DeclVisitorContext, type: Type): TypeModelObject {
   const parent: any = type.typeParameter.symbol.declarations[0].parent;
   const index = parent.typeParameter;
@@ -731,6 +744,8 @@ function includeObject(context: DeclVisitorContext, type: Type): TypeModel {
     switch (type.objectFlags) {
       case ObjectFlags.Mapped:
         return includeMappedObject(context, type);
+      case ObjectFlags.Class | ObjectFlags.Reference:
+        return includeClassObject(context, type);
       default:
         return includeStandardObject(context, type);
     }

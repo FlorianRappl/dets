@@ -6,6 +6,7 @@ import {
   TypeModelBigIntLiteral,
   TypeModelBoolean,
   TypeModelBooleanLiteral,
+  TypeModelClass,
   TypeModelConditional,
   TypeModelDefault,
   TypeModelESSymbol,
@@ -14,7 +15,6 @@ import {
   TypeModelFunction,
   TypeModelFunctionParameter,
   TypeModelIndex,
-  TypeModelIndexKey,
   TypeModelIndexedAccess,
   TypeModelInfer,
   TypeModelIntersection,
@@ -83,6 +83,7 @@ export type TypeModel =
   | TypeModelKeyOf
   | TypeModelAlias
   | TypeModelMapped
-  | TypeModelInfer;
+  | TypeModelInfer
+  | TypeModelClass;
 
 export type TypeModelKinds = TypeModel['kind'];

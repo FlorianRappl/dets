@@ -1,4 +1,4 @@
-import { makeIdentifier, toBlock, toContent } from '../helpers';
+import { makeIdentifier, toBlock } from '../helpers';
 import {
   TypeModel,
   TypeModelObject,
@@ -12,6 +12,8 @@ import {
   WithTypeComments,
   TypeModelConditional,
   TypeModelMapped,
+  TypeModelClass,
+  WithTypeExtends,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -93,9 +95,24 @@ export function stringifyInterface(type: TypeModelObject) {
   return toBlock(lines, ';');
 }
 
+export function stringifyClass(type: TypeModelClass) {
+  const lines: Array<string> = [
+    ...type.ctors.map(c => stringifySignature(c)),
+    ...type.props.map(p => stringifyProp(p)),
+    ...type.calls.map(c => stringifySignature(c)),
+    ...type.indices.map(i => stringifyIndex(i)),
+  ];
+
+  return toBlock(lines, ';');
+}
+
 export function stringifyEnum(values: Array<TypeModel>) {
   const lines: Array<string> = values.map(p => stringifyNode(p));
   return toBlock(lines, ',');
+}
+
+export function stringifyExtends(type: WithTypeExtends) {
+  return type.extends.length > 0 ? ` extends ${type.extends.map(stringifyNode).join(', ')}` : '';
 }
 
 export function stringifyTypeArgs(type: WithTypeArgs) {
