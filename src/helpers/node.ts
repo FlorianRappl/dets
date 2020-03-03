@@ -38,3 +38,11 @@ export function isIdentifierType(type: Node): type is TypeReferenceNode {
 export function isInferType(type: Node): type is InferTypeNode {
   return type && isInferTypeNode(type);
 }
+
+export function isPrivate(type: Node) {
+  return type.kind === SyntaxKind.PrivateKeyword;
+}
+
+export function isProtected(type: Node) {
+  return type.kind === SyntaxKind.ProtectedKeyword;
+}

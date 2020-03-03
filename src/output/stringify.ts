@@ -32,6 +32,7 @@ export function stringifyProp(type: TypeModelProp) {
   const target = type.valueType;
   const comment = stringifyComment(type);
   const isOpt = type.optional ? '?' : '';
+  const modifier = type.modifiers ? `${type.modifiers} ` : '';
   const name = makeIdentifier(type.name);
 
   if (
@@ -40,9 +41,9 @@ export function stringifyProp(type: TypeModelProp) {
     target.indices.length === 0 &&
     target.props.length === 0
   ) {
-    return `${comment}${name}${isOpt}${stringifySignature(target.calls[0])}`;
+    return `${comment}${modifier}${name}${isOpt}${stringifySignature(target.calls[0])}`;
   } else {
-    return `${comment}${name}${isOpt}: ${stringifyNode(type.valueType)}`;
+    return `${comment}${modifier}${name}${isOpt}: ${stringifyNode(type.valueType)}`;
   }
 }
 

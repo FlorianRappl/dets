@@ -17,6 +17,7 @@ export interface TypeModelClass extends WithTypeComments, WithTypeArgs, WithType
 
 export interface TypeModelProp extends WithTypeComments {
   readonly name: string;
+  readonly modifiers: string;
   readonly optional: boolean;
   readonly kind: 'prop';
   readonly valueType: TypeModel;

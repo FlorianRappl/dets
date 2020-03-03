@@ -39,6 +39,7 @@ import {
   isSubstitutionType,
   isAnonymous,
   getConstructors,
+  getModifiers,
 } from '../helpers';
 import { createBinding } from './utils';
 import {
@@ -159,6 +160,7 @@ function getPropType(context: DeclVisitorContext, prop: Symbol): TypeModelProp {
   return {
     kind: 'prop',
     name: prop.name,
+    modifiers: getModifiers(prop),
     id: prop.id || prop.target?.id,
     optional: !!(prop.flags & SymbolFlags.Optional),
     comment: getComment(context.checker, prop),
