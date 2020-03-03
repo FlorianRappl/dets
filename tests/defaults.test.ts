@@ -10,9 +10,5 @@ test('should handle renaming of default exports', () => {
   export const two: {
     (): string;
   };
-
-  export const three: {
-    (): string;
-  };
 }`);
 });
