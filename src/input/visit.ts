@@ -18,6 +18,7 @@ import {
   TypeNode,
   ObjectFlags,
   IndexInfo,
+  isFunctionDeclaration,
 } from 'typescript';
 import {
   getLib,
@@ -250,7 +251,7 @@ export function includeDefaultExport(context: DeclVisitorContext, node: ExportAs
     if (symbol.flags === SymbolFlags.TypeAlias) {
       includeExportedTypeAlias(context, symbol.declarations[0] as any);
     } else if (symbol.flags === SymbolFlags.Function) {
-      includeExportedFunction(context, symbol.valueDeclaration as any);
+      includeExportedFunction(context, symbol.valueDeclaration as any, node.name.text);
     } else {
       includeExportedVariable(context, symbol.valueDeclaration as any);
     }
@@ -261,10 +262,14 @@ export function includeDefaultExport(context: DeclVisitorContext, node: ExportAs
       value: includeRef(context, type, symbol.name),
     };
   } else {
-    context.refs._default = {
-      kind: 'const',
-      value: includeAnonymous(context, type),
-    };
+    if (isFunctionDeclaration(node)) {
+      includeExportedFunction(context, node, '_default');
+    } else {
+      context.refs._default = {
+        kind: 'const',
+        value: includeAnonymous(context, type),
+      };
+    }
     context.refs.default = {
       kind: 'default',
       comment: getComment(context.checker, node.symbol),
@@ -296,8 +301,7 @@ export function includeExportedVariable(context: DeclVisitorContext, variable: V
   };
 }
 
-export function includeExportedFunction(context: DeclVisitorContext, func: FunctionDeclaration) {
-  const name = func.name.text;
+export function includeExportedFunction(context: DeclVisitorContext, func: FunctionDeclaration, name: string) {
   const type = context.checker.getTypeAtLocation(func as any);
   const [signature] = type.getCallSignatures();
   const funcType = getFunctionType(context, signature);
