@@ -14,6 +14,7 @@ import {
   TypeModelMapped,
   TypeModelClass,
   WithTypeExtends,
+  TypeModelConstructor,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -95,9 +96,14 @@ export function stringifyInterface(type: TypeModelObject) {
   return toBlock(lines, ';');
 }
 
+export function stringifyConstructor(type: TypeModelConstructor) {
+  const parameters = stringifyParameters(type.parameters);
+  return `constructor(${parameters})`;
+}
+
 export function stringifyClass(type: TypeModelClass) {
   const lines: Array<string> = [
-    ...type.ctors.map(c => stringifySignature(c)),
+    ...type.ctors.map(c => stringifyConstructor(c)),
     ...type.props.map(p => stringifyProp(p)),
     ...type.calls.map(c => stringifySignature(c)),
     ...type.indices.map(i => stringifyIndex(i)),

@@ -7,11 +7,17 @@ export interface TypeModelDefault extends WithTypeComments {
   readonly value: TypeModel;
 }
 
+export interface TypeModelConstructor extends WithTypeArgs {
+  readonly kind: 'constructor';
+  readonly comment?: string;
+  readonly parameters: Array<TypeModelFunctionParameter>;
+}
+
 export interface TypeModelClass extends WithTypeComments, WithTypeArgs, WithTypeExtends {
   readonly kind: 'class';
   readonly props: Array<TypeModelProp>;
   readonly calls: Array<TypeModelFunction>;
-  readonly ctors: Array<TypeModelFunction>;
+  readonly ctors: Array<TypeModelConstructor>;
   readonly indices: Array<TypeModelIndex>;
 }
 

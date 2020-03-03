@@ -18,6 +18,7 @@ import {
   TypeNode,
   ObjectFlags,
   IndexInfo,
+  SignatureDeclarationBase,
 } from 'typescript';
 import {
   getLib,
@@ -50,6 +51,7 @@ import {
   TypeModelObject,
   TypeModelIndexKey,
   TypeModelClass,
+  TypeModelConstructor,
 } from '../types';
 import { createBinding } from './utils';
 
@@ -128,6 +130,20 @@ function getFunctionType(context: DeclVisitorContext, sign: Signature): TypeMode
       value: getParameterType(context, param.valueDeclaration.type as any),
     })),
     returnType: includeType(context, sign.getReturnType()),
+  };
+}
+
+function getConstructorType(context: DeclVisitorContext, sign: SignatureDeclarationBase): TypeModelConstructor {
+  return {
+    kind: 'constructor',
+    types: getTypeParameters(context, sign as any),
+    parameters: sign.parameters.map((p) => p.symbol).map((param: Symbol) => ({
+      kind: 'parameter',
+      param: param.name,
+      spread: param.valueDeclaration.dotDotDotToken !== undefined,
+      optional: param.valueDeclaration.questionToken !== undefined,
+      value: getParameterType(context, param.valueDeclaration.type as any),
+    })),
   };
 }
 
@@ -706,12 +722,11 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
 
 function includeClassObject(context: DeclVisitorContext, type: Type): TypeModelClass {
   const obj = includeStandardObject(context, type);
-  const ctorSignatures = type.getConstructSignatures();
-  const ctorsDescriptor: Array<TypeModelFunction> = ctorSignatures?.map(sign => getFunctionType(context, sign)) ?? [];
+  const ctor: Symbol | undefined = type.symbol.members.get('__constructor' as any);
 
   return {
     ...obj,
-    ctors: ctorsDescriptor,
+    ctors: ctor ? ctor.declarations.map((decl) => getConstructorType(context, decl as SignatureDeclarationBase)) : [],
     kind: 'class',
   };
 }
