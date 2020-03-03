@@ -63,6 +63,12 @@ export function stringifySignature(type: TypeModelFunction) {
   return `${ta}(${parameters}): ${rt}`;
 }
 
+export function stringifyConstructor(type: TypeModelFunction) {
+  const parameters = stringifyParameters(type.parameters);
+  const ta = stringifyTypeArgs(type);
+  return `constructor${ta}(${parameters})`;
+}
+
 export function stringifyIndex(type: TypeModelIndex) {
   const isOpt = type.optional ? '?' : '';
   const index = `${type.keyName}: ${stringifyNode(type.keyType)}`;
@@ -97,7 +103,7 @@ export function stringifyInterface(type: TypeModelObject) {
 
 export function stringifyClass(type: TypeModelClass) {
   const lines: Array<string> = [
-    ...type.ctors.map(c => stringifySignature(c)),
+    ...type.ctors.map(c => stringifyConstructor(c)),
     ...type.props.map(p => stringifyProp(p)),
     ...type.calls.map(c => stringifySignature(c)),
     ...type.indices.map(i => stringifyIndex(i)),
