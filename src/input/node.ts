@@ -32,7 +32,7 @@ export function includeNode(context: DeclVisitorContext, node: Node) {
           includeExportedVariable(context, decl);
         });
       } else if (isFunctionDeclaration(node)) {
-        includeExportedFunction(context, node);
+        includeExportedFunction(context, node, node.name.text);
       } else if (type.flags !== TypeFlags.Any) {
         includeExportedType(context, type);
       } else {
