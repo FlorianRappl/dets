@@ -8,6 +8,8 @@ import {
   IndexedAccessType,
   ObjectFlags,
   TypeReference,
+  ClassLikeDeclarationBase,
+  SyntaxKind,
 } from 'typescript';
 
 export function isConditionalType(type: Type): type is ConditionalType {
@@ -50,4 +52,9 @@ export function isTypeParameter(type: Type) {
 
 export function isIndexType(type: Type): type is IndexedAccessType {
   return !!(type.flags & TypeFlags.IndexedAccess);
+}
+
+export function getConstructors(type: Type) {
+  const decl = type.symbol?.declarations?.[0] as ClassLikeDeclarationBase;
+  return decl?.members.filter(m => m.kind === SyntaxKind.Constructor);
 }

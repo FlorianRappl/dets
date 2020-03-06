@@ -32,6 +32,7 @@ export function stringifyProp(type: TypeModelProp) {
   const target = type.valueType;
   const comment = stringifyComment(type);
   const isOpt = type.optional ? '?' : '';
+  const modifier = type.modifiers ? `${type.modifiers} ` : '';
   const name = makeIdentifier(type.name);
 
   if (
@@ -40,9 +41,9 @@ export function stringifyProp(type: TypeModelProp) {
     target.indices.length === 0 &&
     target.props.length === 0
   ) {
-    return `${comment}${name}${isOpt}${stringifySignature(target.calls[0])}`;
+    return `${comment}${modifier}${name}${isOpt}${stringifySignature(target.calls[0])}`;
   } else {
-    return `${comment}${name}${isOpt}: ${stringifyNode(type.valueType)}`;
+    return `${comment}${modifier}${name}${isOpt}: ${stringifyNode(type.valueType)}`;
   }
 }
 
@@ -61,6 +62,12 @@ export function stringifySignature(type: TypeModelFunction) {
   const ta = stringifyTypeArgs(type);
   const rt = stringifyNode(type.returnType);
   return `${ta}(${parameters}): ${rt}`;
+}
+
+export function stringifyConstructor(type: TypeModelFunction) {
+  const parameters = stringifyParameters(type.parameters);
+  const ta = stringifyTypeArgs(type);
+  return `constructor${ta}(${parameters})`;
 }
 
 export function stringifyIndex(type: TypeModelIndex) {
@@ -97,7 +104,7 @@ export function stringifyInterface(type: TypeModelObject) {
 
 export function stringifyClass(type: TypeModelClass) {
   const lines: Array<string> = [
-    ...type.ctors.map(c => stringifySignature(c)),
+    ...type.ctors.map(c => stringifyConstructor(c)),
     ...type.props.map(p => stringifyProp(p)),
     ...type.calls.map(c => stringifySignature(c)),
     ...type.indices.map(i => stringifyIndex(i)),

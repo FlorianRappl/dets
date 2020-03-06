@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.1.3
+
+- Support constructor calls
+- Included support for exported default functions (#2)
+
 ## 0.1.2
 
 - Improved potential recursion problem

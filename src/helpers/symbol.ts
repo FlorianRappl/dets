@@ -1,5 +1,6 @@
 import { Symbol } from 'typescript';
 import { globalIndicator } from './constants';
+import { isPrivate, isProtected } from './node';
 
 export function isGlobal(symbol: Symbol) {
   const parent = symbol?.parent;
@@ -13,4 +14,12 @@ export function isGlobal(symbol: Symbol) {
   }
 
   return false;
+}
+
+export function getModifiers(symbol: Symbol) {
+  const modifiers = symbol.declarations?.[0]?.modifiers ?? [];
+  const decorators: Array<string> = [];
+  modifiers.some(isPrivate) && decorators.push('private');
+  modifiers.some(isProtected) && decorators.push('protected');
+  return decorators.join(' ');
 }

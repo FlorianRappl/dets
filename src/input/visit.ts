@@ -38,7 +38,10 @@ import {
   isInferType,
   isSubstitutionType,
   isAnonymous,
+  getConstructors,
+  getModifiers,
 } from '../helpers';
+import { createBinding } from './utils';
 import {
   TypeModel,
   TypeModelIndex,
@@ -52,7 +55,6 @@ import {
   TypeModelIndexKey,
   TypeModelClass,
 } from '../types';
-import { createBinding } from './utils';
 
 function getTypeArguments(context: DeclVisitorContext, type: Type) {
   const typeRef = type as TypeReference;
@@ -132,6 +134,16 @@ function getFunctionType(context: DeclVisitorContext, sign: Signature): TypeMode
   };
 }
 
+function getConstructorTypes(context: DeclVisitorContext, type: Type): Array<TypeModelFunction> {
+  const ctors = getConstructors(type);
+  return (
+    ctors?.map(ctor => {
+      const signature = context.checker.getSignatureFromDeclaration(ctor as any);
+      return getFunctionType(context, signature);
+    }) ?? []
+  );
+}
+
 function getKeyOfType(context: DeclVisitorContext, type: Type): TypeModelKeyOf {
   return {
     kind: 'keyof',
@@ -148,6 +160,7 @@ function getPropType(context: DeclVisitorContext, prop: Symbol): TypeModelProp {
   return {
     kind: 'prop',
     name: prop.name,
+    modifiers: getModifiers(prop),
     id: prop.id || prop.target?.id,
     optional: !!(prop.flags & SymbolFlags.Optional),
     comment: getComment(context.checker, prop),
@@ -710,12 +723,10 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
 
 function includeClassObject(context: DeclVisitorContext, type: Type): TypeModelClass {
   const obj = includeStandardObject(context, type);
-  const ctorSignatures = type.getConstructSignatures();
-  const ctorsDescriptor: Array<TypeModelFunction> = ctorSignatures?.map(sign => getFunctionType(context, sign)) ?? [];
 
   return {
     ...obj,
-    ctors: ctorsDescriptor,
+    ctors: getConstructorTypes(context, type),
     kind: 'class',
   };
 }
