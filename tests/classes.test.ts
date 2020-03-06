@@ -24,3 +24,14 @@ test('should be able to handle exported classes', () => {
   }
 }`);
 });
+
+test.only('should be able to handle exported generic classes', () => {
+  const result = runTestFor('class3.ts');
+  expect(result).toBe(`declare module "test" {
+  export class OtherClass<P, S> {}
+
+  export class SomeClass extends OtherClass<{}, {}> {
+    constructor();
+  }
+}`);
+});
