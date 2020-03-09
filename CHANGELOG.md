@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.1.4
+
+- Fixed issue with exported class
+
 ## 0.1.3
 
 - Support constructor calls

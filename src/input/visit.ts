@@ -183,7 +183,8 @@ function getIndexType(
   };
 }
 
-function normalizeTypeParameters(context: DeclVisitorContext, type: Type, decl: Type, types: Array<TypeModel>) {
+function normalizeTypeParameters(context: DeclVisitorContext, type: Type, decl: Type, types: Array<TypeModel>, refName: string) {
+  const maxTypes = (context.refs[refName] as any)?.types?.length ?? Number.MAX_SAFE_INTEGER;
   const typeParameterIds = decl?.typeParameters?.map(t => getDefaultTypeId(context, t)) ?? [];
   const typeArgumentIds = type.aliasTypeArguments?.map(t => t.id) ?? [];
 
@@ -194,6 +195,11 @@ function normalizeTypeParameters(context: DeclVisitorContext, type: Type, decl: 
       break;
     }
 
+    types.pop();
+  }
+
+  // omit types that are not listed on the original type parameters
+  while (types.length > maxTypes) {
     types.pop();
   }
 
@@ -363,7 +369,7 @@ function makeAliasRef(context: DeclVisitorContext, type: Type, name: string): Ty
 
   return {
     kind: 'ref',
-    types: normalizeTypeParameters(context, type, decl, types),
+    types: normalizeTypeParameters(context, type, decl, types, name),
     refName: name,
   };
 }
@@ -399,7 +405,7 @@ function includeRef(context: DeclVisitorContext, type: Type, refName: string, ex
 
   return {
     kind: 'ref',
-    types: normalizeTypeParameters(context, type, decl, types),
+    types: normalizeTypeParameters(context, type, decl, types, refName),
     refName,
     external,
   };
