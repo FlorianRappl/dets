@@ -119,7 +119,10 @@ export function stringifyEnum(values: Array<TypeModel>) {
 }
 
 export function stringifyExtends(type: WithTypeExtends) {
-  return type.extends.length > 0 ? ` extends ${type.extends.map(stringifyNode).join(', ')}` : '';
+  const { extends: es, implements: is } = type;
+  const e = es.length ? ` extends ${es.map(stringifyNode).join(', ')}` : '';
+  const i = is.length ? ` implements ${is.map(stringifyNode).join(', ')}` : '';
+  return e + i;
 }
 
 export function stringifyTypeArgs(type: WithTypeArgs) {

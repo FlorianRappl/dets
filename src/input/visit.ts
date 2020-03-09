@@ -19,6 +19,7 @@ import {
   ObjectFlags,
   IndexInfo,
   isFunctionDeclaration,
+  SyntaxKind,
 } from 'typescript';
 import {
   getLib,
@@ -584,29 +585,41 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
 
 function includeInheritedTypes(context: DeclVisitorContext, type: Type) {
   const decl = type?.symbol?.declarations?.[0];
+  const result = {
+    extends: [] as Array<TypeModelRef>,
+    implements: [] as Array<TypeModelRef>,
+  };
 
   if (decl && (isInterfaceDeclaration(decl) || isClassDeclaration(decl))) {
-    const types = decl?.heritageClauses?.[0]?.types;
-    return (
-      types?.map(t => {
-        const ti = context.checker.getTypeAtLocation(t as any);
-        const res = includeType(context, ti) as TypeModelRef;
+    const types = decl?.heritageClauses ?? [];
 
-        if (res.kind !== 'ref' && isIdentifier(t.expression)) {
-          return {
-            kind: 'ref',
-            refName: t.expression.text,
-            types: [],
-            external: ti,
-          } as TypeModelRef;
-        }
+    for (const type of types) {
+      const items =
+        type.types?.map(t => {
+          const ti = context.checker.getTypeAtLocation(t);
+          const res = includeType(context, ti) as TypeModelRef;
 
-        return res;
-      }) ?? []
-    );
+          if (res.kind !== 'ref' && isIdentifier(t.expression)) {
+            return {
+              kind: 'ref',
+              refName: t.expression.text,
+              types: [],
+              external: ti,
+            } as TypeModelRef;
+          }
+
+          return res;
+        }) ?? [];
+
+      if (type.token === SyntaxKind.ExtendsKeyword) {
+        result.extends.push(...items);
+      } else if (type.token === SyntaxKind.ImplementsKeyword) {
+        result.implements.push(...items);
+      }
+    }
   }
 
-  return [];
+  return result;
 }
 
 function includeConstraint(context: DeclVisitorContext, type: Type): TypeModel {
@@ -685,7 +698,8 @@ function getAllPropIds(context: DeclVisitorContext, types: Array<TypeModelRef>) 
 }
 
 function includeStandardObject(context: DeclVisitorContext, type: Type): TypeModelObject {
-  const inherited = includeInheritedTypes(context, type);
+  const inheritedTypes = includeInheritedTypes(context, type);
+  const inherited = [...inheritedTypes.extends, ...inheritedTypes.implements];
   const targets = getAllPropIds(context, inherited);
   const props = type.getProperties();
   const propsDescriptor: Array<TypeModelProp> = props
@@ -724,7 +738,8 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
 
   return {
     kind: 'object',
-    extends: inherited,
+    extends: inheritedTypes.extends,
+    implements: inheritedTypes.implements,
     comment: getComment(context.checker, type.symbol),
     props: propsDescriptor,
     calls: callsDescriptor,
@@ -752,6 +767,7 @@ function includeMappedObject(context: DeclVisitorContext, type: Type): TypeModel
     kind: 'object',
     calls: [],
     extends: [],
+    implements: [],
     indices: [],
     props: [],
     types: [],

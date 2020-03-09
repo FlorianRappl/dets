@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.1.5
+
+- Added support for extends and implements in classes
+
 ## 0.1.4
 
 - Fixed issue with exported class

@@ -46,3 +46,16 @@ test('should be able to handle exported generic classes with implicit parameters
   }
 }`);
 });
+
+test('should be able to handle class with implemented interface', () => {
+  const result = runTestFor('class5.ts');
+  expect(result).toBe(`declare module "test" {
+  export class OtherClass<P, S = {}> {}
+
+  export interface OtherInterface<P> {}
+
+  export class SomeClass extends OtherClass<{}> implements OtherInterface<{}> {
+    constructor();
+  }
+}`);
+});
