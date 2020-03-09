@@ -3,6 +3,7 @@
 ## 0.1.4
 
 - Fixed issue with exported class
+- Improved treatment of default generics
 
 ## 0.1.3
 

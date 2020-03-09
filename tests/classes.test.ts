@@ -1,6 +1,6 @@
 import { runTestFor } from './helper';
 
-test('should be able to handle exported classes', () => {
+test('should be able to handle exported classes with constructor', () => {
   const result = runTestFor('class1.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
@@ -11,7 +11,7 @@ test('should be able to handle exported classes', () => {
 }`);
 });
 
-test('should be able to handle exported classes', () => {
+test('should be able to handle exported classes with differnet modifiers', () => {
   const result = runTestFor('class2.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
@@ -25,12 +25,23 @@ test('should be able to handle exported classes', () => {
 }`);
 });
 
-test.only('should be able to handle exported generic classes', () => {
+test('should be able to handle exported generic classes with explicit parameters', () => {
   const result = runTestFor('class3.ts');
   expect(result).toBe(`declare module "test" {
   export class OtherClass<P, S> {}
 
   export class SomeClass extends OtherClass<{}, {}> {
+    constructor();
+  }
+}`);
+});
+
+test('should be able to handle exported generic classes with implicit parameters', () => {
+  const result = runTestFor('class4.ts');
+  expect(result).toBe(`declare module "test" {
+  export class OtherClass<P, S = {}> {}
+
+  export class SomeClass extends OtherClass<{}> {
     constructor();
   }
 }`);

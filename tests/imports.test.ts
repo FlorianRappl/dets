@@ -81,7 +81,7 @@ test('should handle jsx from externals (react)', () => {
   expect(result).toBe(`import * as React from 'react';
 
 declare module "test" {
-  export const MyComponent: React.FunctionComponent<{}>;
+  export const MyComponent: React.FunctionComponent;
 }`);
 });
 
