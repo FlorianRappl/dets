@@ -89,8 +89,7 @@ test('should be able to handle react classes bundled in', () => {
      * If using the new style context, re-declare this in your class to be the
      * \`React.ContextType\` of your \`static contextType\`.
      * Should be used with type annotation or static contextType.
-     *
-     * \`\`\`ts
+     * \n     * \`\`\`ts
      * static contextType = MyContext
      * // For TS pre-3.7:
      * context!: React.ContextType<typeof MyContext>
@@ -111,6 +110,22 @@ test('should be able to handle react classes bundled in', () => {
     refs: {
       [index: string]: ReactInstance;
     };
+    /**
+     * If set, \`this.context\` will be set at runtime to the current value of the given Context.
+     * \n     * Usage:
+     * \n     * \`\`\`ts
+     * type MyContext = number
+     * const Ctx = React.createContext<MyContext>(0)
+     * \n     * class Foo extends React.Component {
+     *    static contextType = Ctx
+     *    context!: React.ContextType<typeof Ctx>
+     *    render () {
+     *      return <>My context's value: {this.context}</>;
+     *    }
+     * }
+     * \`\`\`
+     */
+    static contextType?: Context<any>;
   }
 
   export interface ComponentLifecycle<P, S, SS = any> extends NewLifecycle<P, S, SS>, DeprecatedLifecycle<P, S> {
@@ -120,12 +135,10 @@ test('should be able to handle react classes bundled in', () => {
     componentDidMount?(): void;
     /**
      * Called to determine whether the change in props and state should trigger a re-render.
-     *
-     * \`Component\` always returns true.
+     * \n     * \`Component\` always returns true.
      * \`PureComponent\` implements a shallow comparison on props and state and returns true if any
      * props or states have changed.
-     *
-     * If false is returned, \`Component#render\`, \`componentWillUpdate\`
+     * \n     * If false is returned, \`Component#render\`, \`componentWillUpdate\`
      * and \`componentDidUpdate\` will not be called.
      */
     shouldComponentUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): boolean;
@@ -146,15 +159,13 @@ test('should be able to handle react classes bundled in', () => {
      * Runs before React applies the result of \`render\` to the document, and
      * returns an object to be given to componentDidUpdate. Useful for saving
      * things such as scroll position before \`render\` causes changes to it.
-     *
-     * Note: the presence of getSnapshotBeforeUpdate prevents any of the deprecated
+     * \n     * Note: the presence of getSnapshotBeforeUpdate prevents any of the deprecated
      * lifecycle events from running.
      */
     getSnapshotBeforeUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>): SS;
     /**
      * Called immediately after updating occurs. Not called for the initial render.
-     *
-     * The snapshot is only present if getSnapshotBeforeUpdate is present and returns non-null.
+     * \n     * The snapshot is only present if getSnapshotBeforeUpdate is present and returns non-null.
      */
     componentDidUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: SS): void;
   }
@@ -163,18 +174,15 @@ test('should be able to handle react classes bundled in', () => {
     /**
      * Called immediately before mounting occurs, and before \`Component#render\`.
      * Avoid introducing any side-effects or subscriptions in this method.
-     *
-     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
+     * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
      */
     componentWillMount?(): void;
     /**
      * Called immediately before mounting occurs, and before \`Component#render\`.
      * Avoid introducing any side-effects or subscriptions in this method.
-     *
-     * This method will not stop working in React 17.
-     *
-     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
+     * \n     * This method will not stop working in React 17.
+     * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
      */
     UNSAFE_componentWillMount?(): void;
@@ -182,10 +190,8 @@ test('should be able to handle react classes bundled in', () => {
      * Called when the component may be receiving new props.
      * React may call this even if props have not changed, so be sure to compare new and existing
      * props if you only want to handle changes.
-     *
-     * Calling \`Component#setState\` generally does not trigger this method.
-     *
-     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
+     * \n     * Calling \`Component#setState\` generally does not trigger this method.
+     * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
      */
     componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
@@ -193,32 +199,24 @@ test('should be able to handle react classes bundled in', () => {
      * Called when the component may be receiving new props.
      * React may call this even if props have not changed, so be sure to compare new and existing
      * props if you only want to handle changes.
-     *
-     * Calling \`Component#setState\` generally does not trigger this method.
-     *
-     * This method will not stop working in React 17.
-     *
-     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
+     * \n     * Calling \`Component#setState\` generally does not trigger this method.
+     * \n     * This method will not stop working in React 17.
+     * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
      */
     UNSAFE_componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
     /**
      * Called immediately before rendering when new props or state is received. Not called for the initial render.
-     *
-     * Note: You cannot call \`Component#setState\` here.
-     *
-     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
+     * \n     * Note: You cannot call \`Component#setState\` here.
+     * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
      */
     componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
     /**
      * Called immediately before rendering when new props or state is received. Not called for the initial render.
-     *
-     * Note: You cannot call \`Component#setState\` here.
-     *
-     * This method will not stop working in React 17.
-     *
-     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
+     * \n     * Note: You cannot call \`Component#setState\` here.
+     * \n     * This method will not stop working in React 17.
+     * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
      */
     UNSAFE_componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
@@ -251,6 +249,26 @@ test('should be able to handle react classes bundled in', () => {
   }
 
   export type ReactInstance = Component<any> | Element;
+
+  export interface Context<T> {
+    Provider: Provider<T>;
+    Consumer: Consumer<T>;
+    displayName?: string;
+  }
+
+  export type Provider<T> = ProviderExoticComponent<ProviderProps<T>>;
+
+  export interface ProviderProps<T> {
+    value: T;
+    children?: ReactNode;
+  }
+
+  export type Consumer<T> = ExoticComponent<ConsumerProps<T>>;
+
+  export interface ConsumerProps<T> {
+    children(value: T): ReactNode;
+    unstable_observedBits?: number;
+  }
 }`);
 });
 
