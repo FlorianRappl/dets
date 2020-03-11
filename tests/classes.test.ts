@@ -59,3 +59,13 @@ test('should be able to handle class with implemented interface', () => {
   }
 }`);
 });
+
+test('should be able to handle react classes', () => {
+  const result = runTestFor('class6.tsx');
+  expect(result).toBe(`declare module "test" {
+  export class SomeClass extends React.Component<{}> {
+    constructor(props: {});
+    render(): JSX.Element;
+  }
+}`);
+});
