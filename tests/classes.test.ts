@@ -60,8 +60,24 @@ test('should be able to handle class with implemented interface', () => {
 }`);
 });
 
-test('should be able to handle react classes', () => {
-  const result = runTestFor('class6.tsx');
+test('should be able to handle react classes from externals', () => {
+  const result = runTestFor('class6.tsx', {
+    imports: ['react'],
+  });
+  expect(result).toBe(`import * as React from 'react';
+
+declare module "test" {
+  export class SomeClass extends React.Component<{}> {
+    constructor(props: {});
+    render(): JSX.Element;
+  }
+}`);
+});
+
+test('should be able to handle react classes bundled in', () => {
+  const result = runTestFor('class6.tsx', {
+    imports: [],
+  });
   expect(result).toBe(`declare module "test" {
   export class SomeClass extends React.Component<{}> {
     constructor(props: {});
