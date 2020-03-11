@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.2.0
+
+- Support for dynamically placed imports
+
 ## 0.1.5
 
 - Added support for extends and implements in classes
