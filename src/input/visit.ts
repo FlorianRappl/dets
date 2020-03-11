@@ -19,6 +19,7 @@ import {
   ObjectFlags,
   IndexInfo,
   isFunctionDeclaration,
+  SyntaxKind,
 } from 'typescript';
 import {
   getLib,
@@ -183,9 +184,21 @@ function getIndexType(
   };
 }
 
-function normalizeTypeParameters(context: DeclVisitorContext, type: Type, decl: Type, types: Array<TypeModel>) {
+function normalizeTypeParameters(
+  context: DeclVisitorContext,
+  type: Type,
+  decl: Type,
+  types: Array<TypeModel>,
+  refName: string,
+) {
+  const maxTypes = (context.refs[refName] as any)?.types?.length ?? Number.MAX_SAFE_INTEGER;
   const typeParameterIds = decl?.typeParameters?.map(t => getDefaultTypeId(context, t)) ?? [];
-  const typeArgumentIds = type.aliasTypeArguments?.map(t => t.id) ?? [];
+  const typeArgumentIds = type.aliasTypeArguments?.map(t => t.id) ?? (type as any).typeArguments?.map(t => t.id) ?? [];
+
+  // omit types that are not listed on the original type parameters
+  while (types.length > maxTypes) {
+    types.pop();
+  }
 
   for (let i = typeParameterIds.length; i--; ) {
     const id = typeParameterIds[i];
@@ -363,7 +376,7 @@ function makeAliasRef(context: DeclVisitorContext, type: Type, name: string): Ty
 
   return {
     kind: 'ref',
-    types: normalizeTypeParameters(context, type, decl, types),
+    types: normalizeTypeParameters(context, type, decl, types, name),
     refName: name,
   };
 }
@@ -399,7 +412,7 @@ function includeRef(context: DeclVisitorContext, type: Type, refName: string, ex
 
   return {
     kind: 'ref',
-    types: normalizeTypeParameters(context, type, decl, types),
+    types: normalizeTypeParameters(context, type, decl, types, refName),
     refName,
     external,
   };
@@ -572,29 +585,41 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
 
 function includeInheritedTypes(context: DeclVisitorContext, type: Type) {
   const decl = type?.symbol?.declarations?.[0];
+  const result = {
+    extends: [] as Array<TypeModelRef>,
+    implements: [] as Array<TypeModelRef>,
+  };
 
   if (decl && (isInterfaceDeclaration(decl) || isClassDeclaration(decl))) {
-    const types = decl?.heritageClauses?.[0]?.types;
-    return (
-      types?.map(t => {
-        const ti = context.checker.getTypeAtLocation(t as any);
-        const res = includeType(context, ti) as TypeModelRef;
+    const types = decl?.heritageClauses ?? [];
 
-        if (res.kind !== 'ref' && isIdentifier(t.expression)) {
-          return {
-            kind: 'ref',
-            refName: t.expression.text,
-            types: [],
-            external: ti,
-          } as TypeModelRef;
-        }
+    for (const type of types) {
+      const items =
+        type.types?.map(t => {
+          const ti = context.checker.getTypeAtLocation(t);
+          const res = includeType(context, ti) as TypeModelRef;
 
-        return res;
-      }) ?? []
-    );
+          if (res.kind !== 'ref' && isIdentifier(t.expression)) {
+            return {
+              kind: 'ref',
+              refName: t.expression.text,
+              types: [],
+              external: ti,
+            } as TypeModelRef;
+          }
+
+          return res;
+        }) ?? [];
+
+      if (type.token === SyntaxKind.ExtendsKeyword) {
+        result.extends.push(...items);
+      } else if (type.token === SyntaxKind.ImplementsKeyword) {
+        result.implements.push(...items);
+      }
+    }
   }
 
-  return [];
+  return result;
 }
 
 function includeConstraint(context: DeclVisitorContext, type: Type): TypeModel {
@@ -673,7 +698,8 @@ function getAllPropIds(context: DeclVisitorContext, types: Array<TypeModelRef>) 
 }
 
 function includeStandardObject(context: DeclVisitorContext, type: Type): TypeModelObject {
-  const inherited = includeInheritedTypes(context, type);
+  const inheritedTypes = includeInheritedTypes(context, type);
+  const inherited = [...inheritedTypes.extends, ...inheritedTypes.implements];
   const targets = getAllPropIds(context, inherited);
   const props = type.getProperties();
   const propsDescriptor: Array<TypeModelProp> = props
@@ -712,7 +738,8 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
 
   return {
     kind: 'object',
-    extends: inherited,
+    extends: inheritedTypes.extends,
+    implements: inheritedTypes.implements,
     comment: getComment(context.checker, type.symbol),
     props: propsDescriptor,
     calls: callsDescriptor,
@@ -740,6 +767,7 @@ function includeMappedObject(context: DeclVisitorContext, type: Type): TypeModel
     kind: 'object',
     calls: [],
     extends: [],
+    implements: [],
     indices: [],
     props: [],
     types: [],

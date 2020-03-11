@@ -43,7 +43,7 @@ declare module "test" {
      * The route needs to be unique and can contain params.
      * Params are following the path-to-regexp notation, e.g., :id for an id parameter.
      */
-    registerPage(route: string, Component: AnyComponent<PageComponentProps<any, any>>): void;
+    registerPage(route: string, Component: AnyComponent<PageComponentProps>): void;
     /**
      * Unregisters the page identified by the given route.
      */
@@ -61,7 +61,7 @@ declare module "test" {
     /**
      * React component for displaying extensions for a given name.
      */
-    Extension: React.ComponentType<ExtensionSlotProps<any>>;
+    Extension: React.ComponentType<ExtensionSlotProps>;
     /**
      * Renders an extension in a plain DOM component.
      */
@@ -83,7 +83,7 @@ declare module "test" {
 
   export type DataStoreTarget = "memory" | "local" | "remote";
 
-  export type AnyComponent<T> = React.ComponentClass<T, any> | React.FunctionComponent<T> | HtmlComponent<T>;
+  export type AnyComponent<T> = React.ComponentClass<T> | React.FunctionComponent<T> | HtmlComponent<T>;
 
   export interface HtmlComponent<TProps> {
     /**
@@ -112,7 +112,7 @@ declare module "test" {
   }
 
   export interface ComponentContext {
-    router: ReactRouter.RouteComponentProps<{}, ReactRouter.StaticContext, {}>;
+    router: ReactRouter.RouteComponentProps;
   }
 
   export interface PageComponentProps<T = any, S = any> extends RouteBaseProps<T, S> {}

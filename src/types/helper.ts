@@ -11,4 +11,5 @@ export interface WithTypeComments {
 
 export interface WithTypeExtends {
   readonly extends: Array<TypeModelRef>;
+  readonly implements: Array<TypeModelRef>;
 }
