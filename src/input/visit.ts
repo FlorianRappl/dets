@@ -751,6 +751,13 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
 function includeClassObject(context: DeclVisitorContext, type: Type): TypeModelClass {
   const obj = includeStandardObject(context, type);
 
+  context.checker
+    .getExportsOfModule(type.symbol)
+    .filter(m => (m.flags & SymbolFlags.Prototype) === 0)
+    .map(m => getPropType(context, m.valueDeclaration.symbol))
+    .filter(m => m !== undefined)
+    .forEach(prop => obj.props.push(prop));
+
   return {
     ...obj,
     ctors: getConstructorTypes(context, type),

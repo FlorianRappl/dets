@@ -43,6 +43,10 @@ export function isPrivate(type: Node) {
   return type.kind === SyntaxKind.PrivateKeyword;
 }
 
+export function isStatic(type: Node) {
+  return type.kind === SyntaxKind.StaticKeyword;
+}
+
 export function isProtected(type: Node) {
   return type.kind === SyntaxKind.ProtectedKeyword;
 }
