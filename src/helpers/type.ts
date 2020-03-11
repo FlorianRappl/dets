@@ -12,6 +12,12 @@ import {
   SyntaxKind,
 } from 'typescript';
 
+const excludedKinds = [SyntaxKind.Parameter, SyntaxKind.SourceFile];
+
+export function isHiddenAnonymousType(type: Type) {
+  return type && !excludedKinds.includes(type.kind);
+}
+
 export function isConditionalType(type: Type): type is ConditionalType {
   return (type.flags & TypeFlags.Conditional) !== 0;
 }

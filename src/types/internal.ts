@@ -14,6 +14,7 @@ declare module 'typescript' {
   interface Type {
     id?: number;
     typeName?: ts.Identifier;
+    kind?: ts.SyntaxKind;
     intrinsicName?: string;
     parent?: ts.Type;
     typeParameters?: Array<ts.TypeParameter>;

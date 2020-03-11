@@ -41,6 +41,7 @@ import {
   isAnonymous,
   getConstructors,
   getModifiers,
+  isHiddenAnonymousType,
 } from '../helpers';
 import { createBinding } from './utils';
 import {
@@ -213,6 +214,26 @@ function normalizeTypeParameters(
   return types;
 }
 
+function includeHiddenAnonymous(context: DeclVisitorContext, type: Type) {
+  const name = type.symbol?.name;
+
+  if (isAnonymous(name)) {
+    // Right now this catches the JSXElementConstructor; but
+    // I guess this code should be made "more robust" and also
+    // more generic.
+    const parent: any = type.symbol?.declarations?.[0]?.parent;
+    const hiddenType = parent?.type?.parent?.parent?.parent;
+
+    if (isHiddenAnonymousType(hiddenType)) {
+      const hiddenTypeName = hiddenType?.symbol?.name;
+
+      if (hiddenTypeName) {
+        return includeType(context, hiddenType);
+      }
+    }
+  }
+}
+
 function includeExternal(context: DeclVisitorContext, type: Type) {
   if (isGlobal(type.symbol)) {
     const globalName = getGlobalName(type.symbol);
@@ -230,29 +251,8 @@ function includeExternal(context: DeclVisitorContext, type: Type) {
   const lib = getLib(fn, context.availableImports);
 
   if (lib) {
-    const anonymous = isAnonymous(name);
-
-    if (anonymous) {
-      // Right now this catches the JSXElementConstructor; but
-      // I guess this code should be made "more robust" and also
-      // more generic.
-      const parent: any = type.symbol?.declarations?.[0]?.parent;
-      const hiddenType = parent?.type?.parent?.parent?.parent;
-      const hiddenTypeName = hiddenType?.symbol?.name;
-
-      if (hiddenTypeName) {
-        return includeRef(
-          context,
-          {
-            ...hiddenType,
-            typeArguments:
-              hiddenType.typeParameters?.map(() => ({
-                flags: TypeFlags.Any,
-              })) || [],
-          },
-          createBinding(context, lib, hiddenTypeName),
-        );
-      }
+    if (isAnonymous(name)) {
+      return includeHiddenAnonymous(context, type);
     } else if (!isAnonymousObject(type)) {
       return includeRef(context, type, createBinding(context, lib, name), type);
     }
@@ -848,8 +848,19 @@ function includeCombinator(context: DeclVisitorContext, type: Type): TypeModel {
   }
 }
 
+function includeReference(context: DeclVisitorContext, type: Type): TypeModel {
+  if (type.kind === SyntaxKind.TypeAliasDeclaration) {
+    return {
+      kind: 'alias',
+      comment: getComment(context.checker, type.symbol),
+      types: getTypeParameters(context, type),
+      child: getParameterType(context, (type as any).type),
+    };
+  }
+}
+
 function includeNamed(context: DeclVisitorContext, type: Type): TypeModel {
-  return includeBasic(context, type) ?? includeObject(context, type);
+  return includeBasic(context, type) ?? includeObject(context, type) ?? includeReference(context, type);
 }
 
 function includeAnonymousNode(context: DeclVisitorContext, type: TypeNode): TypeModel {
@@ -864,6 +875,7 @@ function includeAnonymous(context: DeclVisitorContext, type: Type): TypeModel {
   return (
     includeBasic(context, type) ??
     includeCombinator(context, type) ??
+    includeHiddenAnonymous(context, type) ??
     includeObject(context, type) ?? {
       kind: 'unidentified',
     }
