@@ -29,3 +29,10 @@ test('should handle generator functions', () => {
   export function myGenerator(): Generator<string, string>;
 }`);
 });
+
+test('should handle dotted arguments', () => {
+  const result = runTestFor('function4.ts');
+  expect(result).toBe(`declare module "test" {
+  export function foo(index: number, ...args: Array<any>): void;
+}`);
+});

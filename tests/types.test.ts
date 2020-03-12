@@ -70,3 +70,41 @@ test('should export literal types', () => {
   export type Fail2 = "hello" | "world";
 }`);
 });
+
+test('should export computed types with dotted arguments', () => {
+  const result = runTestFor('type8.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Foo {
+    createDataProvider<TItem extends {}, TReducers extends DataProviderReducers<TItem>>(options: DataProviderOptions<TItem, TReducers>): DataConnector<TItem, TReducers>;
+  }
+
+  export interface DataProviderReducers<TItem> {
+    [name: string]: {
+      (data: DataProviderState<TItem>, ...args: any): DataProviderState<TItem>;
+    };
+  }
+
+  export interface DataProviderState<TItem> {
+    current: Array<TItem>;
+  }
+
+  export interface DataProviderOptions<TItem, TReducers> {
+    searchData(query: string): Promise<Array<TItem>>;
+    reducers?: TReducers;
+  }
+
+  export type DataConnector<TItem, TReducers> = GetActions<TReducers> & {
+    get(id: string): TItem;
+  };
+
+  export type GetActions<TActions> = {
+    [P in keyof TActions]: {
+      (...args: RemainingArgs<TActions[P]>): void;
+    };
+  };
+
+  export type RemainingArgs<T> = T extends {
+    (_: any, ...args: infer U): any;
+  } ? U : never;
+}`);
+});
