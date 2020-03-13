@@ -291,3 +291,15 @@ test('should be able to handle static members with modifiers', () => {
   }
 }`);
 });
+
+test('should remove inherited props', () => {
+  const result = runTestFor('class9.ts');
+  expect(result).toBe(`declare module "test" {
+  export class Bar {
+    foo: number;
+    bar(): void;
+  }
+
+  export class Foo extends Bar {}
+}`);
+});

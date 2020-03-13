@@ -56,7 +56,14 @@ import {
   TypeModelObject,
   TypeModelIndexKey,
   TypeModelClass,
+  WithTypeProps,
 } from '../types';
+
+const allowedBaseTypes = ['object', 'class'];
+
+function isClassOrObject(type: TypeModel): type is TypeModelObject | TypeModelClass {
+  return type && allowedBaseTypes.includes(type.kind);
+}
 
 function getTypeArguments(context: DeclVisitorContext, type: Type) {
   const typeRef = type as TypeReference;
@@ -677,7 +684,7 @@ function getAllPropIds(context: DeclVisitorContext, types: Array<TypeModelRef>) 
   for (const type of types) {
     const baseType = context.refs[type.refName];
 
-    if (baseType && baseType.kind === 'object') {
+    if (isClassOrObject(baseType)) {
       for (const prop of baseType.props) {
         if (prop.id) {
           propIds.push(prop.id);
