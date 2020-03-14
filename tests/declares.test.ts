@@ -22,9 +22,9 @@ test('should handle manual composition of react typings', () => {
      * \`\`\`
      */
     context: any;
-    setState<K extends keyof S>(state: S | {
+    setState<K extends keyof S>(state: {
       (prevState: Readonly<S>, props: Readonly<P>): S | Pick<S, K>;
-    } | Pick<S, K>, callback?: Component): void;
+    } | S | Pick<S, K>, callback?: Component): void;
     forceUpdate(callback?: Component): void;
     render(): ReactNode;
     props: Readonly<P> & Readonly<{
@@ -158,7 +158,7 @@ test('should handle manual composition of react typings', () => {
   export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
     type: T;
     props: P;
-    key: ReactText;
+    key: ReactText | null;
   }
 
   export type ReactText = string | number;
@@ -195,5 +195,22 @@ test('should handle manual composition of react typings', () => {
   }
 
   export type ReactChild = string | number | ReactElement;
+}`);
+});
+
+test('does include null in an union', () => {
+  const result = runTestFor('null1.ts');
+  expect(result).toBe(`declare module "test" {
+  export type Foo = "foo" | null;
+}`);
+});
+
+test('does include an union prop in an interface', () => {
+  const result = runTestFor('null2.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Foo {
+    bar: "foo" | null;
+    qxz(a: number): boolean | null;
+  }
 }`);
 });

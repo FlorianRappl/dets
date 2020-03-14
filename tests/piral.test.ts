@@ -78,7 +78,7 @@ declare module "test" {
     /**
      * Optionally determines when the data expires.
      */
-    expires?: number | "never" | Date;
+    expires?: "never" | Date | number;
   }
 
   export type DataStoreTarget = "memory" | "local" | "remote";
@@ -145,7 +145,7 @@ declare module "test" {
     /**
      * Defines how the provided nodes should be rendered.
      */
-    render?(nodes: Array<React.ReactNode>): React.ReactElement<any, any>;
+    render?(nodes: Array<React.ReactNode>): React.ReactElement<any, any> | null;
     /**
      * The custom parameters for the given extension.
      */
@@ -237,7 +237,7 @@ declare module "test" {
      * of the cache. In case of an accurate hash this should not be
      * required or set.
      */
-    noCache?: string | false | true;
+    noCache?: boolean | string;
     /**
      * Optionally provides some custom metadata for the pilet.
      */

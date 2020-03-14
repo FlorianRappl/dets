@@ -98,9 +98,9 @@ test('should be able to handle react classes bundled in', () => {
      * \`\`\`
      */
     context: any;
-    setState<K extends keyof S>(state: S | {
+    setState<K extends keyof S>(state: {
       (prevState: Readonly<S>, props: Readonly<P>): S | Pick<S, K>;
-    } | Pick<S, K>, callback?: Component): void;
+    } | S | Pick<S, K>, callback?: Component): void;
     forceUpdate(callback?: Component): void;
     render(): ReactNode;
     props: Readonly<P> & Readonly<{
@@ -234,7 +234,7 @@ test('should be able to handle react classes bundled in', () => {
   export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
     type: T;
     props: P;
-    key: ReactText;
+    key: ReactText | null;
   }
 
   export type ReactText = string | number;
