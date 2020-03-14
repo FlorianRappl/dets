@@ -1,0 +1,9 @@
+*.tgz
+.vscode
+src
+tests
+azure-pipelines.yml
+.editorconfig
+prettier.config.js
+jest.config.json
+tsconfig.json

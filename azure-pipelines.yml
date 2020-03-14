@@ -24,15 +24,20 @@ steps:
 
 - script: |
     npm run build
-  displayName: 'Build Source'
+    npm run test
+  displayName: 'Build and Test Source'
 
-- script: |
-    npm pack
-  displayName: 'Compile Package'
+- task: Npm@1
+  inputs:
+    command: custom
+    customCommand: publish --tag next
+    customEndpoint: 'npm_registry'
+  displayName: 'Publish Pre-Package'
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - task: Npm@1
   inputs:
     command: publish
     publishEndpoint: 'npm_registry'
   displayName: 'Publish Package'
-  condition: and(succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/develop'))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
