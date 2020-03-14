@@ -40,7 +40,7 @@ export function fillVisitorContextFromApi(context: DeclVisitorContext, apiPath: 
     ts.forEachChild(api, node => includeApi(context, node, apiName));
   } else {
     context.error(
-      'Cannot find the "piral-core" module. Are you sure it exists? Please run "npm i" to install missing modules.',
+      `Cannot find the "${apiPath}" module. Are you sure it exists? Please run "npm i" to install missing modules.`,
     );
   }
 }

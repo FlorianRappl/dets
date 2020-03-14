@@ -13,6 +13,8 @@ import {
   TypeReferenceNode,
   isInferTypeNode,
   InferTypeNode,
+  isUnionTypeNode,
+  UnionTypeNode,
 } from 'typescript';
 
 export function isDefaultExport(node: Node): node is ExportAssignment {
@@ -29,6 +31,10 @@ export function isNodeExported(node: Node, alsoTopLevel = false): boolean {
 
 export function isKeyOfType(type: Node): type is TypeOperatorNode {
   return type && isTypeOperatorNode(type) && type.operator === SyntaxKind.KeyOfKeyword;
+}
+
+export function isUnionType(type: Node): type is UnionTypeNode {
+  return type && isUnionTypeNode(type);
 }
 
 export function isIdentifierType(type: Node): type is TypeReferenceNode {
