@@ -1,12 +1,11 @@
 import {
   TypeChecker,
+  Node,
   Type,
   TypeFlags,
   SymbolFlags,
-  TypeReference,
   Symbol,
   InterfaceTypeWithDeclaredMembers,
-  InterfaceType,
   VariableDeclaration,
   TypeAliasDeclaration,
   isIdentifier,
@@ -20,7 +19,9 @@ import {
   IndexInfo,
   isFunctionDeclaration,
   SyntaxKind,
+  isMethodSignature,
 } from 'typescript';
+import { createBinding } from './utils';
 import {
   getLib,
   isBaseLib,
@@ -42,8 +43,8 @@ import {
   getConstructors,
   getModifiers,
   isHiddenAnonymousType,
+  isUnionType,
 } from '../helpers';
-import { createBinding } from './utils';
 import {
   TypeModel,
   TypeModelIndex,
@@ -52,30 +53,29 @@ import {
   DeclVisitorContext,
   TypeModelRef,
   TypeMemberModel,
-  TypeModelKeyOf,
-  TypeModelObject,
+  TypeModelPrefix,
+  TypeModelInterface,
   TypeModelIndexKey,
   TypeModelClass,
-  WithTypeProps,
+  TypeModelFunctionParameter,
+  TypeModelConstructor,
 } from '../types';
 
 const allowedBaseTypes = ['object', 'class'];
 
-function isClassOrObject(type: TypeModel): type is TypeModelObject | TypeModelClass {
+function isClassOrObject(type: TypeModel): type is TypeModelInterface | TypeModelClass {
   return type && allowedBaseTypes.includes(type.kind);
 }
 
-function getTypeArguments(context: DeclVisitorContext, type: Type) {
-  const typeRef = type as TypeReference;
-  return typeRef.typeArguments?.map(t => includeType(context, t)) ?? [];
+function getTypeArguments(context: DeclVisitorContext, type: any): Array<TypeModel> {
+  return type.typeArguments?.map(t => includeType(context, t)) ?? [];
 }
 
-function getTypeParameters(context: DeclVisitorContext, type: Type) {
-  const typeRef = type as InterfaceType;
-  return typeRef.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [];
+function getTypeParameters(context: DeclVisitorContext, type: any): Array<TypeModel> {
+  return type.typeParameters?.map(t => includeTypeParameter(context, t)) ?? [];
 }
 
-function getDefaultTypeId(context: DeclVisitorContext, type: Type) {
+function getDefaultTypeId(context: DeclVisitorContext, type: Type): number {
   const symbol = type?.symbol;
   const decl = symbol?.declarations?.[0];
   const defaultNode = decl?.default;
@@ -88,7 +88,7 @@ function getDefaultTypeId(context: DeclVisitorContext, type: Type) {
   return undefined;
 }
 
-function getComment(checker: TypeChecker, symbol: Symbol) {
+function getComment(checker: TypeChecker, symbol: Symbol): string {
   const doc = symbol?.getDocumentationComment(checker);
   return doc?.map(item => item.text).join('\n');
 }
@@ -128,44 +128,81 @@ function getParameterType(context: DeclVisitorContext, type: TypeNode): TypeMode
   }
 }
 
+function getFunctionParameters(
+  context: DeclVisitorContext,
+  parameters: Array<Symbol>,
+): Array<TypeModelFunctionParameter> {
+  return parameters.map(param => ({
+    kind: 'parameter',
+    param: param.name,
+    modifiers: '',
+    spread: param.valueDeclaration.dotDotDotToken !== undefined,
+    optional: param.valueDeclaration.questionToken !== undefined,
+    value: getParameterType(context, param.valueDeclaration.type as any),
+  }));
+}
+
 function getFunctionType(context: DeclVisitorContext, sign: Signature): TypeModelFunction {
   return {
     kind: 'function',
     types: getTypeParameters(context, sign as any),
-    parameters: sign.getParameters().map(param => ({
-      kind: 'parameter',
-      param: param.name,
-      spread: param.valueDeclaration.dotDotDotToken !== undefined,
-      optional: param.valueDeclaration.questionToken !== undefined,
-      value: getParameterType(context, param.valueDeclaration.type as any),
-    })),
+    parameters: getFunctionParameters(context, sign.getParameters()),
     returnType: includeType(context, sign.getReturnType()),
   };
 }
 
-function getConstructorTypes(context: DeclVisitorContext, type: Type): Array<TypeModelFunction> {
+function getConstructorTypes(context: DeclVisitorContext, type: Type): Array<TypeModelConstructor> {
   const ctors = getConstructors(type);
   return (
     ctors?.map(ctor => {
       const signature = context.checker.getSignatureFromDeclaration(ctor as any);
-      return getFunctionType(context, signature);
+      const type = getFunctionType(context, signature);
+      return {
+        ...type,
+        kind: 'constructor',
+      };
     }) ?? []
   );
 }
 
-function getKeyOfType(context: DeclVisitorContext, type: Type): TypeModelKeyOf {
+function getKeyOfType(context: DeclVisitorContext, type: Type): TypeModelPrefix {
   return {
-    kind: 'keyof',
+    kind: 'prefix',
+    prefix: 'keyof',
     value: includeType(context, type),
   };
 }
 
+function includeNode(context: DeclVisitorContext, type: Node): TypeModel {
+  if (isKeyOfType(type)) {
+    return getKeyOfType(context, context.checker.getTypeFromTypeNode(type.type));
+  } else if (isUnionType(type)) {
+    return getUnion(context, type.types.map(context.checker.getTypeFromTypeNode));
+  }
+}
+
+function getPropValue(context: DeclVisitorContext, prop: Symbol): TypeModel {
+  const decl = prop.declarations[0];
+  const type =
+    includeNode(context, decl.type) ?? includeType(context, context.checker.getTypeOfSymbolAtLocation(prop, decl));
+
+  if (isMethodSignature(decl)) {
+    const parameters = decl.parameters.map(p => p.symbol);
+    return {
+      kind: 'function',
+      parameters: getFunctionParameters(context, parameters),
+      returnType: type,
+      types: getTypeParameters(context, decl),
+      comment: undefined,
+    };
+  }
+
+  return type;
+}
+
 function getPropType(context: DeclVisitorContext, prop: Symbol): TypeModelProp {
-  const propType = context.checker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration);
-  const type = prop.valueDeclaration?.type;
-  const valueType = isKeyOfType(type)
-    ? getKeyOfType(context, context.checker.getTypeFromTypeNode(type.type))
-    : includeType(context, propType);
+  const valueType = getPropValue(context, prop);
+
   return {
     kind: 'prop',
     name: prop.name,
@@ -185,10 +222,25 @@ function getIndexType(
 ): TypeModelIndex {
   return {
     kind: 'index',
-    keyType,
+    parameters: [
+      {
+        kind: 'parameter',
+        param: getKeyName(info),
+        modifiers: '',
+        optional: false,
+        spread: false,
+        value: keyType,
+      },
+    ],
     optional: false,
-    keyName: getKeyName(info),
     valueType: includeType(context, type),
+  };
+}
+
+function getUnion(context: DeclVisitorContext, types: Array<Type>): TypeModel {
+  return {
+    kind: 'union',
+    types: types.map(t => includeType(context, t)),
   };
 }
 
@@ -349,7 +401,8 @@ function includeType(context: DeclVisitorContext, type: Type): TypeModel {
 
   if (ta.stringsOnly === false) {
     return {
-      kind: 'keyof',
+      kind: 'prefix',
+      prefix: 'keyof',
       value: includeType(context, ta.type),
     };
   } else {
@@ -458,21 +511,21 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
 
   if (typeof type.isStringLiteral === 'function' && type.isStringLiteral()) {
     return {
-      kind: 'stringLiteral',
+      kind: 'literal',
       value: type.value,
     };
   }
 
   if (typeof type.isNumberLiteral === 'function' && type.isNumberLiteral()) {
     return {
-      kind: 'numberLiteral',
+      kind: 'literal',
       value: type.value,
     };
   }
 
   if (type.flags & TypeFlags.BooleanLiteral) {
     return {
-      kind: 'booleanLiteral',
+      kind: 'literal',
       // FIXME It's a dirty hack but i can't seem to find any other way to get a value of BooleanLiteral
       value: (type as any).intrinsicName === 'true',
     };
@@ -565,11 +618,8 @@ function includeBasic(context: DeclVisitorContext, type: Type): TypeModel {
   if (isConditionalType(type)) {
     return {
       kind: 'conditional',
-      condition: {
-        kind: 'typeParameter',
-        parameter: includeType(context, type.root.checkType),
-        constraint: includeType(context, type.root.extendsType),
-      },
+      extends: includeType(context, type.root.extendsType),
+      check: includeType(context, type.root.checkType),
       primary: includeType(context, type.root.trueType),
       alternate: includeType(context, type.root.falseType),
     };
@@ -678,22 +728,25 @@ function includeTypeParameter(context: DeclVisitorContext, type: Type): TypeMode
   }
 }
 
-function getAllPropIds(context: DeclVisitorContext, types: Array<TypeModelRef>) {
+function getAllPropIds(context: DeclVisitorContext, types: Array<TypeModel>) {
   const propIds: Array<number> = [];
 
   for (const type of types) {
-    const baseType = context.refs[type.refName];
+    const ref = type as TypeModelRef;
+    const baseType = context.refs[ref.refName];
 
     if (isClassOrObject(baseType)) {
       for (const prop of baseType.props) {
-        if (prop.id) {
-          propIds.push(prop.id);
+        const id = (prop as any).id;
+
+        if (id) {
+          propIds.push(id);
         }
       }
 
       propIds.push(...getAllPropIds(context, baseType.extends));
-    } else if (type.external) {
-      const props = type.external.getProperties() || [];
+    } else if (ref.external) {
+      const props = ref.external.getProperties() || [];
 
       for (const prop of props) {
         propIds.push(prop.id || prop.target?.id);
@@ -704,22 +757,21 @@ function getAllPropIds(context: DeclVisitorContext, types: Array<TypeModelRef>) 
   return propIds;
 }
 
-function includeStandardObject(context: DeclVisitorContext, type: Type): TypeModelObject {
+function includeStandardObject(context: DeclVisitorContext, type: Type): TypeModelInterface {
   const inheritedTypes = includeInheritedTypes(context, type);
   const inherited = [...inheritedTypes.extends, ...inheritedTypes.implements];
   const targets = getAllPropIds(context, inherited);
   const props = type.getProperties();
-  const propsDescriptor: Array<TypeModelProp> = props
+  const propsDescriptor: Array<TypeModel> = props
     .filter(prop => !targets.includes(prop.id || prop.target?.id))
     .map(prop => getPropType(context, prop));
 
   // index types
   const stringIndexType = type.getStringIndexType();
   const numberIndexType = type.getNumberIndexType();
-  const indicesDescriptor: Array<TypeModelIndex> = [];
 
   if (numberIndexType && !inherited.some(m => m.external?.getNumberIndexType() === numberIndexType)) {
-    indicesDescriptor.push(
+    propsDescriptor.push(
       getIndexType(
         context,
         numberIndexType,
@@ -730,7 +782,7 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
   }
 
   if (stringIndexType && !inherited.some(m => m.external?.getStringIndexType() === stringIndexType)) {
-    indicesDescriptor.push(
+    propsDescriptor.push(
       getIndexType(
         context,
         stringIndexType,
@@ -740,23 +792,23 @@ function includeStandardObject(context: DeclVisitorContext, type: Type): TypeMod
     );
   }
 
-  const callSignatures = type.getCallSignatures();
-  const callsDescriptor: Array<TypeModelFunction> = callSignatures?.map(sign => getFunctionType(context, sign)) ?? [];
+  type
+    .getCallSignatures()
+    ?.map(sign => getFunctionType(context, sign))
+    .forEach(m => propsDescriptor.push(m));
 
   return {
-    kind: 'object',
+    kind: 'interface',
     extends: inheritedTypes.extends,
-    implements: inheritedTypes.implements,
     comment: getComment(context.checker, type.symbol),
     props: propsDescriptor,
-    calls: callsDescriptor,
     types: getTypeParameters(context, type),
-    indices: indicesDescriptor,
   };
 }
 
 function includeClassObject(context: DeclVisitorContext, type: Type): TypeModelClass {
   const obj = includeStandardObject(context, type);
+  const inheritedTypes = includeInheritedTypes(context, type);
 
   context.checker
     .getExportsOfModule(type.symbol)
@@ -765,24 +817,23 @@ function includeClassObject(context: DeclVisitorContext, type: Type): TypeModelC
     .filter(m => m !== undefined)
     .forEach(prop => obj.props.push(prop));
 
+  getConstructorTypes(context, type).forEach(ctor => obj.props.push(ctor));
+
   return {
     ...obj,
-    ctors: getConstructorTypes(context, type),
+    implements: inheritedTypes.implements,
     kind: 'class',
   };
 }
 
-function includeMappedObject(context: DeclVisitorContext, type: Type): TypeModelObject {
+function includeMappedObject(context: DeclVisitorContext, type: Type): TypeModelInterface {
   const parent: any = type.typeParameter.symbol.declarations[0].parent;
   const index = parent.typeParameter;
   const declType: any = type.symbol.declarations[0].type;
   const valueType = context.checker.getTypeFromTypeNode(declType);
   return {
-    kind: 'object',
-    calls: [],
+    kind: 'interface',
     extends: [],
-    implements: [],
-    indices: [],
     props: [],
     types: [],
     comment: getComment(context.checker, type.symbol),
@@ -840,10 +891,7 @@ function includeCombinator(context: DeclVisitorContext, type: Type): TypeModel {
   }
 
   if (typeof type.isUnion === 'function' && type.isUnion()) {
-    return {
-      kind: 'union',
-      types: type.types.map(t => includeType(context, t)),
-    };
+    return getUnion(context, type.types);
   }
 
   if (typeof type.isIntersection === 'function' && type.isIntersection()) {
@@ -878,11 +926,7 @@ function includeNamed(context: DeclVisitorContext, type: Type): TypeModel {
 }
 
 function includeAnonymousNode(context: DeclVisitorContext, type: TypeNode): TypeModel {
-  if (isKeyOfType(type)) {
-    return getKeyOfType(context, context.checker.getTypeFromTypeNode(type.type));
-  }
-
-  return includeAnonymous(context, context.checker.getTypeFromTypeNode(type));
+  return includeNode(context, type) ?? includeAnonymous(context, context.checker.getTypeFromTypeNode(type));
 }
 
 function includeAnonymous(context: DeclVisitorContext, type: Type): TypeModel {

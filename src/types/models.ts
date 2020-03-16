@@ -1,5 +1,5 @@
 import { PseudoBigInt, Type } from 'typescript';
-import { WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps } from './helper';
+import { WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps, WithTypeImplements } from './helper';
 import { TypeModel } from './model';
 
 export interface TypeModelDefault extends WithTypeComments {
@@ -7,9 +7,13 @@ export interface TypeModelDefault extends WithTypeComments {
   readonly value: TypeModel;
 }
 
-export interface TypeModelClass extends WithTypeComments, WithTypeArgs, WithTypeExtends, WithTypeProps {
+export interface TypeModelClass
+  extends WithTypeComments,
+    WithTypeArgs,
+    WithTypeExtends,
+    WithTypeImplements,
+    WithTypeProps {
   readonly kind: 'class';
-  readonly ctors: Array<TypeModelFunction>;
 }
 
 export interface TypeModelProp extends WithTypeComments {
@@ -19,6 +23,12 @@ export interface TypeModelProp extends WithTypeComments {
   readonly kind: 'prop';
   readonly valueType: TypeModel;
   readonly id: number;
+}
+
+export interface TypeModelPredicate {
+  readonly kind: 'predicate';
+  readonly name: string;
+  readonly value: TypeModel;
 }
 
 export interface TypeModelDefault extends WithTypeComments {
@@ -37,8 +47,9 @@ export interface TypeModelRef extends WithTypeArgs {
   readonly external?: Type;
 }
 
-export interface TypeModelKeyOf {
-  readonly kind: 'keyof';
+export interface TypeModelPrefix {
+  readonly kind: 'prefix';
+  readonly prefix: string;
   readonly value: TypeModel;
 }
 
@@ -62,6 +73,19 @@ export interface TypeModelBoolean {
   readonly kind: 'boolean';
 }
 
+export interface TypeModelConstructor {
+  readonly kind: 'constructor';
+  readonly comment?: string;
+  readonly parameters: Array<TypeModelFunctionParameter>;
+}
+
+export interface TypeModelNew extends WithTypeArgs {
+  readonly kind: 'new';
+  readonly comment?: string;
+  readonly parameters: Array<TypeModelFunctionParameter>;
+  readonly returnType: TypeModel;
+}
+
 export interface TypeModelFunction extends WithTypeArgs {
   readonly kind: 'function';
   readonly comment?: string;
@@ -74,6 +98,7 @@ export interface TypeModelFunctionParameter {
   readonly param: string;
   readonly value: TypeModel;
   readonly optional: boolean;
+  readonly modifiers: string;
   readonly spread: boolean;
 }
 
@@ -87,19 +112,9 @@ export interface TypeModelBigInt {
   readonly kind: 'bigint';
 }
 
-export interface TypeModelStringLiteral {
-  readonly kind: 'stringLiteral';
-  readonly value: string;
-}
-
-export interface TypeModelNumberLiteral {
-  readonly kind: 'numberLiteral';
-  readonly value: number;
-}
-
-export interface TypeModelBooleanLiteral {
-  readonly kind: 'booleanLiteral';
-  readonly value: boolean;
+export interface TypeModelLiteral {
+  readonly kind: 'literal';
+  readonly value: boolean | string | number;
 }
 
 export interface TypeModelEnumLiteral extends WithTypeComments {
@@ -129,6 +144,10 @@ export interface TypeModelUniqueESSymbol {
 
 export interface TypeModelVoid {
   readonly kind: 'void';
+}
+
+export interface TypeModelThis {
+  readonly kind: 'this';
 }
 
 export interface TypeModelUndefined {
@@ -167,8 +186,7 @@ export type TypeModelIndexKey = TypeModelUnion | TypeModelString | TypeModelNumb
 
 export interface TypeModelIndex {
   readonly kind: 'index';
-  readonly keyName: string;
-  readonly keyType: TypeModelIndexKey;
+  readonly parameters: Array<TypeModelFunctionParameter>;
   readonly valueType: TypeModel;
   readonly optional: boolean;
 }
@@ -181,7 +199,8 @@ export interface TypeModelIndexedAccess {
 
 export interface TypeModelConditional {
   readonly kind: 'conditional';
-  readonly condition: TypeModel;
+  readonly check: TypeModel;
+  readonly extends: TypeModel;
   readonly primary: TypeModel;
   readonly alternate: TypeModel;
 }
@@ -208,8 +227,8 @@ export interface TypeModelMapped {
   readonly value: TypeModel;
 }
 
-export interface TypeModelObject extends WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps {
-  readonly kind: 'object';
+export interface TypeModelInterface extends WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps {
+  readonly kind: 'interface';
   readonly mapped?: TypeModelMapped;
 }
 

@@ -7,19 +7,20 @@ import {
   stringifyInterface,
   stringifySignature,
   stringifyExtends,
+  stringifyImplements,
 } from './stringify';
 import { TypeModel, TypeRefs } from '../types';
 
 export function stringifyExport(name: string, type: TypeModel) {
   switch (type?.kind) {
-    case 'object':
+    case 'interface':
       return `${stringifyComment(type)}export interface ${name}${stringifyTypeArgs(type)}${stringifyExtends(
         type,
       )} ${stringifyInterface(type)}`;
     case 'class':
       return `${stringifyComment(type)}export class ${name}${stringifyTypeArgs(type)}${stringifyExtends(
         type,
-      )} ${stringifyClass(type)}`;
+      )}${stringifyImplements(type)} ${stringifyClass(type)}`;
     case 'alias':
       return `${stringifyComment(type)}export type ${name}${stringifyTypeArgs(type)} = ${stringifyNode(type.child)};`;
     case 'enumLiteral':
@@ -31,7 +32,7 @@ export function stringifyExport(name: string, type: TypeModel) {
     case 'const':
       return `${stringifyComment(type)}export const ${name}: ${stringifyNode(type.value)};`;
     case 'function':
-      return `${stringifyComment(type)}export function ${name}${stringifySignature(type)};`;
+      return `${stringifyComment(type)}export function ${name}${stringifySignature(type, true)};`;
     case 'default':
       return `${stringifyComment(type)}export default ${stringifyNode(type.value)};`;
   }

@@ -2,6 +2,8 @@ import { getRefName } from '../helpers';
 import { DeclVisitorContext } from '../types';
 
 export function createBinding(context: DeclVisitorContext, lib: string | undefined, name: string) {
+  name = name.split('.').pop();
+
   if (lib) {
     // if we did not use the given lib yet, add it to the used libs
     if (!context.usedImports.includes(lib)) {
@@ -10,6 +12,7 @@ export function createBinding(context: DeclVisitorContext, lib: string | undefin
 
     return `${getRefName(lib)}.${name}`;
   }
+
   return name;
 }
 

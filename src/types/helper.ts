@@ -1,5 +1,4 @@
 import { TypeModel } from './model';
-import { TypeModelRef, TypeModelProp, TypeModelFunction, TypeModelIndex } from './models';
 
 export interface WithTypeArgs {
   readonly types: Array<TypeModel>;
@@ -10,12 +9,13 @@ export interface WithTypeComments {
 }
 
 export interface WithTypeExtends {
-  readonly extends: Array<TypeModelRef>;
-  readonly implements: Array<TypeModelRef>;
+  readonly extends: Array<TypeModel>;
+}
+
+export interface WithTypeImplements {
+  readonly implements: Array<TypeModel>;
 }
 
 export interface WithTypeProps {
-  readonly props: Array<TypeModelProp>;
-  readonly calls: Array<TypeModelFunction>;
-  readonly indices: Array<TypeModelIndex>;
+  readonly props: Array<TypeModel>;
 }

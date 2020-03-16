@@ -5,29 +5,28 @@ import {
   TypeModelBigInt,
   TypeModelBigIntLiteral,
   TypeModelBoolean,
-  TypeModelBooleanLiteral,
   TypeModelClass,
   TypeModelConditional,
   TypeModelDefault,
   TypeModelESSymbol,
   TypeModelEnum,
   TypeModelEnumLiteral,
+  TypeModelConstructor,
   TypeModelFunction,
   TypeModelFunctionParameter,
   TypeModelIndex,
   TypeModelIndexedAccess,
   TypeModelInfer,
   TypeModelIntersection,
-  TypeModelKeyOf,
+  TypeModelPrefix,
   TypeModelString,
   TypeModelProp,
   TypeModelNumber,
   TypeModelVariable,
-  TypeModelObject,
+  TypeModelInterface,
   TypeModelUnidentified,
   TypeModelUnknown,
-  TypeModelStringLiteral,
-  TypeModelNumberLiteral,
+  TypeModelLiteral,
   TypeModelUniqueESSymbol,
   TypeModelVoid,
   TypeModelUndefined,
@@ -40,6 +39,9 @@ import {
   TypeModelTuple,
   TypeModelRef,
   TypeModelMapped,
+  TypeModelThis,
+  TypeModelNew,
+  TypeModelPredicate,
 } from './models';
 
 export type TypeModel =
@@ -50,15 +52,13 @@ export type TypeModel =
   | TypeModelBoolean
   | TypeModelNumber
   | TypeModelVariable
-  | TypeModelObject
+  | TypeModelInterface
   | TypeModelUnidentified
   | TypeModelAny
   | TypeModelUnknown
   | TypeModelEnum
   | TypeModelBigInt
-  | TypeModelStringLiteral
-  | TypeModelNumberLiteral
-  | TypeModelBooleanLiteral
+  | TypeModelLiteral
   | TypeModelEnumLiteral
   | TypeModelBigIntLiteral
   | TypeModelESSymbol
@@ -79,11 +79,15 @@ export type TypeModel =
   | TypeModelNonPrimitive
   | TypeModelTuple
   | TypeModelFunction
+  | TypeModelConstructor
   | TypeModelRef
-  | TypeModelKeyOf
+  | TypeModelPrefix
+  | TypeModelPredicate
   | TypeModelAlias
   | TypeModelMapped
   | TypeModelInfer
-  | TypeModelClass;
+  | TypeModelClass
+  | TypeModelThis
+  | TypeModelNew;
 
 export type TypeModelKinds = TypeModel['kind'];

@@ -17,10 +17,14 @@ export function isGlobal(symbol: Symbol) {
 }
 
 export function getModifiers(symbol: Symbol) {
-  const modifiers = symbol.declarations?.[0]?.modifiers ?? [];
   const decorators: Array<string> = [];
-  modifiers.some(isPrivate) && decorators.push('private');
-  modifiers.some(isProtected) && decorators.push('protected');
-  modifiers.some(isStatic) && decorators.push('static');
+
+  if (symbol) {
+    const modifiers = symbol.declarations?.[0]?.modifiers ?? [];
+    modifiers.some(isPrivate) && decorators.push('private');
+    modifiers.some(isProtected) && decorators.push('protected');
+    modifiers.some(isStatic) && decorators.push('static');
+  }
+
   return decorators.join(' ');
 }

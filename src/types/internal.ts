@@ -23,6 +23,7 @@ declare module 'typescript' {
 
   interface Node {
     symbol?: ts.Symbol;
+    aliasSymbol?: ts.Symbol;
     localSymbol?: ts.Symbol;
   }
 

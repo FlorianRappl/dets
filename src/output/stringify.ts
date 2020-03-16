@@ -1,7 +1,7 @@
 import { makeIdentifier, toBlock } from '../helpers';
 import {
   TypeModel,
-  TypeModelObject,
+  TypeModelInterface,
   TypeModelProp,
   TypeModelFunction,
   TypeModelIndex,
@@ -14,6 +14,9 @@ import {
   TypeModelMapped,
   TypeModelClass,
   WithTypeExtends,
+  WithTypeImplements,
+  TypeModelConstructor,
+  TypeModelNew,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -35,44 +38,40 @@ export function stringifyProp(type: TypeModelProp) {
   const modifier = type.modifiers ? `${type.modifiers} ` : '';
   const name = makeIdentifier(type.name);
 
-  if (
-    target.kind === 'object' &&
-    target.calls.length === 1 &&
-    target.indices.length === 0 &&
-    target.props.length === 0
-  ) {
-    return `${comment}${modifier}${name}${isOpt}${stringifySignature(target.calls[0])}`;
+  if (target.kind === 'function') {
+    return `${comment}${modifier}${name}${isOpt}${stringifySignature(target, true)}`;
   } else {
-    return `${comment}${modifier}${name}${isOpt}: ${stringifyNode(type.valueType)}`;
+    return `${comment}${modifier}${name}${isOpt}: ${stringifyNode(target)}`;
   }
 }
 
 export function stringifyParameter(param: TypeModelFunctionParameter) {
   const isOpt = param.optional ? '?' : '';
   const spread = param.spread ? '...' : '';
-  return `${spread}${param.param}${isOpt}: ${stringifyNode(param.value)}`;
+  const modifiers = param.modifiers ? `${param.modifiers} ` : '';
+  return `${modifiers}${spread}${param.param}${isOpt}: ${stringifyNode(param.value)}`;
 }
 
 export function stringifyParameters(params: Array<TypeModelFunctionParameter>) {
   return params.map(stringifyParameter).join(', ');
 }
 
-export function stringifySignature(type: TypeModelFunction) {
+export function stringifySignature(type: TypeModelFunction | TypeModelNew, prop: boolean) {
   const parameters = stringifyParameters(type.parameters);
   const ta = stringifyTypeArgs(type);
   const rt = stringifyNode(type.returnType);
-  return `${ta}(${parameters}): ${rt}`;
+  const del = prop ? ': ' : ' => ';
+  return `${ta}(${parameters})${del}${rt}`;
 }
 
-export function stringifyConstructor(type: TypeModelFunction) {
+export function stringifyConstructor(type: TypeModelConstructor) {
   const parameters = stringifyParameters(type.parameters);
-  const ta = stringifyTypeArgs(type);
-  return `constructor${ta}(${parameters})`;
+  return `constructor(${parameters})`;
 }
 
 export function stringifyIndex(type: TypeModelIndex) {
   const isOpt = type.optional ? '?' : '';
-  const index = `${type.keyName}: ${stringifyNode(type.keyType)}`;
+  const index = stringifyParameters(type.parameters);
   return `[${index}]${isOpt}: ${stringifyNode(type.valueType)}`;
 }
 
@@ -88,12 +87,8 @@ export function stringifyIndexedAccess(type: TypeModelIndexedAccess) {
   return `${back}[${front}]`;
 }
 
-export function stringifyInterface(type: TypeModelObject) {
-  const lines: Array<string> = [
-    ...type.props.map(p => stringifyProp(p)),
-    ...type.calls.map(c => stringifySignature(c)),
-    ...type.indices.map(i => stringifyIndex(i)),
-  ];
+export function stringifyInterface(type: TypeModelInterface) {
+  const lines = type.props.map(p => stringifyNode(p, true));
 
   if (type.mapped) {
     lines.push(stringifyMapped(type.mapped));
@@ -103,13 +98,7 @@ export function stringifyInterface(type: TypeModelObject) {
 }
 
 export function stringifyClass(type: TypeModelClass) {
-  const lines: Array<string> = [
-    ...type.ctors.map(c => stringifyConstructor(c)),
-    ...type.props.map(p => stringifyProp(p)),
-    ...type.calls.map(c => stringifySignature(c)),
-    ...type.indices.map(i => stringifyIndex(i)),
-  ];
-
+  const lines = type.props.map(p => stringifyNode(p));
   return toBlock(lines, ';');
 }
 
@@ -119,15 +108,18 @@ export function stringifyEnum(values: Array<TypeModel>) {
 }
 
 export function stringifyExtends(type: WithTypeExtends) {
-  const { extends: es, implements: is } = type;
-  const e = es.length ? ` extends ${es.map(stringifyNode).join(', ')}` : '';
-  const i = is.length ? ` implements ${is.map(stringifyNode).join(', ')}` : '';
-  return e + i;
+  const { extends: es } = type;
+  return es.length ? ` extends ${es.map(t => stringifyNode(t)).join(', ')}` : '';
+}
+
+export function stringifyImplements(type: WithTypeImplements) {
+  const { implements: is } = type;
+  return is.length ? ` implements ${is.map(t => stringifyNode(t)).join(', ')}` : '';
 }
 
 export function stringifyTypeArgs(type: WithTypeArgs) {
   if (type.types?.length > 0) {
-    const args = type.types.map(stringifyNode).join(', ');
+    const args = type.types.map(t => stringifyNode(t)).join(', ');
     return `<${args}>`;
   }
 
@@ -144,30 +136,33 @@ export function stringifyTypeParameter(type: TypeModelTypeParameter) {
 }
 
 export function stringifyTernary(type: TypeModelConditional) {
-  const cond = stringifyNode(type.condition);
-  const primary = stringifyNode(type.primary);
-  const alt = stringifyNode(type.alternate);
-  return `${cond} ? ${primary} : ${alt}`;
+  const t = stringifyNode(type.check);
+  const e = stringifyNode(type.extends);
+  const p = stringifyNode(type.primary);
+  const a = stringifyNode(type.alternate);
+  return `${t} extends ${e} ? ${p} : ${a}`;
 }
 
-export function stringifyNode(type: TypeModel) {
+export function stringifyNode(type: TypeModel, inInterface = false) {
   switch (type?.kind) {
-    case 'object':
+    case 'interface':
       return stringifyInterface(type);
+    case 'prop':
+      return stringifyProp(type);
     case 'ref':
       return `${type.refName}${stringifyTypeArgs(type)}`;
     case 'typeParameter':
       return stringifyTypeParameter(type);
     case 'union':
-      return type.types.map(stringifyNode).join(' | ');
+      return type.types.map(u => stringifyNode(u)).join(' | ');
     case 'intersection':
-      return type.types.map(stringifyNode).join(' & ');
+      return type.types.map(u => stringifyNode(u)).join(' & ');
     case 'member':
       return `${stringifyComment(type)}${type.name} = ${stringifyNode(type.value)}`;
     case 'conditional':
       return stringifyTernary(type);
-    case 'keyof':
-      return `keyof ${stringifyNode(type.value)}`;
+    case 'prefix':
+      return `${type.prefix} ${stringifyNode(type.value)}`;
     case 'infer':
       return `infer ${stringifyNode(type.parameter)}`;
     case 'any':
@@ -179,6 +174,7 @@ export function stringifyNode(type: TypeModel) {
     case 'bigint':
     case 'number':
     case 'never':
+    case 'this':
     case 'string':
       return type.kind;
     case 'nonPrimitive':
@@ -187,16 +183,22 @@ export function stringifyNode(type: TypeModel) {
       return 'symbol';
     case 'unidentified':
       return 'any';
-    case 'stringLiteral':
-    case 'booleanLiteral':
-    case 'numberLiteral':
+    case 'literal':
       return JSON.stringify(type.value);
     case 'indexedAccess':
       return stringifyIndexedAccess(type);
+    case 'index':
+      return stringifyIndex(type);
+    case 'constructor':
+      return stringifyConstructor(type);
     case 'mapped':
       return stringifyMapped(type);
     case 'substitution':
       return stringifyNode(type.variable);
+    case 'new':
+      return `new ${stringifySignature(type, inInterface)}`;
+    case 'function':
+      return stringifySignature(type, inInterface);
   }
 
   return '';
