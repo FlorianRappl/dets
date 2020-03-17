@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import { createBinding } from './utils';
-import { isDefaultExport, getModifiers, isGlobal, isBaseLib, getLib } from '../helpers';
+import { isDefaultExport, getModifiers, isGlobal, isBaseLib, getLib, fullyQualifiedName } from '../helpers';
 import {
   DeclVisitorContext,
   TypeModel,
@@ -80,19 +80,28 @@ function getParameterName(name: ts.BindingName): string {
   return '';
 }
 
-function getDeclaration(symbol: ts.Symbol): ts.Declaration {
-  return symbol?.declarations?.[0];
+function getDeclaration(checker: ts.TypeChecker, node: ts.Node): ts.Declaration {
+  const symbol = getSymbol(checker, node);
+  const decl = symbol?.declarations?.[0];
+
+  if (decl && ts.isImportSpecifier(decl)) {
+    return getDeclaration(checker, decl.name);
+  }
+
+  return decl;
 }
 
 function getSymbol(checker: ts.TypeChecker, node: ts.Node): ts.Symbol {
   const symbol = node.aliasSymbol ?? node.symbol;
 
-  if (!symbol && ts.isTypeNode(node)) {
-    const type = checker.getTypeFromTypeNode(node);
-    return type.aliasSymbol ?? type.symbol;
+  if (symbol) {
+    return symbol;
+  } else if (ts.isTypeReferenceNode(node)) {
+    const ref = node.typeName;
+    return ref.aliasSymbol ?? ref.symbol ?? checker.getSymbolAtLocation(ref);
+  } else {
+    return checker.getSymbolAtLocation(node);
   }
-
-  return symbol;
 }
 
 class DeclVisitor {
@@ -103,10 +112,25 @@ class DeclVisitor {
     this.queue.push(node);
   }
 
-  private normalizeName(node: ts.Node, name: string) {
+  private normalizeName(node: ts.Node) {
+    const c = this.context;
     const fn = node.getSourceFile()?.fileName;
-    const lib = getLib(fn, this.context.availableImports);
-    return createBinding(this.context, lib, name);
+    const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
+    const global = isGlobal(symbol);
+
+    if (!global) {
+      const lib = getLib(fn, c.availableImports);
+      return createBinding(c, lib, symbol.name);
+    }
+
+    return fullyQualifiedName(symbol);
+  }
+
+  private inferType(node: ts.Expression) {
+    const c = this.context.checker;
+    const type = c.getTypeAtLocation(node);
+    const typeNode = c.typeToTypeNode(type);
+    return this.getTypeNode(typeNode);
   }
 
   private getUnion(node: ts.UnionTypeNode): TypeModelUnion {
@@ -149,16 +173,21 @@ class DeclVisitor {
       this.enqueue(node);
       return {
         kind: 'ref',
-        refName: this.normalizeName(node, node.symbol.name),
+        refName: this.normalizeName(node),
         types: this.getTypeParameters(node.typeParameters),
       };
     } else if (isDefaultExport(node) || ts.isVariableDeclaration(node) || ts.isVariableStatement(node)) {
       this.enqueue(node);
+      return {
+        kind: 'ref',
+        refName: this.normalizeName(node),
+        types: [],
+      };
     }
 
     return {
       kind: 'ref',
-      refName: this.normalizeName(node, node.symbol.name),
+      refName: node.symbol.name,
       types: [],
     };
   }
@@ -387,21 +416,21 @@ class DeclVisitor {
   }
 
   private getTypeReference(node: ts.TypeReferenceNode): TypeModelRef {
-    const refName = getRefName(node.typeName);
-    const decl = getDeclaration(getSymbol(this.context.checker, node));
+    const c = this.context.checker;
+    const decl = getDeclaration(c, node);
 
     if (decl && !ts.isTypeParameterDeclaration(decl)) {
       this.enqueue(decl);
       return {
         kind: 'ref',
-        refName: this.normalizeName(decl, refName),
+        refName: this.normalizeName(decl),
         types: this.getTypeArguments(node.typeArguments),
       };
     }
 
     return {
       kind: 'ref',
-      refName: this.normalizeName(node, refName),
+      refName: getRefName(node.typeName),
       types: this.getTypeArguments(node.typeArguments),
     }
   }
@@ -421,7 +450,7 @@ class DeclVisitor {
     this.enqueue(decl);
     return {
       kind: 'ref',
-      refName: this.normalizeName(decl, symbol.name),
+      refName: this.normalizeName(decl),
       types: this.getTypeArguments(node.typeArguments),
     };
   }
@@ -596,17 +625,7 @@ class DeclVisitor {
     if (ts.isArrowFunction(node)) {
       return this.getMethodSignature(node);
     } else {
-      const type = this.context.checker.getTypeAtLocation(node);
-      const typeNode = this.context.checker.typeToTypeNode(type);
-      const decl = getDeclaration(type.aliasSymbol ?? type.symbol);
-
-      if (typeNode) {
-        return this.getTypeNode(typeNode);
-      } else if (decl) {
-        return this.getNode(decl);
-      }
-
-      debugger;
+      return this.inferType(node);
     }
   }
 

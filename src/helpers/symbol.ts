@@ -1,6 +1,17 @@
-import { Symbol } from 'typescript';
+import { Symbol, SymbolFlags } from 'typescript';
 import { globalIndicator } from './constants';
 import { isPrivate, isProtected, isStatic } from './node';
+
+export function fullyQualifiedName(symbol: Symbol) {
+  const parts = [];
+
+  do {
+    parts.push(symbol.name);
+    symbol = symbol.parent;
+  } while (symbol && symbol.flags === SymbolFlags.NamespaceModule && symbol.name !== globalIndicator);
+
+  return parts.reverse().join('.');
+}
 
 export function isGlobal(symbol: Symbol) {
   const parent = symbol?.parent;

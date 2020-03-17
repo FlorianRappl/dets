@@ -32,12 +32,12 @@ declare module "test" {
     /**
      * Gets a shared data value.
      */
-    getData<TKey extends string>(name: TKey): any;
+    getData<TKey extends string>(name: TKey): SharedData[TKey];
     /**
      * Sets the data using a given name. The name needs to be used exclusively by the current pilet.
      * Using the name occupied by another pilet will result in no change.
      */
-    setData<TKey extends string>(name: TKey, value: any, options?: DataStoreOptions): boolean;
+    setData<TKey extends string>(name: TKey, value: SharedData[TKey], options?: DataStoreOptions): boolean;
     /**
      * Registers a route for predefined page component.
      * The route needs to be unique and can contain params.
