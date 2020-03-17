@@ -3,7 +3,7 @@ import { runTestFor } from './helper';
 test('should handle manual composition of react typings', () => {
   const result = runTestFor('react3.ts');
   expect(result).toBe(`declare module "test" {
-  export class SomeClass extends Component {
+  export class SomeClass extends Component<{}> {
     constructor(props: {});
     render(): ReactChild;
   }
@@ -86,7 +86,7 @@ test('should handle manual composition of react typings', () => {
      * \n     * Note: the presence of getSnapshotBeforeUpdate prevents any of the deprecated
      * lifecycle events from running.
      */
-    getSnapshotBeforeUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>): SS;
+    getSnapshotBeforeUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>): SS | null;
     /**
      * Called immediately after updating occurs. Not called for the initial render.
      * \n     * The snapshot is only present if getSnapshotBeforeUpdate is present and returns non-null.

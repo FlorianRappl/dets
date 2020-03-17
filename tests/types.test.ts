@@ -4,7 +4,7 @@ test('should be able to handle a simple mapped type', () => {
   const result = runTestFor('type1.ts');
   expect(result).toBe(`declare module "test" {
   export type Foo = {
-    [index: string]: string;
+    [f: string]: string;
   };
 }`);
 });
@@ -21,9 +21,7 @@ test('should handle mapping of keyof with selection', () => {
 test('should handle inference of arguments in conditionals', () => {
   const result = runTestFor('type3.ts');
   expect(result).toBe(`declare module "test" {
-  export type RemainingArgs<T> = T extends {
-    (_: any, ...args: infer U): any;
-  } ? U : never;
+  export type RemainingArgs<T> = T extends (_: any, ...args: infer U) => any ? U : never;
 }`);
 });
 
@@ -56,9 +54,7 @@ test('should not expand a keyof operator usage', () => {
 
   export type MergedKeys = keyof Merged;
 
-  export const mergedParams: {
-    (key: MergedKeys): boolean;
-  };
+  export const mergedParams: (key: MergedKeys) => boolean;
 }`);
 });
 
@@ -78,16 +74,6 @@ test('should export computed types with dotted arguments', () => {
     createDataProvider<TItem extends {}, TReducers extends DataProviderReducers<TItem>>(options: DataProviderOptions<TItem, TReducers>): DataConnector<TItem, TReducers>;
   }
 
-  export interface DataProviderReducers<TItem> {
-    [name: string]: {
-      (data: DataProviderState<TItem>, ...args: any): DataProviderState<TItem>;
-    };
-  }
-
-  export interface DataProviderState<TItem> {
-    current: Array<TItem>;
-  }
-
   export interface DataProviderOptions<TItem, TReducers> {
     searchData(query: string): Promise<Array<TItem>>;
     reducers?: TReducers;
@@ -97,11 +83,21 @@ test('should export computed types with dotted arguments', () => {
     get(id: string): TItem;
   };
 
+  export interface DataProviderReducers<TItem> {
+    [name: string]: {
+      (data: DataProviderState<TItem>, ...args: any): DataProviderState<TItem>;
+    };
+  }
+
   export type GetActions<TActions> = {
     [P in keyof TActions]: {
       (...args: RemainingArgs<TActions[P]>): void;
     };
   };
+
+  export interface DataProviderState<TItem> {
+    current: Array<TItem>;
+  }
 
   export type RemainingArgs<T> = T extends {
     (_: any, ...args: infer U): any;

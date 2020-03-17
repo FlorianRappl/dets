@@ -26,7 +26,7 @@ test('should handle simple generics and ignore internals', () => {
 test('should handle generator functions', () => {
   const result = runTestFor('function3.ts');
   expect(result).toBe(`declare module "test" {
-  export function myGenerator(): Generator<string, string>;
+  export function myGenerator(): Generator<string, string, unknown>;
 }`);
 });
 

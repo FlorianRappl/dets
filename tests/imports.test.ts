@@ -7,10 +7,8 @@ test('should handle imports from externals (deox)', () => {
   expect(result).toBe(`declare module "test" {
   export const ACTION: "ACTION";
 
-  export const action1: {
-    <_T>(...args: Array<any>): {
-      type: "ACTION";
-    };
+  export const action1: <_T>(...args: Array<any>) => {
+    type: "ACTION";
   } & {
     type: "ACTION";
     toString(): "ACTION";
@@ -39,23 +37,13 @@ test('should handle imports from externals (deox)', () => {
     meta: TMeta;
   };
 
-  export function createAction2<TType extends string, TCallable extends {
-    <_T>(...args: Array<any>): {
-      type: TType;
-    };
-  }>(type: TType, executor?: {
-    (resolve: {
-      <Payload = undefined, Meta = undefined>(payload?: Payload, meta?: Meta): Action<TType, Payload, Meta>;
-    }): TCallable;
-  }): TCallable & {
+  export function createAction2<TType extends string, TCallable extends <_T>(...args: Array<any>) => Action<TType>>(type: TType, executor?: (resolve: <Payload = undefined, Meta = undefined>(payload?: Payload, meta?: Meta) => Action<TType, Payload, Meta>) => TCallable): TCallable & {
     type: TType;
     toString(): TType;
   };
 
-  export const action2: {
-    <_T>(...args: Array<any>): {
-      type: "ACTION";
-    };
+  export const action2: <_T>(...args: Array<any>) => {
+    type: "ACTION";
   } & {
     type: "ACTION";
     toString(): "ACTION";
@@ -70,7 +58,7 @@ test('should handle complex types from externals (styled-components)', () => {
   expect(result).toBe(`import * as StyledComponents from 'styled-components';
 
 declare module "test" {
-  export const Styled: StyledComponents.StyledComponent<"p", any>;
+  export const Styled: StyledComponents.StyledComponent<"p", any, {}, never>;
 }`);
 });
 
@@ -81,7 +69,7 @@ test('should handle jsx from externals (react)', () => {
   expect(result).toBe(`import * as React from 'react';
 
 declare module "test" {
-  export const MyComponent: React.FunctionComponent;
+  export const MyComponent: React.FunctionComponent<{}>;
 }`);
 });
 
@@ -93,9 +81,17 @@ test('should handle keyof operator correctly (react)', () => {
 
 declare module "test" {
   export type NonReactStatics<S extends React.ComponentType<any>, C extends {
-    [index: string]: true;
+    [key: string]: true;
   } = {}> = {
-    [key in Exclude<keyof S, S extends React.MemoExoticComponent<any> ? keyof C : S extends React.ForwardRefExoticComponent<any> ? keyof C : keyof C>]: S[key];
+    [key in Exclude<keyof S, S extends React.MemoExoticComponent<any> ? keyof MEMO_STATICS | keyof C : S extends React.ForwardRefExoticComponent<any> ? keyof FORWARD_REF_STATICS | keyof C : keyof REACT_STATICS | keyof KNOWN_STATICS | keyof C>]: S[key];
   };
+
+  export interface REACT_STATICS {}
+
+  export interface KNOWN_STATICS {}
+
+  export interface FORWARD_REF_STATICS {}
+
+  export interface MEMO_STATICS {}
 }`);
 });

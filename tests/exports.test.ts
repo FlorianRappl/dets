@@ -5,8 +5,6 @@ test('should handle nested selected exports', () => {
   expect(result).toBe(`declare module "test" {
   export const Fail3: "";
 
-  export const Fail3b: {
-    (): string;
-  };
+  export function Fail3b(): string;
 }`);
 });

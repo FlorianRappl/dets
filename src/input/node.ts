@@ -720,6 +720,8 @@ class DeclVisitor {
       this.includeExportedClass(node);
     } else if (ts.isImportSpecifier(node)) {
       this.includeImportedValue(node);
+    } else if (ts.isTypeLiteralNode(node)) {
+      //ignore
     } else {
       this.context.warn(`Could not resolve type at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`);
     }

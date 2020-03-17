@@ -4,8 +4,7 @@ test('should be able to handle exported classes with constructor', () => {
   const result = runTestFor('class1.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
-    constructor(value: string);
-    private value: string;
+    constructor(private value: string);
     foo(): string;
   }
 }`);
@@ -15,9 +14,7 @@ test('should be able to handle exported classes with differnet modifiers', () =>
   const result = runTestFor('class2.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
-    constructor(bar: boolean, value: string);
-    protected bar: boolean;
-    private value: string;
+    constructor(protected bar: boolean, private value: string);
     foo(): string;
     private qxz(): boolean;
     protected name: string;
@@ -79,7 +76,7 @@ test('should be able to handle react classes bundled in', () => {
     imports: [],
   });
   expect(result).toBe(`declare module "test" {
-  export class SomeClass extends Component {
+  export class SomeClass extends Component<{}> {
     constructor(props: {});
     render(): JSX.Element;
   }
@@ -162,7 +159,7 @@ test('should be able to handle react classes bundled in', () => {
      * \n     * Note: the presence of getSnapshotBeforeUpdate prevents any of the deprecated
      * lifecycle events from running.
      */
-    getSnapshotBeforeUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>): SS;
+    getSnapshotBeforeUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>): SS | null;
     /**
      * Called immediately after updating occurs. Not called for the initial render.
      * \n     * The snapshot is only present if getSnapshotBeforeUpdate is present and returns non-null.
@@ -285,8 +282,8 @@ test('should be able to handle static members with modifiers', () => {
   const result = runTestFor('class8.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
-    qxz: string;
     static foo: number;
+    qxz: string;
     protected static bar(): number;
   }
 }`);
