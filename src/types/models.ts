@@ -102,12 +102,6 @@ export interface TypeModelFunctionParameter {
   readonly spread: boolean;
 }
 
-export interface TypeModelEnum extends WithTypeComments {
-  readonly kind: 'enum';
-  readonly comment?: string;
-  readonly values: Array<TypeMemberModel>;
-}
-
 export interface TypeModelBigInt {
   readonly kind: 'bigint';
 }
@@ -144,10 +138,6 @@ export interface TypeModelUniqueESSymbol {
 
 export interface TypeModelVoid {
   readonly kind: 'void';
-}
-
-export interface TypeModelThis {
-  readonly kind: 'this';
 }
 
 export interface TypeModelUndefined {

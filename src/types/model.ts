@@ -9,7 +9,6 @@ import {
   TypeModelConditional,
   TypeModelDefault,
   TypeModelESSymbol,
-  TypeModelEnum,
   TypeModelEnumLiteral,
   TypeModelConstructor,
   TypeModelFunction,
@@ -39,7 +38,6 @@ import {
   TypeModelTuple,
   TypeModelRef,
   TypeModelMapped,
-  TypeModelThis,
   TypeModelNew,
   TypeModelPredicate,
 } from './models';
@@ -56,7 +54,6 @@ export type TypeModel =
   | TypeModelUnidentified
   | TypeModelAny
   | TypeModelUnknown
-  | TypeModelEnum
   | TypeModelBigInt
   | TypeModelLiteral
   | TypeModelEnumLiteral
@@ -87,7 +84,6 @@ export type TypeModel =
   | TypeModelMapped
   | TypeModelInfer
   | TypeModelClass
-  | TypeModelThis
   | TypeModelNew;
 
 export type TypeModelKinds = TypeModel['kind'];

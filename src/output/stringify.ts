@@ -17,6 +17,7 @@ import {
   WithTypeImplements,
   TypeModelConstructor,
   TypeModelNew,
+  TypeMemberModel,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -150,6 +151,16 @@ export function stringifyTernary(type: TypeModelConditional) {
   return `${t} extends ${e} ? ${p} : ${a}`;
 }
 
+export function stringifyMember(type: TypeMemberModel) {
+  const name = `${stringifyComment(type)}${type.name}`;
+
+  if (type.value) {
+    return `${name} = ${stringifyNode(type.value)}`;
+  }
+
+  return name;
+}
+
 export const enum StringifyMode {
   default = 0,
   property = 1,
@@ -171,7 +182,7 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
     case 'intersection':
       return type.types.map(u => stringifyNode(u)).join(' & ');
     case 'member':
-      return `${stringifyComment(type)}${type.name} = ${stringifyNode(type.value)}`;
+      return stringifyMember(type);
     case 'conditional':
       return stringifyTernary(type);
     case 'prefix':
@@ -187,7 +198,6 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
     case 'bigint':
     case 'number':
     case 'never':
-    case 'this':
     case 'string':
       return type.kind;
     case 'nonPrimitive':

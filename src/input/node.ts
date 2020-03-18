@@ -13,6 +13,7 @@ import {
   getTypeRefName,
   getPredicateName,
   getComment,
+  getSymbol,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -37,7 +38,17 @@ import {
   TypeModelInfer,
   TypeModelIntersection,
   TypeModelTuple,
+  TypeModelEnumLiteral,
+  TypeMemberModel,
 } from '../types';
+
+function getSimpleRef(refName: string): TypeModelRef {
+  return {
+    kind: 'ref',
+    refName,
+    types: [],
+  };
+}
 
 class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
@@ -113,18 +124,10 @@ class DeclVisitor {
       };
     } else if (isDefaultExport(node) || ts.isVariableDeclaration(node) || ts.isVariableStatement(node)) {
       this.enqueue(node);
-      return {
-        kind: 'ref',
-        refName: this.normalizeName(node),
-        types: [],
-      };
+      return getSimpleRef(this.normalizeName(node));
     }
 
-    return {
-      kind: 'ref',
-      refName: node.symbol.name,
-      types: [],
-    };
+    return getSimpleRef(node.symbol.name);
   }
 
   private getPropDeclaration(node: ts.PropertyDeclaration): TypeModel {
@@ -194,7 +197,7 @@ class DeclVisitor {
     return props;
   }
 
-  private getMember(node: ts.ClassElement): TypeModel {
+  private getClassMember(node: ts.ClassElement): TypeModel {
     if (ts.isConstructorDeclaration(node)) {
       return this.getConstructor(node);
     }
@@ -210,8 +213,23 @@ class DeclVisitor {
     };
   }
 
-  private getMembers(nodes: ts.NodeArray<ts.ClassElement>): Array<TypeModel> {
-    return nodes?.map(node => this.getMember(node)) ?? [];
+  private getClassMembers(nodes: ts.NodeArray<ts.ClassElement>): Array<TypeModel> {
+    return nodes?.map(node => this.getClassMember(node)) ?? [];
+  }
+
+  private getEnumMember(node: ts.EnumMember): TypeMemberModel {
+    const value = node.initializer;
+
+    return {
+      kind: 'member',
+      name: getPropName(node.name),
+      value: value && this.getExpression(value),
+      comment: getComment(this.context.checker, node),
+    };
+  }
+
+  private getEnumMembers(nodes: ts.NodeArray<ts.EnumMember>): Array<TypeMemberModel> {
+    return nodes?.map(node => this.getEnumMember(node)) ?? [];
   }
 
   private getMethodSignature(node: ts.SignatureDeclaration): TypeModelFunction {
@@ -250,11 +268,7 @@ class DeclVisitor {
   private getTypeParameter(node: ts.TypeParameterDeclaration): TypeModelTypeParameter {
     return {
       kind: 'typeParameter',
-      parameter: {
-        kind: 'ref',
-        refName: node.name.text,
-        types: [],
-      },
+      parameter: getSimpleRef(node.name.text),
       constraint: node.constraint && this.getTypeNode(node.constraint),
       default: node.default && this.getTypeNode(node.default),
     };
@@ -493,10 +507,6 @@ class DeclVisitor {
         return {
           kind: 'esSymbol',
         };
-      case ts.SyntaxKind.ThisKeyword:
-        return {
-          kind: 'this',
-        };
       case ts.SyntaxKind.VoidKeyword:
         return {
           kind: 'void',
@@ -513,10 +523,9 @@ class DeclVisitor {
         return {
           kind: 'never',
         };
+      case ts.SyntaxKind.ThisKeyword:
       case ts.SyntaxKind.ThisType:
-        return {
-          kind: 'this',
-        };
+        return getSimpleRef('this');
     }
 
     this.context.warn(`Saw unknown type node: ${node.kind}.`);
@@ -548,7 +557,7 @@ class DeclVisitor {
       kind: 'class',
       extends: this.getExtends(node.heritageClauses),
       implements: this.getImplements(node.heritageClauses),
-      props: this.getMembers(node.members),
+      props: this.getClassMembers(node.members),
       types: this.getTypeParameters(node.typeParameters),
       comment: getComment(this.context.checker, node),
     };
@@ -567,6 +576,16 @@ class DeclVisitor {
   private getExpression(node: ts.Expression): TypeModel {
     if (ts.isArrowFunction(node)) {
       return this.getMethodSignature(node);
+    } else if (ts.isNumericLiteral(node)) {
+      return {
+        kind: 'literal',
+        value: +node.text,
+      };
+    } else if (ts.isStringLiteral(node)) {
+      return {
+        kind: 'literal',
+        value: node.text,
+      };
     } else {
       return this.inferType(node);
     }
@@ -588,6 +607,16 @@ class DeclVisitor {
     return {
       kind: 'const',
       value: this.getVariableValue(node),
+      comment: getComment(this.context.checker, node),
+    };
+  }
+
+  private getEnum(node: ts.EnumDeclaration): TypeModelEnumLiteral {
+    const symbol = getSymbol(this.context.checker, node);
+    return {
+      kind: 'enumLiteral',
+      const: symbol.flags === ts.SymbolFlags.ConstEnum,
+      values: this.getEnumMembers(node.members),
       comment: getComment(this.context.checker, node),
     };
   }
@@ -659,6 +688,11 @@ class DeclVisitor {
     this.enqueue(decl);
   }
 
+  private includeExportedEnum(node: ts.EnumDeclaration) {
+    const name = node.name.text;
+    this.includeInContext(name, node, () => this.getEnum(node));
+  }
+
   private enqueue(item: ts.Node) {
     if (item && this.queue.indexOf(item) === -1 && this.processed.indexOf(item) === -1) {
       this.queue.push(item);
@@ -682,6 +716,8 @@ class DeclVisitor {
       this.includeExportedClass(node);
     } else if (ts.isImportSpecifier(node)) {
       this.includeImportedValue(node);
+    } else if (ts.isEnumDeclaration(node)) {
+      this.includeExportedEnum(node);
     } else if (ts.isTypeLiteralNode(node)) {
       //ignore
     } else {
