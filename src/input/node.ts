@@ -125,13 +125,13 @@ class DeclVisitor {
     const fn = node.getSourceFile()?.fileName;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
     const global = isGlobal(symbol);
+    const lib = getLib(fn, c.availableImports);
 
-    if (!global) {
-      const lib = getLib(fn, c.availableImports);
-      return createBinding(c, lib, symbol.name);
+    if (global && lib) {
+      return fullyQualifiedName(symbol);
     }
 
-    return fullyQualifiedName(symbol);
+    return createBinding(c, lib, symbol.name);
   }
 
   private inferType(node: ts.Expression) {
