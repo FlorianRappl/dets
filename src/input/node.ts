@@ -50,7 +50,6 @@ function getRefName(name: ts.EntityName): string {
 }
 
 function getPropName(name: ts.PropertyName): string {
-  if (name === undefined) debugger;
   if (ts.isIdentifier(name)) {
     return name.text;
   } else if (ts.isStringLiteral(name)) {
@@ -80,15 +79,24 @@ function getParameterName(name: ts.BindingName): string {
   return '';
 }
 
-function getDeclaration(checker: ts.TypeChecker, node: ts.Node): ts.Declaration {
-  const symbol = getSymbol(checker, node);
-  const decl = symbol?.declarations?.[0];
+function getDeclarationFromSymbol(checker: ts.TypeChecker, symbol: ts.Symbol): ts.Declaration {
+  if (symbol.flags === ts.SymbolFlags.Alias) {
+    const aliasSymbol = checker.getAliasedSymbol(symbol);
+    return getDeclarationFromSymbol(checker, aliasSymbol);
+  } else {
+    const decl = symbol?.declarations?.[0];
 
-  if (decl && ts.isImportSpecifier(decl)) {
-    return getDeclaration(checker, decl.name);
+    if (decl && ts.isImportSpecifier(decl)) {
+      return getDeclarationFromNode(checker, decl.name);
+    }
+
+    return decl;
   }
+}
 
-  return decl;
+function getDeclarationFromNode(checker: ts.TypeChecker, node: ts.Node): ts.Declaration {
+  const symbol = getSymbol(checker, node);
+  return getDeclarationFromSymbol(checker, symbol);
 }
 
 function getSymbol(checker: ts.TypeChecker, node: ts.Node): ts.Symbol {
@@ -417,7 +425,7 @@ class DeclVisitor {
 
   private getTypeReference(node: ts.TypeReferenceNode): TypeModelRef {
     const c = this.context.checker;
-    const decl = getDeclaration(c, node);
+    const decl = getDeclarationFromNode(c, node);
 
     if (decl && !ts.isTypeParameterDeclaration(decl)) {
       this.enqueue(decl);
@@ -445,8 +453,7 @@ class DeclVisitor {
   }
 
   private getExpressionWithTypeArguments(node: ts.ExpressionWithTypeArguments): TypeModelRef {
-    const symbol = this.context.checker.getSymbolAtLocation(node.expression);
-    const decl = symbol.declarations[0];
+    const decl = getDeclarationFromNode(this.context.checker, node.expression)
     this.enqueue(decl);
     return {
       kind: 'ref',

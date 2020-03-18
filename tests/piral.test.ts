@@ -68,94 +68,6 @@ declare module "test" {
     renderHtmlExtension<T = any>(element: HTMLElement | ShadowRoot, props: ExtensionSlotProps<T>): void;
   }
 
-  export type DataStoreOptions = "memory" | "local" | "remote" | CustomDataStoreOptions;
-
-  export interface CustomDataStoreOptions {
-    /**
-     * The target data store. By default the data is only stored in memory.
-     */
-    target?: DataStoreTarget;
-    /**
-     * Optionally determines when the data expires.
-     */
-    expires?: "never" | Date | number;
-  }
-
-  export type DataStoreTarget = "memory" | "local" | "remote";
-
-  export type AnyComponent<T> = React.ComponentClass<T> | React.FunctionComponent<T> | HtmlComponent<T>;
-
-  export interface HtmlComponent<TProps> {
-    /**
-     * Renders a component into the provided element using the given props and context.
-     */
-    component: ForeignComponent<TProps>;
-    /**
-     * The type of the HTML component.
-     */
-    type: "html";
-  }
-
-  export interface ForeignComponent<TProps> {
-    /**
-     * Called when the component is mounted.
-     */
-    mount(element: HTMLElement, props: TProps, ctx: ComponentContext): void;
-    /**
-     * Called when the component should be updated.
-     */
-    update?(element: HTMLElement, props: TProps, ctx: ComponentContext): void;
-    /**
-     * Called when a component is unmounted.
-     */
-    unmount?(element: HTMLElement): void;
-  }
-
-  export interface ComponentContext {
-    router: ReactRouter.RouteComponentProps;
-  }
-
-  export interface PageComponentProps<T = any, S = any> extends RouteBaseProps<T, S> {}
-
-  export interface RouteBaseProps<UrlParams = any, UrlState = any> extends ReactRouter.RouteComponentProps<UrlParams, {}, UrlState>, BaseComponentProps {}
-
-  export interface BaseComponentProps {
-    /**
-     * The currently used pilet API.
-     */
-    piral: PiletApi;
-  }
-
-  export interface ExtensionComponentProps<T = Record<string, any>> extends BaseComponentProps {
-    /**
-     * The provided parameters for showing the extension.
-     */
-    params: T;
-  }
-
-  /**
-   * Props for defining an extension slot.
-   */
-  export interface ExtensionSlotProps<T = any> {
-    /**
-     * Defines what should be rendered when no components are available
-     * for the specified extension.
-     */
-    empty?(): React.ReactNode;
-    /**
-     * Defines how the provided nodes should be rendered.
-     */
-    render?(nodes: Array<React.ReactNode>): React.ReactElement<any, any> | null;
-    /**
-     * The custom parameters for the given extension.
-     */
-    params?: T;
-    /**
-     * The name of the extension to render.
-     */
-    name: string;
-  }
-
   export interface EventEmitter {
     /**
      * Attaches a new event listener.
@@ -169,43 +81,6 @@ declare module "test" {
      * Emits a new event with the given type.
      */
     emit<K extends keyof PiralEventMap>(type: K, arg: PiralEventMap[K]): EventEmitter;
-  }
-
-  export interface PiralEventMap extends PiralCustomEventMap {
-    "store-data": PiralStoreDataEvent;
-    [custom: string]: any;
-  }
-
-  /**
-   * Custom events defined outside of piral-core.
-   */
-  export interface PiralCustomEventMap {}
-
-  export interface PiralStoreDataEvent {
-    /**
-     * The name of the item that was stored.
-     */
-    name: string;
-    /**
-     * The storage target of the item.
-     */
-    target: string;
-    /**
-     * The value that was stored.
-     */
-    value: any;
-    /**
-     * The owner of the item.
-     */
-    owner: string;
-    /**
-     * The expiration of the item.
-     */
-    expires: number;
-  }
-
-  export interface Listener<T> {
-    (arg: T): void;
   }
 
   export interface PiletMetadata {
@@ -242,6 +117,152 @@ declare module "test" {
      * Optionally provides some custom metadata for the pilet.
      */
     custom?: any;
+  }
+
+  export interface SharedData<TValue = any> {
+    [key: string]: TValue;
+  }
+
+  export type DataStoreOptions = DataStoreTarget | CustomDataStoreOptions;
+
+  export type AnyComponent<T> = React.ComponentType<T> | FirstParametersOf<ComponentConverters<T>>;
+
+  export interface PageComponentProps<T = any, S = any> extends RouteBaseProps<T, S> {}
+
+  export interface ExtensionComponentProps<T = Dict<any>> extends BaseComponentProps {
+    /**
+     * The provided parameters for showing the extension.
+     */
+    params: T;
+  }
+
+  /**
+   * Props for defining an extension slot.
+   */
+  export interface ExtensionSlotProps<T = any> {
+    /**
+     * Defines what should be rendered when no components are available
+     * for the specified extension.
+     */
+    empty?(): React.ReactNode;
+    /**
+     * Defines how the provided nodes should be rendered.
+     */
+    render?(nodes: Array<React.ReactNode>): React.ReactElement<any, any> | null;
+    /**
+     * The custom parameters for the given extension.
+     */
+    params?: T;
+    /**
+     * The name of the extension to render.
+     */
+    name: string;
+  }
+
+  export interface Listener<T> {
+    (arg: T): void;
+  }
+
+  export interface PiralEventMap extends PiralCustomEventMap {
+    "store-data": PiralStoreDataEvent;
+    [custom: string]: any;
+  }
+
+  export type DataStoreTarget = "memory" | "local" | "remote";
+
+  export interface CustomDataStoreOptions {
+    /**
+     * The target data store. By default the data is only stored in memory.
+     */
+    target?: DataStoreTarget;
+    /**
+     * Optionally determines when the data expires.
+     */
+    expires?: "never" | Date | number;
+  }
+
+  export type FirstParametersOf<T> = {
+    [K in keyof T]: T[K] extends (arg: any) => any ? FirstParameter<T[K]> : never;
+  }[keyof T];
+
+  export interface ComponentConverters<TProps> extends PiralCustomComponentConverters<TProps> {
+    html(component: HtmlComponent<TProps>): ForeignComponent<TProps>;
+  }
+
+  export interface RouteBaseProps<UrlParams = any, UrlState = any> extends ReactRouter.RouteComponentProps<UrlParams, {}, UrlState>, BaseComponentProps {}
+
+  export interface BaseComponentProps {
+    /**
+     * The currently used pilet API.
+     */
+    piral: PiletApi;
+  }
+
+  export type Dict<T> = Record<string, T>;
+
+  /**
+   * Custom events defined outside of piral-core.
+   */
+  export interface PiralCustomEventMap {}
+
+  export interface PiralStoreDataEvent {
+    /**
+     * The name of the item that was stored.
+     */
+    name: string;
+    /**
+     * The storage target of the item.
+     */
+    target: string;
+    /**
+     * The value that was stored.
+     */
+    value: any;
+    /**
+     * The owner of the item.
+     */
+    owner: string;
+    /**
+     * The expiration of the item.
+     */
+    expires: number;
+  }
+
+  export type FirstParameter<T extends (arg: any) => any> = T extends (arg: infer P) => any ? P : never;
+
+  /**
+   * Custom component converters defined outside of piral-core.
+   */
+  export interface PiralCustomComponentConverters<TProps> {}
+
+  export interface HtmlComponent<TProps> {
+    /**
+     * Renders a component into the provided element using the given props and context.
+     */
+    component: ForeignComponent<TProps>;
+    /**
+     * The type of the HTML component.
+     */
+    type: "html";
+  }
+
+  export interface ForeignComponent<TProps> {
+    /**
+     * Called when the component is mounted.
+     */
+    mount(element: HTMLElement, props: TProps, ctx: ComponentContext): void;
+    /**
+     * Called when the component should be updated.
+     */
+    update?(element: HTMLElement, props: TProps, ctx: ComponentContext): void;
+    /**
+     * Called when a component is unmounted.
+     */
+    unmount?(element: HTMLElement): void;
+  }
+
+  export interface ComponentContext {
+    router: ReactRouter.RouteComponentProps;
   }
 }`);
 });

@@ -95,3 +95,18 @@ declare module "test" {
   export interface MEMO_STATICS {}
 }`);
 });
+
+test('should handle alias of imports correctly (react)', () => {
+  const result = runTestFor('react4.ts', {
+    imports: ['react'],
+  });
+  expect(result).toBe(`import * as React from 'react';
+
+declare module "test" {
+  export interface FooProps {
+    bar: number;
+  }
+
+  export const Foo: React.ComponentType<FooProps>;
+}`);
+});
