@@ -39,7 +39,7 @@ export function stringifyProp(type: TypeModelProp) {
   const name = makeIdentifier(type.name);
 
   if (target.kind === 'function') {
-    return `${comment}${modifier}${name}${isOpt}${stringifySignature(target, true)}`;
+    return `${comment}${modifier}${name}${isOpt}${stringifySignature(target, StringifyMode.property)}`;
   } else {
     return `${comment}${modifier}${name}${isOpt}: ${stringifyNode(target)}`;
   }
@@ -56,12 +56,16 @@ export function stringifyParameters(params: Array<TypeModelFunctionParameter>) {
   return params.map(stringifyParameter).join(', ');
 }
 
-export function stringifySignature(type: TypeModelFunction | TypeModelNew, prop: boolean) {
+export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode: StringifyMode) {
+  const ctor = type.kind === 'new' ? 'new ' : '';
+  const prop = (mode & StringifyMode.property) !== 0;
+  const paren = (mode & StringifyMode.parenthesis) !== 0;
   const parameters = stringifyParameters(type.parameters);
   const ta = stringifyTypeArgs(type);
   const rt = stringifyNode(type.returnType);
   const del = prop ? ': ' : ' => ';
-  return `${ta}(${parameters})${del}${rt}`;
+  const result = `${ctor}${ta}(${parameters})${del}${rt}`;
+  return paren ? `(${result})` : result;
 }
 
 export function stringifyConstructor(type: TypeModelConstructor) {
@@ -88,7 +92,7 @@ export function stringifyIndexedAccess(type: TypeModelIndexedAccess) {
 }
 
 export function stringifyInterface(type: TypeModelInterface) {
-  const lines = type.props.map(p => stringifyNode(p, true));
+  const lines = type.props.map(p => stringifyNode(p, StringifyMode.property));
 
   if (type.mapped) {
     lines.push(stringifyMapped(type.mapped));
@@ -143,7 +147,13 @@ export function stringifyTernary(type: TypeModelConditional) {
   return `${t} extends ${e} ? ${p} : ${a}`;
 }
 
-export function stringifyNode(type: TypeModel, inInterface = false) {
+export const enum StringifyMode {
+  default = 0,
+  property = 1,
+  parenthesis = 2,
+}
+
+export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
   switch (type?.kind) {
     case 'interface':
       return stringifyInterface(type);
@@ -154,7 +164,7 @@ export function stringifyNode(type: TypeModel, inInterface = false) {
     case 'typeParameter':
       return stringifyTypeParameter(type);
     case 'union':
-      return type.types.map(u => stringifyNode(u)).join(' | ');
+      return type.types.map(u => stringifyNode(u, StringifyMode.parenthesis)).join(' | ');
     case 'intersection':
       return type.types.map(u => stringifyNode(u)).join(' & ');
     case 'member':
@@ -196,9 +206,8 @@ export function stringifyNode(type: TypeModel, inInterface = false) {
     case 'substitution':
       return stringifyNode(type.variable);
     case 'new':
-      return `new ${stringifySignature(type, inInterface)}`;
     case 'function':
-      return stringifySignature(type, inInterface);
+      return stringifySignature(type, mode);
   }
 
   return '';

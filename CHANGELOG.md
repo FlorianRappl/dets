@@ -3,6 +3,8 @@
 ## 0.2.0
 
 - Support for dynamically placed imports
+- Rewrote the engine for improved resolution
+- Enhanced accuracy of generated declaration
 
 ## 0.1.5
 

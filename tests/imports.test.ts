@@ -110,3 +110,14 @@ declare module "test" {
   export const Foo: React.ComponentType<FooProps>;
 }`);
 });
+
+test('should handle partial imports in arrays', () => {
+  const result = runTestFor('react5.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Foo {
+    elements: Array<ReactText>;
+  }
+
+  export type ReactText = string | number;
+}`);
+});

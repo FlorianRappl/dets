@@ -8,49 +8,9 @@ test('should handle manual composition of react typings', () => {
     render(): ReactChild;
   }
 
-  export class Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<P, S, SS> {
-    /**
-     * If using the new style context, re-declare this in your class to be the
-     * \`React.ContextType\` of your \`static contextType\`.
-     * Should be used with type annotation or static contextType.
-     * \n     * \`\`\`ts
-     * static contextType = MyContext
-     * // For TS pre-3.7:
-     * context!: React.ContextType<typeof MyContext>
-     * // For TS 3.7 and above:
-     * declare context: React.ContextType<typeof MyContext>
-     * \`\`\`
-     */
-    context: any;
-    setState<K extends keyof S>(state: {
-      (prevState: Readonly<S>, props: Readonly<P>): S | Pick<S, K>;
-    } | S | Pick<S, K>, callback?: Component): void;
-    forceUpdate(callback?: Component): void;
-    render(): ReactNode;
-    props: Readonly<P> & Readonly<{
-      children?: ReactNode;
-    }>;
-    state: Readonly<S>;
-    refs: {
-      [index: string]: ReactInstance;
-    };
-    /**
-     * If set, \`this.context\` will be set at runtime to the current value of the given Context.
-     * \n     * Usage:
-     * \n     * \`\`\`ts
-     * type MyContext = number
-     * const Ctx = React.createContext<MyContext>(0)
-     * \n     * class Foo extends React.Component {
-     *    static contextType = Ctx
-     *    context!: React.ContextType<typeof Ctx>
-     *    render () {
-     *      return <>My context's value: {this.context}</>;
-     *    }
-     * }
-     * \`\`\`
-     */
-    static contextType?: Context<any>;
-  }
+  export interface Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<P, S, SS> {}
+
+  export type ReactChild = ReactElement | ReactText;
 
   export interface ComponentLifecycle<P, S, SS = any> extends NewLifecycle<P, S, SS>, DeprecatedLifecycle<P, S> {
     /**
@@ -77,6 +37,14 @@ test('should handle manual composition of react typings', () => {
      */
     componentDidCatch?(error: Error, errorInfo: ErrorInfo): void;
   }
+
+  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
+    type: T;
+    props: P;
+    key: Key | null;
+  }
+
+  export type ReactText = string | number;
 
   export interface NewLifecycle<P, S, SS> {
     /**
@@ -153,48 +121,9 @@ test('should handle manual composition of react typings', () => {
     componentStack: string;
   }
 
-  export type ReactNode = string | number | false | true | {} | ReactElement | ReactNodeArray | ReactPortal;
-
-  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
-    type: T;
-    props: P;
-    key: ReactText | null;
-  }
-
-  export type ReactText = string | number;
+  export type Key = string | number;
 
   export type JSXElementConstructor<P> = ((props: P) => ReactElement | null) | (new (props: P) => Component<P, any>);
-
-  export interface ReactNodeArray extends Array<ReactNode> {}
-
-  export interface ReactPortal extends ReactElement {
-    key: ReactText | null;
-    children: ReactNode;
-  }
-
-  export type ReactInstance = Component<any> | Element;
-
-  export interface Context<T> {
-    Provider: Provider<T>;
-    Consumer: Consumer<T>;
-    displayName?: string;
-  }
-
-  export type Provider<T> = ProviderExoticComponent<ProviderProps<T>>;
-
-  export interface ProviderProps<T> {
-    value: T;
-    children?: ReactNode;
-  }
-
-  export type Consumer<T> = ExoticComponent<ConsumerProps<T>>;
-
-  export interface ConsumerProps<T> {
-    children(value: T): ReactNode;
-    unstable_observedBits?: number;
-  }
-
-  export type ReactChild = string | number | ReactElement;
 }`);
 });
 

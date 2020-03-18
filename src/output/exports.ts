@@ -8,6 +8,7 @@ import {
   stringifySignature,
   stringifyExtends,
   stringifyImplements,
+  StringifyMode,
 } from './stringify';
 import { TypeModel, TypeRefs } from '../types';
 
@@ -32,7 +33,7 @@ export function stringifyExport(name: string, type: TypeModel) {
     case 'const':
       return `${stringifyComment(type)}export const ${name}: ${stringifyNode(type.value)};`;
     case 'function':
-      return `${stringifyComment(type)}export function ${name}${stringifySignature(type, true)};`;
+      return `${stringifyComment(type)}export function ${name}${stringifySignature(type, StringifyMode.property)};`;
     case 'default':
       return `${stringifyComment(type)}export default ${stringifyNode(type.value)};`;
   }
