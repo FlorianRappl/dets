@@ -9,7 +9,7 @@ const root = process.cwd();
 const args = yargs
   .describe('name', 'Sets the name of the module')
   .string('name')
-  .required('name')
+  .default('name', getName(root))
   .describe('files', 'Sets the files referenced by TypeScript')
   .array('files')
   .default('files', [] as Array<string>)
@@ -26,6 +26,22 @@ const args = yargs
   .describe('out', 'Sets the path to the output file')
   .string('out')
   .default('out', './dist/index.d.ts').argv;
+
+function getName(dir: string) {
+  const location = resolve(dir, 'package.json');
+
+  if (!existsSync(location)) {
+    const parent = resolve(dir, '..');
+
+    if (parent !== dir) {
+      return getName(parent);
+    }
+
+    return undefined;
+  }
+
+  return require(location).name;
+}
 
 function getApiDecl(api: string) {
   const [name, file] = api.split(':');
