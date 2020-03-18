@@ -1,5 +1,12 @@
 # Changelog for dets
 
+## 0.3.0
+
+- Improved resolution of interface merging
+- Enhanced default CLI settings
+- Support for tuples
+- Support for enums
+
 ## 0.2.0
 
 - Support for dynamically placed imports
