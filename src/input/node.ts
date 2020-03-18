@@ -179,7 +179,7 @@ class DeclVisitor {
     };
   }
 
-  private getProps(nodes: ts.NodeArray<ts.TypeElement>): Array<TypeModel> {
+  private getProps(nodes: ReadonlyArray<ts.TypeElement>): Array<TypeModel> {
     const props: Array<TypeModel> = [];
 
     nodes?.forEach(node => {
@@ -213,7 +213,7 @@ class DeclVisitor {
     };
   }
 
-  private getClassMembers(nodes: ts.NodeArray<ts.ClassElement>): Array<TypeModel> {
+  private getClassMembers(nodes: ReadonlyArray<ts.ClassElement>): Array<TypeModel> {
     return nodes?.map(node => this.getClassMember(node)) ?? [];
   }
 
@@ -228,7 +228,7 @@ class DeclVisitor {
     };
   }
 
-  private getEnumMembers(nodes: ts.NodeArray<ts.EnumMember>): Array<TypeMemberModel> {
+  private getEnumMembers(nodes: ReadonlyArray<ts.EnumMember>): Array<TypeMemberModel> {
     return nodes?.map(node => this.getEnumMember(node)) ?? [];
   }
 
@@ -274,11 +274,11 @@ class DeclVisitor {
     };
   }
 
-  private getTypeParameters(nodes: ts.NodeArray<ts.TypeParameterDeclaration>): Array<TypeModel> {
+  private getTypeParameters(nodes: ReadonlyArray<ts.TypeParameterDeclaration>): Array<TypeModel> {
     return nodes?.map(node => this.getTypeParameter(node)) ?? [];
   }
 
-  private getTypeArguments(nodes: ts.NodeArray<ts.TypeNode>): Array<TypeModel> {
+  private getTypeArguments(nodes: ReadonlyArray<ts.TypeNode>): Array<TypeModel> {
     return nodes?.map(node => this.getTypeNode(node)) ?? [];
   }
 
@@ -293,7 +293,7 @@ class DeclVisitor {
     };
   }
 
-  private getFunctionParameters(nodes: ts.NodeArray<ts.ParameterDeclaration>): Array<TypeModelFunctionParameter> {
+  private getFunctionParameters(nodes: ReadonlyArray<ts.ParameterDeclaration>): Array<TypeModelFunctionParameter> {
     return nodes?.map(node => this.getFunctionParameter(node)) ?? [];
   }
 
@@ -531,13 +531,13 @@ class DeclVisitor {
     this.context.warn(`Saw unknown type node: ${node.kind}.`);
   }
 
-  private getExtends(nodes: ts.NodeArray<ts.HeritageClause>): Array<TypeModel> {
+  private getExtends(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
     const clauses: Array<ts.ExpressionWithTypeArguments> = [];
     nodes?.forEach(node => node.token === ts.SyntaxKind.ExtendsKeyword && clauses.push(...node.types));
     return clauses.map(node => this.getTypeNode(node));
   }
 
-  private getImplements(nodes: ts.NodeArray<ts.HeritageClause>): Array<TypeModel> {
+  private getImplements(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
     const clauses: Array<ts.ExpressionWithTypeArguments> = [];
     nodes?.forEach(node => node.token === ts.SyntaxKind.ImplementsKeyword && clauses.push(...node.types));
     return clauses.map(node => this.getTypeNode(node));
@@ -564,11 +564,23 @@ class DeclVisitor {
   }
 
   private getInterface(node: ts.InterfaceDeclaration): TypeModelInterface {
+    const type = this.context.checker.getTypeAtLocation(node);
+    const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
+    const clauses: Array<ts.HeritageClause> = [];
+    const props: Array<ts.TypeElement> = [];
+    const typeParameters: Array<ts.TypeParameterDeclaration> = [];
+
+    decls.forEach(m => {
+      m.heritageClauses?.forEach(c => clauses.includes(c) || clauses.push(c));
+      m.members?.forEach(p => props.includes(p) || props.push(p));
+      m.typeParameters?.forEach(t => typeParameters.includes(t) || typeParameters.push(t));
+    });
+
     return {
       kind: 'interface',
-      extends: this.getExtends(node.heritageClauses),
-      props: this.getProps(node.members),
-      types: this.getTypeParameters(node.typeParameters),
+      extends: this.getExtends(clauses),
+      props: this.getProps(props),
+      types: this.getTypeParameters(typeParameters),
       comment: getComment(this.context.checker, node),
     };
   }
@@ -628,19 +640,19 @@ class DeclVisitor {
 
     if (!isGlobal(symbol) && !isBaseLib(fn) && !getLib(fn, c.availableImports)) {
       const existing = c.refs[name];
-      const type = createType();
+      //const type = createType();
 
-      if (existing) {
-        if (existing.kind === 'interface' && type.kind === 'interface') {
-          // perform declaration merging
-          for (const prop of type.props) {
-            if (prop.kind !== 'prop' || !existing.props.some(m => m.kind === prop.kind && m.name === prop.name)) {
-              existing.props.push(prop);
-            }
-          }
-        }
-      } else {
-        c.refs[name] = type;
+      if (!existing) {
+        //   if (existing.kind === 'interface' && type.kind === 'interface') {
+        //     // perform declaration merging
+        //     for (const prop of type.props) {
+        //       if (prop.kind !== 'prop' || !existing.props.some(m => m.kind === prop.kind && m.name === prop.name)) {
+        //         existing.props.push(prop);
+        //       }
+        //     }
+        //   }
+        // } else {
+        c.refs[name] = createType();
       }
     }
   }
