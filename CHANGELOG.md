@@ -3,6 +3,7 @@
 ## 0.2.0
 
 - Support for dynamically placed imports
+- Support array and object destructuring
 - Rewrote the engine for improved resolution
 - Enhanced accuracy of generated declaration
 
