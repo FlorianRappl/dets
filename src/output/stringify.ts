@@ -121,10 +121,13 @@ export function stringifyImplements(type: WithTypeImplements) {
   return is.length ? ` implements ${is.map(t => stringifyNode(t)).join(', ')}` : '';
 }
 
+export function stringifyTypes(types: Array<TypeModel>) {
+  return types.map(t => stringifyNode(t)).join(', ');
+}
+
 export function stringifyTypeArgs(type: WithTypeArgs) {
   if (type.types?.length > 0) {
-    const args = type.types.map(t => stringifyNode(t)).join(', ');
-    return `<${args}>`;
+    return `<${stringifyTypes(type.types)}>`;
   }
 
   return '';
@@ -208,6 +211,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
     case 'new':
     case 'function':
       return stringifySignature(type, mode);
+    case 'tuple':
+      return `[${stringifyTypes(type.types)}]`;
   }
 
   return '';

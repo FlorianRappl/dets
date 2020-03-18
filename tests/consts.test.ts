@@ -25,3 +25,10 @@ test('should be able to handle computed properties', () => {
   };
 }`);
 });
+
+test('should be able tuples', () => {
+  const result = runTestFor('const4.ts');
+  expect(result).toBe(`declare module "test" {
+  export const foo: [number, string];
+}`);
+});

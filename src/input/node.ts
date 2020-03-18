@@ -36,6 +36,7 @@ import {
   TypeModelRef,
   TypeModelInfer,
   TypeModelIntersection,
+  TypeModelTuple,
 } from '../types';
 
 class DeclVisitor {
@@ -410,6 +411,13 @@ class DeclVisitor {
     };
   }
 
+  private getTuple(node: ts.TupleTypeNode): TypeModelTuple {
+    return {
+      kind: 'tuple',
+      types: node.elementTypes.map(n => this.getTypeNode(n)),
+    };
+  }
+
   private getTypeNode(node: ts.TypeNode): TypeModel {
     if (ts.isUnionTypeNode(node)) {
       return this.getUnion(node);
@@ -443,6 +451,8 @@ class DeclVisitor {
       return this.getConstructorCall(node);
     } else if (ts.isTypePredicateNode(node)) {
       return this.getPredicate(node);
+    } else if (ts.isTupleTypeNode(node)) {
+      return this.getTuple(node);
     } else if (ts.isTypeQueryNode(node)) {
       const symbol = this.context.checker.getSymbolAtLocation(node.exprName);
       const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
