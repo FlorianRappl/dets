@@ -1,4 +1,4 @@
-import { Node, isModuleDeclaration, isExportDeclaration, forEachChild } from 'typescript';
+import { Node, isModuleDeclaration, isExportDeclaration, forEachChild, isNamedExports } from 'typescript';
 import { includeNode } from './node';
 import { swapName } from './utils';
 import { isNodeExported } from '../helpers';
@@ -20,7 +20,8 @@ export function includeTypings(context: DeclVisitorContext, node: Node) {
     includeNode(context, node);
   } else if (isExportDeclaration(node)) {
     const moduleName = node.moduleSpecifier?.text;
-    const elements = node.exportClause?.elements;
+    const exportClause = node.exportClause;
+    const elements = exportClause && isNamedExports(exportClause) && exportClause.elements;
 
     if (elements) {
       // selected exports here
