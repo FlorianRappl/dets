@@ -1,17 +1,62 @@
-import { Identifier, IndexInfo, Symbol } from 'typescript';
+import { Identifier, IndexInfo, Symbol, PropertyName, isIdentifier, isStringLiteral, isNumericLiteral, EntityName, ThisTypeNode, BindingName, isObjectBindingPattern, isArrayBindingPattern } from 'typescript';
 import { typesRoot, modulesRoot, anonymousIndicator, globalIndicator } from './constants';
 
 export function isAnonymous(name: string) {
   return name === anonymousIndicator;
 }
 
-export function getRefName(libName: string) {
+export function getLibRefName(libName: string) {
   if (libName[0] === '@') {
     libName = libName.substr(1);
   }
 
   const parts = libName.split(/[\/\-]/g);
   return parts.map(p => p[0].toUpperCase() + p.substr(1)).join('');
+}
+
+export function getTypeRefName(name: EntityName): string {
+  if (isIdentifier(name)) {
+    return name.text;
+  } else {
+    // must be isQualifiedName(name)
+    const ns = getTypeRefName(name.left);
+    return `${ns}.${name.right.text}`;
+  }
+}
+
+export function getPredicateName(name: Identifier | ThisTypeNode): string {
+  if (isIdentifier(name)) {
+    return name.text;
+  } else {
+    // must be ThisTypeNode
+    return 'this';
+  }
+}
+
+export function getPropName(name: PropertyName): string {
+  if (isIdentifier(name)) {
+    return name.text;
+  } else if (isStringLiteral(name)) {
+    return name.text;
+  } else if (isNumericLiteral(name)) {
+    return name.text;
+  } else {
+    // must be isComputedPropertyName(name)
+    return name.getText();
+  }
+}
+
+export function getParameterName(name: BindingName): string {
+  if (isIdentifier(name)) {
+    return name.text;
+  } else if (isObjectBindingPattern(name)) {
+    //TODO
+    debugger;
+    return '';
+  } else {
+    // must be isArrayBindingPattern(name)
+    return '';
+  }
 }
 
 export function getLibName(fileName: string) {

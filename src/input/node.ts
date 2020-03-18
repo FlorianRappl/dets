@@ -1,6 +1,19 @@
 import * as ts from 'typescript';
 import { createBinding } from './utils';
-import { isDefaultExport, getModifiers, isGlobal, isBaseLib, getLib, fullyQualifiedName } from '../helpers';
+import {
+  isDefaultExport,
+  getModifiers,
+  isGlobal,
+  isBaseLib,
+  getLib,
+  fullyQualifiedName,
+  getPropName,
+  getParameterName,
+  getDeclarationFromNode,
+  getTypeRefName,
+  getPredicateName,
+  getComment,
+} from '../helpers';
 import {
   DeclVisitorContext,
   TypeModel,
@@ -24,93 +37,6 @@ import {
   TypeModelInfer,
   TypeModelIntersection,
 } from '../types';
-
-function getComment(checker: ts.TypeChecker, node: ts.Node): string {
-  const doc = node.symbol?.getDocumentationComment(checker);
-  return doc?.map(item => item.text).join('\n');
-}
-
-function getPredicateName(name: ts.Identifier | ts.ThisTypeNode): string {
-  if (ts.isIdentifier(name)) {
-    return name.text;
-  }
-
-  return 'this';
-}
-
-function getRefName(name: ts.EntityName): string {
-  if (ts.isIdentifier(name)) {
-    return name.text;
-  } else if (ts.isQualifiedName(name)) {
-    const ns = getRefName(name.left);
-    return `${ns}.${name.right.text}`;
-  }
-
-  debugger;
-}
-
-function getPropName(name: ts.PropertyName): string {
-  if (ts.isIdentifier(name)) {
-    return name.text;
-  } else if (ts.isStringLiteral(name)) {
-    return name.text;
-  } else if (ts.isNumericLiteral(name)) {
-    return name.text;
-  } else if (ts.isComputedPropertyName(name)) {
-    return name.getText();
-  }
-
-  debugger;
-  return '';
-}
-
-function getParameterName(name: ts.BindingName): string {
-  if (ts.isIdentifier(name)) {
-    return name.text;
-  } else if (ts.isObjectBindingPattern(name)) {
-    debugger;
-    return '';
-  } else if (ts.isArrayBindingPattern(name)) {
-    debugger;
-    return '';
-  }
-
-  debugger;
-  return '';
-}
-
-function getDeclarationFromSymbol(checker: ts.TypeChecker, symbol: ts.Symbol): ts.Declaration {
-  if (symbol.flags === ts.SymbolFlags.Alias) {
-    const aliasSymbol = checker.getAliasedSymbol(symbol);
-    return getDeclarationFromSymbol(checker, aliasSymbol);
-  } else {
-    const decl = symbol?.declarations?.[0];
-
-    if (decl && ts.isImportSpecifier(decl)) {
-      return getDeclarationFromNode(checker, decl.name);
-    }
-
-    return decl;
-  }
-}
-
-function getDeclarationFromNode(checker: ts.TypeChecker, node: ts.Node): ts.Declaration {
-  const symbol = getSymbol(checker, node);
-  return getDeclarationFromSymbol(checker, symbol);
-}
-
-function getSymbol(checker: ts.TypeChecker, node: ts.Node): ts.Symbol {
-  const symbol = node.aliasSymbol ?? node.symbol;
-
-  if (symbol) {
-    return symbol;
-  } else if (ts.isTypeReferenceNode(node)) {
-    const ref = node.typeName;
-    return ref.aliasSymbol ?? ref.symbol ?? checker.getSymbolAtLocation(ref);
-  } else {
-    return checker.getSymbolAtLocation(node);
-  }
-}
 
 class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
@@ -217,7 +143,7 @@ class DeclVisitor {
       return this.getMethodSignature(node);
     }
 
-    debugger;
+    this.context.warn(`Saw unknown property node: ${node.kind}.`);
   }
 
   private getNormalProp(node: ts.TypeElement): TypeModelProp {
@@ -438,9 +364,9 @@ class DeclVisitor {
 
     return {
       kind: 'ref',
-      refName: getRefName(node.typeName),
+      refName: getTypeRefName(node.typeName),
       types: this.getTypeArguments(node.typeArguments),
-    }
+    };
   }
 
   private getTypeLiteral(node: ts.TypeLiteralNode): TypeModelInterface {
@@ -453,7 +379,7 @@ class DeclVisitor {
   }
 
   private getExpressionWithTypeArguments(node: ts.ExpressionWithTypeArguments): TypeModelRef {
-    const decl = getDeclarationFromNode(this.context.checker, node.expression)
+    const decl = getDeclarationFromNode(this.context.checker, node.expression);
     this.enqueue(decl);
     return {
       kind: 'ref',
@@ -583,7 +509,7 @@ class DeclVisitor {
         };
     }
 
-    debugger;
+    this.context.warn(`Saw unknown type node: ${node.kind}.`);
   }
 
   private getExtends(nodes: ts.NodeArray<ts.HeritageClause>): Array<TypeModel> {
@@ -749,7 +675,9 @@ class DeclVisitor {
     } else if (ts.isTypeLiteralNode(node)) {
       //ignore
     } else {
-      this.context.warn(`Could not resolve type at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`);
+      this.context.warn(
+        `Could not resolve type at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
+      );
     }
   }
 

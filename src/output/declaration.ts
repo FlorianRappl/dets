@@ -1,5 +1,5 @@
 import { stringifyModule } from './module';
-import { getRefName } from '../helpers';
+import { getLibRefName } from '../helpers';
 import { DeclVisitorContext } from '../types';
 
 export function stringifyDeclaration(context: DeclVisitorContext) {
@@ -8,7 +8,7 @@ export function stringifyDeclaration(context: DeclVisitorContext) {
     .map(moduleName => stringifyModule(moduleName, context.modules[moduleName]))
     .join('\n\n');
 
-  const preamble = context.usedImports.map(lib => `import * as ${getRefName(lib)} from '${lib}';`).join('\n');
+  const preamble = context.usedImports.map(lib => `import * as ${getLibRefName(lib)} from '${lib}';`).join('\n');
 
   if (preamble) {
     return `${preamble}\n\n${modules}`;

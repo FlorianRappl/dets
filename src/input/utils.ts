@@ -1,4 +1,4 @@
-import { getRefName } from '../helpers';
+import { getLibRefName } from '../helpers';
 import { DeclVisitorContext } from '../types';
 
 export function createBinding(context: DeclVisitorContext, lib: string | undefined, name: string) {
@@ -8,7 +8,7 @@ export function createBinding(context: DeclVisitorContext, lib: string | undefin
       context.usedImports.push(lib);
     }
 
-    return `${getRefName(lib)}.${name}`;
+    return `${getLibRefName(lib)}.${name}`;
   }
 
   return name;
