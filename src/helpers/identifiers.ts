@@ -1,4 +1,20 @@
-import { Identifier, IndexInfo, Symbol, PropertyName, isIdentifier, isStringLiteral, isNumericLiteral, EntityName, ThisTypeNode, BindingName, isObjectBindingPattern, isArrayBindingPattern } from 'typescript';
+import {
+  Identifier,
+  IndexInfo,
+  Symbol,
+  PropertyName,
+  isIdentifier,
+  isStringLiteral,
+  isNumericLiteral,
+  EntityName,
+  ThisTypeNode,
+  BindingName,
+  isObjectBindingPattern,
+  isArrayBindingPattern,
+  OmittedExpression,
+  isBindingElement,
+  ArrayBindingElement,
+} from 'typescript';
 import { typesRoot, modulesRoot, anonymousIndicator, globalIndicator } from './constants';
 
 export function isAnonymous(name: string) {
@@ -46,15 +62,22 @@ export function getPropName(name: PropertyName): string {
   }
 }
 
-export function getParameterName(name: BindingName): string {
+export function getParameterElement(element: ArrayBindingElement): string {
+  return isBindingElement(element) ? getParameterName(element.name) : getParameterName(element);
+}
+
+export function getParameterName(name: BindingName | OmittedExpression): string {
   if (isIdentifier(name)) {
     return name.text;
   } else if (isObjectBindingPattern(name)) {
-    //TODO
-    debugger;
+    const content = name.elements.map(getParameterElement).join(', ');
+    return `{ ${content} }`;
     return '';
+  } else if (isArrayBindingPattern(name)) {
+    const content = name.elements.map(getParameterElement).join(', ');
+    return `[${content}]`;
   } else {
-    // must be isArrayBindingPattern(name)
+    // must be OmittedExpression
     return '';
   }
 }

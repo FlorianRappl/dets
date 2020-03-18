@@ -36,3 +36,17 @@ test('should handle dotted arguments', () => {
   export function foo(index: number, ...args: Array<any>): void;
 }`);
 });
+
+test('should handle object destructuring', () => {
+  const result = runTestFor('function5.ts');
+  expect(result).toBe(`declare module "test" {
+  export function foo({ a, b }: Record<string, any>): void;
+}`);
+});
+
+test('should handle array destructuring', () => {
+  const result = runTestFor('function6.ts');
+  expect(result).toBe(`declare module "test" {
+  export function foo([, second]: Array<any>): void;
+}`);
+});
