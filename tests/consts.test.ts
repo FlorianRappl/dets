@@ -16,3 +16,12 @@ test('should be able to handle regular expressions', () => {
   export const IS_TELEPHONE: RegExp;
 }`);
 });
+
+test('should be able to handle computed properties', () => {
+  const result = runTestFor('const3.ts');
+  expect(result).toBe(`declare module "test" {
+  export const foo: {
+    [x: string]: number;
+  };
+}`);
+});

@@ -56,8 +56,7 @@ export function getPropName(name: PropertyName): string {
     return name.text;
   } else if (isNumericLiteral(name)) {
     return name.text;
-  } else {
-    // must be isComputedPropertyName(name)
+  } else /* isComputedPropertyName(name) */ {
     return name.getText();
   }
 }
@@ -72,12 +71,10 @@ export function getParameterName(name: BindingName | OmittedExpression): string 
   } else if (isObjectBindingPattern(name)) {
     const content = name.elements.map(getParameterElement).join(', ');
     return `{ ${content} }`;
-    return '';
   } else if (isArrayBindingPattern(name)) {
     const content = name.elements.map(getParameterElement).join(', ');
     return `[${content}]`;
-  } else {
-    // must be OmittedExpression
+  } else /* is OmittedExpression */ {
     return '';
   }
 }
