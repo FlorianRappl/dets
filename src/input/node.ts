@@ -52,6 +52,19 @@ function getSimpleRef(refName: string): TypeModelRef {
   };
 }
 
+function getPackage(node: ts.Node, availableImports: Array<string>) {
+  const fn = node.getSourceFile()?.fileName;
+  const base = isBaseLib(fn);
+  const lib = getLib(fn, availableImports);
+
+  return {
+    external: !!(base || lib),
+    base,
+    lib,
+    fn,
+  };
+}
+
 class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
   private readonly processed: Array<ts.Node> = [];
@@ -62,10 +75,9 @@ class DeclVisitor {
 
   private normalizeName(node: ts.Node) {
     const c = this.context;
-    const fn = node.getSourceFile()?.fileName;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
     const global = isGlobal(symbol);
-    const lib = getLib(fn, c.availableImports);
+    const { lib } = getPackage(node, c.availableImports);
 
     if (global && lib) {
       return fullyQualifiedName(symbol);
@@ -685,10 +697,9 @@ class DeclVisitor {
 
   private includeInContext(name: string, node: ts.Node, createType: () => TypeModel) {
     const c = this.context;
-    const fn = node.parent?.getSourceFile()?.fileName;
     const symbol = c.checker.getSymbolAtLocation(node);
 
-    if (!isGlobal(symbol) && !isBaseLib(fn) && !getLib(fn, c.availableImports)) {
+    if (!isGlobal(symbol) && !getPackage(node, c.availableImports).external) {
       const existing = c.refs[name];
       //const type = createType();
 

@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.4.0
+
+- Enhanced the module resolution for imports
+- Provide dets in a pre-bundled format
+
 ## 0.3.3
 
 - Updated dependencies

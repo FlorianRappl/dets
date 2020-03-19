@@ -121,3 +121,14 @@ test('should handle partial imports in arrays', () => {
   export type ReactText = string | number;
 }`);
 });
+
+test('should handle imports from the right modules', () => {
+  const result = runTestFor('import1.ts', {
+    imports: ['node'],
+  });
+  expect(result).toBe(`import * as Events from 'events';
+
+declare module "test" {
+  export interface Foo extends Events.EventEmitter {}
+}`);
+});

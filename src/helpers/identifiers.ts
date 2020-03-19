@@ -109,6 +109,11 @@ export function getLibName(fileName: string) {
   return undefined;
 }
 
+export interface LibSpecifier {
+  packageName: string;
+  moduleName: string;
+}
+
 export function getLib(fileName: string, imports: Array<string>) {
   const libName = getLibName(fileName);
 
