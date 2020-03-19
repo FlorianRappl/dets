@@ -50,3 +50,10 @@ test('should handle array destructuring', () => {
   export function foo([, second]: Array<any>): void;
 }`);
 });
+
+test('should handle ReadonlyArray from es2015 lib', () => {
+  const result = runTestFor('function7.ts');
+  expect(result).toBe(`declare module "test" {
+  export function foo(s: ReadonlyArray<string>): void;
+}`);
+});
