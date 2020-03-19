@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.3.1
+
+- Fixed duplicated type parameters in decl. merging scenarios
+
 ## 0.3.0
 
 - Improved resolution of interface merging

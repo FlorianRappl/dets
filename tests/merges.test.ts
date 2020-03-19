@@ -19,3 +19,16 @@ test('should merge interfaces appropriately', () => {
   }
 }`);
 });
+
+test('should strip out duplicated type parameters', () => {
+  const result = runTestFor('', {
+    files: ['merge2.ts', 'merge2-one.ts', 'merge2-two.ts'],
+    types: ['merge2.ts'],
+  });
+  expect(result).toBe(`declare module "test" {
+  export interface MyApi<T> {
+    first: T;
+    second: T;
+  }
+}`);
+});

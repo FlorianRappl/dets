@@ -59,6 +59,8 @@ Options:
                                          [string] [default: "./dist/index.d.ts"]
 ```
 
+If `name` is omitted then the `name` from the closest `package.json` is taken.
+
 ### From Node Applications
 
 An example code for using dets in a Node.js application is:
@@ -79,7 +81,33 @@ writeFileSync("dist/index.d.ts", content, "utf8");
 
 This is effectively the same call as the example in the CLI section.
 
-(tbd)
+There are multiple other possibilities, which may be relevant.
+
+The basis for most operations is a `DeclVisitorContext`, which can be created via the `setupVisitorContext` function.
+
+```ts
+import { setupVisitorContext } from "dets";
+
+const context = setupVisitorContext('foo', ["src/**/*.ts"]);
+```
+
+Using the `DeclVisitorContext` you can fill from an exported object, which is automatically enriched with all available information form the given input files:
+
+```ts
+import { fillVisitorContextFromApi } from "dets";
+
+fillVisitorContextFromApi(context, 'src/types/api.ts', 'MyExportedApi');
+```
+
+Alternatively, just get all exports from a given module.
+
+Using the `DeclVisitorContext` you can fill from an exported object, which is automatically enriched with all available information form the given input files:
+
+```ts
+import { fillVisitorContextFromTypes } from "dets";
+
+fillVisitorContextFromTypes(context, 'src/types/index.ts');
+```
 
 ## Development
 

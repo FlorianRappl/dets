@@ -573,7 +573,7 @@ class DeclVisitor {
     decls.forEach(m => {
       m.heritageClauses?.forEach(c => clauses.includes(c) || clauses.push(c));
       m.members?.forEach(p => props.includes(p) || props.push(p));
-      m.typeParameters?.forEach(t => typeParameters.includes(t) || typeParameters.push(t));
+      m.typeParameters?.forEach((t, i) => typeParameters.length === i && typeParameters.push(t));
     });
 
     return {
