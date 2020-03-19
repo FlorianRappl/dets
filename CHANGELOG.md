@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.3.3
+
+- Updated dependencies
+
 ## 0.3.2
 
 - Implemented support for `get` accessors
