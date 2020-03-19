@@ -32,3 +32,10 @@ test('should be able tuples', () => {
   export const foo: [number, string];
 }`);
 });
+
+test('should be able to handle unique keyword', () => {
+  const result = runTestFor('const5.ts');
+  expect(result).toBe(`declare module "test" {
+  export const Foo: unique symbol;
+}`);
+});

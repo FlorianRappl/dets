@@ -239,3 +239,12 @@ test('should be able to get and set accessors', () => {
   }
 }`);
 });
+
+test('should be able to handle readonly modifier', () => {
+  const result = runTestFor('class11.ts');
+  expect(result).toBe(`declare module "test" {
+  export class C {
+    static readonly StaticSymbol: unique symbol;
+  }
+}`);
+});

@@ -1,6 +1,6 @@
 import { Symbol, SymbolFlags } from 'typescript';
 import { globalIndicator } from './constants';
-import { isPrivate, isProtected, isStatic } from './node';
+import { isPrivate, isProtected, isStatic, isReadonly } from './node';
 
 export function fullyQualifiedName(symbol: Symbol) {
   const parts = [];
@@ -35,6 +35,7 @@ export function getModifiers(symbol: Symbol) {
     modifiers.some(isPrivate) && decorators.push('private');
     modifiers.some(isProtected) && decorators.push('protected');
     modifiers.some(isStatic) && decorators.push('static');
+    modifiers.some(isReadonly) && decorators.push('readonly');
   }
 
   return decorators.join(' ');

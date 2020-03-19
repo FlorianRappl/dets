@@ -98,3 +98,7 @@ export function isStatic(type: Node) {
 export function isProtected(type: Node) {
   return type.kind === SyntaxKind.ProtectedKeyword;
 }
+
+export function isReadonly(type: Node) {
+  return type.kind === SyntaxKind.ReadonlyKeyword;
+}
