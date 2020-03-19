@@ -18,6 +18,8 @@ import {
   TypeModelConstructor,
   TypeModelNew,
   TypeMemberModel,
+  TypeModelSetAccessor,
+  TypeModelGetAccessor,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -143,22 +145,36 @@ export function stringifyTypeParameter(type: TypeModelTypeParameter) {
   return `${name}${constraintClause}${defaultsClause}`;
 }
 
-export function stringifyTernary(type: TypeModelConditional) {
-  const t = stringifyNode(type.check);
-  const e = stringifyNode(type.extends);
-  const p = stringifyNode(type.primary);
-  const a = stringifyNode(type.alternate);
+export function stringifyTernary(condition: TypeModelConditional) {
+  const t = stringifyNode(condition.check);
+  const e = stringifyNode(condition.extends);
+  const p = stringifyNode(condition.primary);
+  const a = stringifyNode(condition.alternate);
   return `${t} extends ${e} ? ${p} : ${a}`;
 }
 
-export function stringifyMember(type: TypeMemberModel) {
-  const name = `${stringifyComment(type)}${type.name}`;
+export function stringifyMember(member: TypeMemberModel) {
+  const name = `${stringifyComment(member)}${member.name}`;
 
-  if (type.value) {
-    return `${name} = ${stringifyNode(type.value)}`;
+  if (member.value) {
+    return `${name} = ${stringifyNode(member.value)}`;
   }
 
   return name;
+}
+
+export function stringifySetAccessor(accessor: TypeModelSetAccessor) {
+  const comment = stringifyComment(accessor);
+  const modifier = accessor.modifiers ? `${accessor.modifiers} ` : '';
+  const args = stringifyParameters(accessor.parameters);
+  return `${comment}${modifier}set ${accessor.name}(${args})`;
+}
+
+export function stringifyGetAccessor(accessor: TypeModelGetAccessor) {
+  const comment = stringifyComment(accessor);
+  const modifier = accessor.modifiers ? `${accessor.modifiers} ` : '';
+  const result = stringifyNode(accessor.type);
+  return `${comment}${modifier}get ${accessor.name}(): ${result}`;
 }
 
 export const enum StringifyMode {
@@ -223,6 +239,10 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifySignature(type, mode);
     case 'tuple':
       return `[${stringifyTypes(type.types)}]`;
+    case 'set':
+      return stringifySetAccessor(type);
+    case 'get':
+      return stringifyGetAccessor(type);
   }
 
   return '';

@@ -40,6 +40,8 @@ import {
   TypeModelTuple,
   TypeModelEnumLiteral,
   TypeMemberModel,
+  TypeModelGetAccessor,
+  TypeModelSetAccessor,
 } from '../types';
 
 function getSimpleRef(refName: string): TypeModelRef {
@@ -179,29 +181,7 @@ class DeclVisitor {
     };
   }
 
-  private getProps(nodes: ReadonlyArray<ts.TypeElement>): Array<TypeModel> {
-    const props: Array<TypeModel> = [];
-
-    nodes?.forEach(node => {
-      if (ts.isIndexSignatureDeclaration(node)) {
-        props.push(this.getIndexProp(node));
-      } else if (ts.isCallSignatureDeclaration(node)) {
-        props.push(this.getFunctionSignature(node));
-      } else if (ts.isConstructSignatureDeclaration(node)) {
-        props.push(this.getConstructorCall(node));
-      } else {
-        props.push(this.getNormalProp(node));
-      }
-    });
-
-    return props;
-  }
-
   private getClassMember(node: ts.ClassElement): TypeModel {
-    if (ts.isConstructorDeclaration(node)) {
-      return this.getConstructor(node);
-    }
-
     return {
       kind: 'prop',
       name: node.name.getText(),
@@ -213,8 +193,48 @@ class DeclVisitor {
     };
   }
 
+  private getProps(nodes: ReadonlyArray<ts.TypeElement>): Array<TypeModel> {
+    const props: Array<TypeModel> = [];
+
+    nodes?.forEach(node => {
+      if (ts.isIndexSignatureDeclaration(node)) {
+        props.push(this.getIndexProp(node));
+      } else if (ts.isCallSignatureDeclaration(node)) {
+        props.push(this.getFunctionSignature(node));
+      } else if (ts.isConstructSignatureDeclaration(node)) {
+        props.push(this.getConstructorCall(node));
+      } else if (ts.isGetAccessor(node)) {
+        props.push(this.getGetAccessor(node));
+      } else if (ts.isSetAccessor(node)) {
+        props.push(this.getSetAccessor(node));
+      } else {
+        props.push(this.getNormalProp(node));
+      }
+    });
+
+    return props;
+  }
+
   private getClassMembers(nodes: ReadonlyArray<ts.ClassElement>): Array<TypeModel> {
-    return nodes?.map(node => this.getClassMember(node)) ?? [];
+    const members: Array<TypeModel> = [];
+
+    nodes?.forEach(node => {
+      if (ts.isConstructorDeclaration(node)) {
+        members.push(this.getConstructor(node));
+      } else if (ts.isCallSignatureDeclaration(node)) {
+        members.push(this.getFunctionSignature(node));
+      } else if (ts.isConstructSignatureDeclaration(node)) {
+        members.push(this.getConstructorCall(node));
+      } else if (ts.isGetAccessor(node)) {
+        members.push(this.getGetAccessor(node));
+      } else if (ts.isSetAccessor(node)) {
+        members.push(this.getSetAccessor(node));
+      } else {
+        members.push(this.getClassMember(node));
+      }
+    });
+
+    return members;
   }
 
   private getEnumMember(node: ts.EnumMember): TypeMemberModel {
@@ -232,16 +252,20 @@ class DeclVisitor {
     return nodes?.map(node => this.getEnumMember(node)) ?? [];
   }
 
-  private getMethodSignature(node: ts.SignatureDeclaration): TypeModelFunction {
+  private getReturnType(node: ts.SignatureDeclaration) {
     const checker = this.context.checker;
-    const returnType =
+    const type =
       node.type ?? checker.typeToTypeNode(checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)));
+    return this.getTypeNode(type);
+  }
+
+  private getMethodSignature(node: ts.SignatureDeclaration): TypeModelFunction {
     return {
       kind: 'function',
       parameters: this.getFunctionParameters(node.parameters),
-      returnType: this.getTypeNode(returnType),
+      returnType: this.getReturnType(node),
       types: this.getTypeParameters(node.typeParameters),
-      comment: getComment(checker, node),
+      comment: getComment(this.context.checker, node),
     };
   }
 
@@ -361,6 +385,26 @@ class DeclVisitor {
       kind: 'predicate',
       name: getPredicateName(node.parameterName),
       value: this.getTypeNode(node.type),
+    };
+  }
+
+  private getSetAccessor(node: ts.SetAccessorDeclaration): TypeModelSetAccessor {
+    return {
+      kind: 'set',
+      name: getPropName(node.name),
+      parameters: this.getFunctionParameters(node.parameters),
+      comment: getComment(this.context.checker, node),
+      modifiers: getModifiers(node.symbol),
+    };
+  }
+
+  private getGetAccessor(node: ts.GetAccessorDeclaration): TypeModelGetAccessor {
+    return {
+      kind: 'get',
+      name: getPropName(node.name),
+      type: this.getReturnType(node),
+      comment: getComment(this.context.checker, node),
+      modifiers: getModifiers(node.symbol),
     };
   }
 

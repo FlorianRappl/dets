@@ -157,6 +157,20 @@ export interface TypeModelInfer {
   readonly parameter: TypeModel;
 }
 
+export interface TypeModelGetAccessor extends WithTypeComments {
+  readonly kind: 'get';
+  readonly name: string;
+  readonly type: TypeModel;
+  readonly modifiers: string;
+}
+
+export interface TypeModelSetAccessor extends WithTypeComments {
+  readonly kind: 'set';
+  readonly name: string;
+  readonly parameters: Array<TypeModelFunctionParameter>;
+  readonly modifiers: string;
+}
+
 export interface TypeModelTypeParameter {
   readonly kind: 'typeParameter';
   readonly parameter: TypeModel;

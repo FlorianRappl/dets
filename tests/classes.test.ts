@@ -229,3 +229,13 @@ test('should remove inherited props', () => {
   export class Foo extends Bar {}
 }`);
 });
+
+test('should be able to get and set accessors', () => {
+  const result = runTestFor('class10.ts');
+  expect(result).toBe(`declare module "test" {
+  export class Foo {
+    get foo(): number;
+    set foo(value: number);
+  }
+}`);
+});
