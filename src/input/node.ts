@@ -142,7 +142,7 @@ class DeclVisitor {
     if (ts.isPropertySignature(node)) {
       return this.getTypeNode(node.type);
     } else if (ts.isMethodSignature(node)) {
-      return this.getFunctionSignature(node);
+      return this.getMethodSignature(node);
     } else if (ts.isPropertyDeclaration(node)) {
       return this.getPropDeclaration(node);
     } else if (ts.isMethodDeclaration(node)) {
@@ -200,7 +200,7 @@ class DeclVisitor {
       if (ts.isIndexSignatureDeclaration(node)) {
         props.push(this.getIndexProp(node));
       } else if (ts.isCallSignatureDeclaration(node)) {
-        props.push(this.getFunctionSignature(node));
+        props.push(this.getMethodSignature(node));
       } else if (ts.isConstructSignatureDeclaration(node)) {
         props.push(this.getConstructorCall(node));
       } else if (ts.isGetAccessor(node)) {
@@ -222,7 +222,7 @@ class DeclVisitor {
       if (ts.isConstructorDeclaration(node)) {
         members.push(this.getConstructor(node));
       } else if (ts.isCallSignatureDeclaration(node)) {
-        members.push(this.getFunctionSignature(node));
+        members.push(this.getMethodSignature(node));
       } else if (ts.isConstructSignatureDeclaration(node)) {
         members.push(this.getConstructorCall(node));
       } else if (ts.isGetAccessor(node)) {
@@ -279,16 +279,6 @@ class DeclVisitor {
     };
   }
 
-  private getFunctionSignature(node: ts.SignatureDeclarationBase): TypeModelFunction {
-    return {
-      kind: 'function',
-      parameters: this.getFunctionParameters(node.parameters),
-      returnType: this.getTypeNode(node.type),
-      types: this.getTypeParameters(node.typeParameters),
-      comment: getComment(this.context.checker, node),
-    };
-  }
-
   private getTypeParameter(node: ts.TypeParameterDeclaration): TypeModelTypeParameter {
     return {
       kind: 'typeParameter',
@@ -306,14 +296,26 @@ class DeclVisitor {
     return nodes?.map(node => this.getTypeNode(node)) ?? [];
   }
 
+  private getFunctionParameterValue(node: ts.ParameterDeclaration): TypeModel {
+    if (node.type) {
+      return this.getTypeNode(node.type);
+    } else if (node.initializer) {
+      return this.getExpression(node.initializer);
+    } else {
+      return {
+        kind: 'any',
+      };
+    }
+  }
+
   private getFunctionParameter(node: ts.ParameterDeclaration): TypeModelFunctionParameter {
     return {
       kind: 'parameter',
       param: getParameterName(node.name),
       spread: node.dotDotDotToken !== undefined,
-      optional: node.questionToken !== undefined,
+      optional: node.questionToken !== undefined || node.initializer !== undefined,
       modifiers: getModifiers(node.symbol),
-      value: this.getTypeNode(node.type),
+      value: this.getFunctionParameterValue(node),
     };
   }
 
@@ -498,7 +500,7 @@ class DeclVisitor {
     } else if (ts.isConditionalTypeNode(node)) {
       return this.getConditionalType(node);
     } else if (ts.isFunctionTypeNode(node)) {
-      return this.getFunctionSignature(node);
+      return this.getMethodSignature(node);
     } else if (ts.isInferTypeNode(node)) {
       return this.getInfer(node);
     } else if (ts.isIntersectionTypeNode(node)) {
@@ -641,6 +643,10 @@ class DeclVisitor {
       return {
         kind: 'literal',
         value: node.text,
+      };
+    } else if (node.kind === ts.SyntaxKind.TrueKeyword || node.kind === ts.SyntaxKind.FalseKeyword) {
+      return {
+        kind: 'boolean',
       };
     } else {
       return this.inferType(node);

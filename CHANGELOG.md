@@ -3,6 +3,7 @@
 ## 0.3.3
 
 - Updated dependencies
+- Added support for default arguments
 
 ## 0.3.2
 

@@ -57,3 +57,10 @@ test('should handle ReadonlyArray from es2015 lib', () => {
   export function foo(s: ReadonlyArray<string>): void;
 }`);
 });
+
+test('should handle default arguments', () => {
+  const result = runTestFor('function8.ts');
+  expect(result).toBe(`declare module "test" {
+  export function foo(canManage?: boolean): boolean;
+}`);
+});
