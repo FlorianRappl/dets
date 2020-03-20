@@ -1,17 +1,23 @@
 import { resolve } from 'path';
-import { tslibRoot } from './constants';
+import { tslibRoot, tslibPrefix } from './constants';
 
 export function findAppRoot(root: string, app: string) {
   return resolve(root, app);
 }
 
-export function isBaseLib(path: string) {
-  if (path) {
-    const parts = path.split('/');
-    parts.pop();
-    const newPath = parts.join('/');
-    return newPath.endsWith(tslibRoot);
-  }
+const pathCache = {};
 
-  return false;
+export function isBaseLib(path: string) {
+  if (path in pathCache) {
+    return pathCache[path];
+  } else if (path) {
+    const parts = path.split('/');
+    const part = parts.pop();
+    const newPath = parts.join('/');
+    const result = newPath.endsWith(tslibRoot) && part.startsWith(tslibPrefix);
+    pathCache[path] = result;
+    return result;
+  } else {
+    return false;
+  }
 }
