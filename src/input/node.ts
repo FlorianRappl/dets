@@ -523,7 +523,10 @@ class DeclVisitor {
     } else if (ts.isIntersectionTypeNode(node)) {
       return this.getIntersection(node);
     } else if (ts.isParenthesizedTypeNode(node)) {
-      return this.getTypeNode(node.type);
+      return {
+        kind: 'parenthesis',
+        value: this.getTypeNode(node.type),
+      };
     } else if (ts.isConstructorTypeNode(node)) {
       return this.getConstructorCall(node);
     } else if (ts.isTypePredicateNode(node)) {

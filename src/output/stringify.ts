@@ -268,6 +268,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifyGetAccessor(type);
     case 'predicate':
       return stringifyPredicate(type);
+    case 'parenthesis':
+      return `(${stringifyNode(type.value)})`;
   }
 
   return '';

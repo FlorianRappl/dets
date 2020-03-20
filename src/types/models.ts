@@ -242,6 +242,11 @@ export interface TypeModelInterface extends WithTypeArgs, WithTypeComments, With
   readonly mapped?: TypeModelMapped;
 }
 
+export interface TypeModelParenthesis {
+  readonly kind: 'parenthesis';
+  readonly value: TypeModel;
+}
+
 export interface TypeModelTuple extends WithTypeArgs {
   readonly kind: 'tuple';
 }
