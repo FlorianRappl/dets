@@ -246,7 +246,7 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
     case 'unidentified':
       return 'any';
     case 'literal':
-      return JSON.stringify(type.value);
+      return `${type.value}`;
     case 'indexedAccess':
       return stringifyIndexedAccess(type);
     case 'index':

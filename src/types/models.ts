@@ -1,4 +1,3 @@
-import { PseudoBigInt, Type } from 'typescript';
 import { WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps, WithTypeImplements } from './helper';
 import { TypeModel } from './model';
 
@@ -38,7 +37,6 @@ export interface TypeModelVariable extends WithTypeComments {
 export interface TypeModelRef extends WithTypeArgs {
   readonly kind: 'ref';
   readonly refName: string;
-  readonly external?: Type;
 }
 
 export interface TypeModelPrefixReadonly {
@@ -130,7 +128,7 @@ export interface TypeMemberModel extends WithTypeComments {
 
 export interface TypeModelBigIntLiteral {
   readonly kind: 'bigintLiteral';
-  readonly value: PseudoBigInt;
+  readonly value: string;
 }
 
 export interface TypeModelESSymbol {

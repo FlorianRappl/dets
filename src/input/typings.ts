@@ -10,11 +10,13 @@ export function includeTypings(context: DeclVisitorContext, node: ts.Node) {
     const existing = context.modules[moduleName];
     const before = context.refs;
     context.modules[moduleName] = context.refs = existing || {};
+
     node.body.forEachChild(subNode => {
       if (isNodeExported(subNode)) {
         includeNode(context, subNode);
       }
     });
+
     context.refs = before;
   } else if (isNodeExported(node)) {
     includeNode(context, node);

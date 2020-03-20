@@ -59,13 +59,23 @@ function getPackage(node: ts.Node, availableImports: Array<string>) {
   const base = isBaseLib(fn);
   const lib = getLib(fn, availableImports);
 
-  return {
-    external: !!(base || lib),
-    moduleName: (lib && getModule(node)) || lib,
-    base,
-    lib,
-    fn,
-  };
+  if (base) {
+    return {
+      external: true,
+      moduleName: undefined,
+      base,
+      lib: undefined,
+      fn,
+    };
+  } else {
+    return {
+      external: !!lib,
+      moduleName: (lib && getModule(node)) || lib,
+      base: false,
+      lib,
+      fn,
+    };
+  }
 }
 
 class DeclVisitor {
@@ -106,14 +116,16 @@ class DeclVisitor {
   private getLiteralValue(node: ts.LiteralTypeNode): any {
     switch (node.literal.kind) {
       case ts.SyntaxKind.StringLiteral:
-        return node.literal.text;
+        return JSON.stringify(node.literal.text);
       case ts.SyntaxKind.TrueKeyword:
-        return true;
+        return 'true';
       case ts.SyntaxKind.FalseKeyword:
-        return false;
+        return 'false';
+      case ts.SyntaxKind.BigIntLiteral:
+        return node.literal.text;
       default:
         const type = this.context.checker.getTypeFromTypeNode(node) as any;
-        return type.value;
+        return type?.value;
     }
   }
 
@@ -662,12 +674,12 @@ class DeclVisitor {
     } else if (ts.isNumericLiteral(node)) {
       return {
         kind: 'literal',
-        value: +node.text,
+        value: node.text,
       };
     } else if (ts.isStringLiteral(node)) {
       return {
         kind: 'literal',
-        value: node.text,
+        value: JSON.stringify(node.text),
       };
     } else if (node.kind === ts.SyntaxKind.TrueKeyword || node.kind === ts.SyntaxKind.FalseKeyword) {
       return {
