@@ -14,6 +14,7 @@ import {
   OmittedExpression,
   isBindingElement,
   ArrayBindingElement,
+  ModuleName,
 } from 'typescript';
 import { typesRoot, modulesRoot, anonymousIndicator, globalIndicator } from './constants';
 
@@ -43,8 +44,7 @@ export function getTypeRefName(name: EntityName): string {
 export function getPredicateName(name: Identifier | ThisTypeNode): string {
   if (isIdentifier(name)) {
     return name.text;
-  } else {
-    // must be ThisTypeNode
+  } /* is ThisTypeNode */ else {
     return 'this';
   }
 }
@@ -56,7 +56,7 @@ export function getPropName(name: PropertyName): string {
     return name.text;
   } else if (isNumericLiteral(name)) {
     return name.text;
-  } else /* isComputedPropertyName(name) */ {
+  } /* isComputedPropertyName(name) */ else {
     return name.getText();
   }
 }
@@ -74,7 +74,7 @@ export function getParameterName(name: BindingName | OmittedExpression): string 
   } else if (isArrayBindingPattern(name)) {
     const content = name.elements.map(getParameterElement).join(', ');
     return `[${content}]`;
-  } else /* is OmittedExpression */ {
+  } /* is OmittedExpression */ else {
     return '';
   }
 }

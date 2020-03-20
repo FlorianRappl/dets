@@ -52,6 +52,19 @@ function getSimpleRef(refName: string): TypeModelRef {
   };
 }
 
+function getModule(node: ts.Node): string {
+  while (node) {
+    // only string literal declared top-level modules are external modules
+    if (ts.isModuleDeclaration(node) && ts.isSourceFile(node.parent) && ts.isStringLiteral(node.name)) {
+      return node.name.text;
+    }
+
+    node = node.parent;
+  }
+
+  return undefined;
+}
+
 function getPackage(node: ts.Node, availableImports: Array<string>) {
   const fn = node.getSourceFile()?.fileName;
   const base = isBaseLib(fn);
@@ -59,6 +72,7 @@ function getPackage(node: ts.Node, availableImports: Array<string>) {
 
   return {
     external: !!(base || lib),
+    moduleName: (lib && getModule(node)) || lib,
     base,
     lib,
     fn,
@@ -77,13 +91,13 @@ class DeclVisitor {
     const c = this.context;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
     const global = isGlobal(symbol);
-    const { lib } = getPackage(node, c.availableImports);
+    const { lib, moduleName } = getPackage(node, c.availableImports);
 
     if (global && lib) {
       return fullyQualifiedName(symbol);
     }
 
-    return createBinding(c, lib, symbol.name);
+    return createBinding(c, moduleName, symbol.name);
   }
 
   private inferType(node: ts.Expression) {
