@@ -43,4 +43,25 @@ test('should work with type alias of constants', () => {
 }`);
 });
 
+test('should work with boolean return narrowing', () => {
+  const result = runTestFor('interface4.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Type {
+    isUnion(): this is UnionType;
+  }
 
+  export interface UnionType {}
+}`);
+});
+
+test('should work with merging', () => {
+  const result = runTestFor('interface5.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Merged {
+    kind: "hello";
+    first: boolean;
+    other: number;
+    second: string;
+  }
+}`);
+});

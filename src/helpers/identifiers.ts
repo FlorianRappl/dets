@@ -50,7 +50,9 @@ export function getPredicateName(name: Identifier | ThisTypeNode): string {
 }
 
 export function getPropName(name: PropertyName): string {
-  if (isIdentifier(name)) {
+  if (!name) {
+    return undefined;
+  } else if (isIdentifier(name)) {
     return name.text;
   } else if (isStringLiteral(name)) {
     return name.text;

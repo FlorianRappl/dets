@@ -637,9 +637,16 @@ class DeclVisitor {
     const typeParameters: Array<ts.TypeParameterDeclaration> = [];
 
     decls.forEach(m => {
-      m.heritageClauses?.forEach(c => clauses.includes(c) || clauses.push(c));
-      m.members?.forEach(p => props.includes(p) || props.push(p));
-      m.typeParameters?.forEach((t, i) => typeParameters.length === i && typeParameters.push(t));
+      m.heritageClauses?.forEach(c => {
+        clauses.includes(c) || clauses.push(c);
+      });
+      m.members?.forEach(p => {
+        const name = getPropName(p.name);
+        props.includes(p) || props.some(n => getPropName(n.name) === name) || props.push(p);
+      });
+      m.typeParameters?.forEach((t, i) => {
+        typeParameters.length === i && typeParameters.push(t);
+      });
     });
 
     return {
@@ -709,18 +716,8 @@ class DeclVisitor {
 
     if (!isGlobal(symbol) && !getPackage(node, c.availableImports).external) {
       const existing = c.refs[name];
-      //const type = createType();
 
       if (!existing) {
-        //   if (existing.kind === 'interface' && type.kind === 'interface') {
-        //     // perform declaration merging
-        //     for (const prop of type.props) {
-        //       if (prop.kind !== 'prop' || !existing.props.some(m => m.kind === prop.kind && m.name === prop.name)) {
-        //         existing.props.push(prop);
-        //       }
-        //     }
-        //   }
-        // } else {
         c.refs[name] = createType();
       }
     }
