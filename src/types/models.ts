@@ -31,11 +31,6 @@ export interface TypeModelPredicate {
   readonly value: TypeModel;
 }
 
-export interface TypeModelDefault extends WithTypeComments {
-  readonly kind: 'default';
-  readonly value: TypeModel;
-}
-
 export interface TypeModelVariable extends WithTypeComments {
   readonly kind: 'const';
   readonly value: TypeModel;

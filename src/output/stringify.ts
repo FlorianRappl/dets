@@ -20,6 +20,7 @@ import {
   TypeMemberModel,
   TypeModelSetAccessor,
   TypeModelGetAccessor,
+  TypeModelPredicate,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -177,6 +178,11 @@ export function stringifyGetAccessor(accessor: TypeModelGetAccessor) {
   return `${comment}${modifier}get ${accessor.name}(): ${result}`;
 }
 
+export function stringifyPredicate(predicate: TypeModelPredicate) {
+  const type = stringifyNode(predicate.value);
+  return `${predicate.name} is ${type}`;
+}
+
 export const enum StringifyMode {
   default = 0,
   property = 1,
@@ -243,6 +249,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifySetAccessor(type);
     case 'get':
       return stringifyGetAccessor(type);
+    case 'predicate':
+      return stringifyPredicate(type);
   }
 
   return '';

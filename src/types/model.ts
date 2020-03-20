@@ -70,7 +70,6 @@ export type TypeModel =
   | TypeModelFunctionParameter
   | TypeModelUnion
   | TypeModelIntersection
-  | TypeModelDefault
   | TypeModelIndex
   | TypeModelIndexedAccess
   | TypeModelConditional
