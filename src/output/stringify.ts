@@ -21,6 +21,8 @@ import {
   TypeModelSetAccessor,
   TypeModelGetAccessor,
   TypeModelPredicate,
+  TypeModelPrefix,
+  TypeModelPrefixReadonly,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -183,6 +185,17 @@ export function stringifyPredicate(predicate: TypeModelPredicate) {
   return `${predicate.name} is ${type}`;
 }
 
+export function stringifyReadonly(type: TypeModelPrefixReadonly) {
+  const value = type.value;
+
+  if (value.kind === 'ref' && value.refName === 'Array' && value.types.length === 1) {
+    const [arg] = value.types;
+    return `readonly ${stringifyNode(arg)}[]`;
+  }
+
+  return `readonly ${stringifyNode(value)}`;
+}
+
 export const enum StringifyMode {
   default = 0,
   property = 1,
@@ -207,8 +220,12 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifyMember(type);
     case 'conditional':
       return stringifyTernary(type);
-    case 'prefix':
-      return `${type.prefix} ${stringifyNode(type.value)}`;
+    case 'readonly':
+      return stringifyReadonly(type);
+    case 'unique':
+      return `unique ${stringifyNode(type.value)}`;
+    case 'keyof':
+      return `keyof ${stringifyNode(type.value)}`;
     case 'infer':
       return `infer ${stringifyNode(type.parameter)}`;
     case 'any':

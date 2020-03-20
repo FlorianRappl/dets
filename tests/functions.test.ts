@@ -64,3 +64,10 @@ test('should handle default arguments', () => {
   export function foo(canManage?: boolean): boolean;
 }`);
 });
+
+test('should use array literal for readonly modifiers', () => {
+  const result = runTestFor('function9.ts');
+  expect(result).toBe(`declare module "test" {
+  export function foo(): readonly string[];
+}`);
+});

@@ -42,11 +42,22 @@ export interface TypeModelRef extends WithTypeArgs {
   readonly external?: Type;
 }
 
-export interface TypeModelPrefix {
-  readonly kind: 'prefix';
-  readonly prefix: string;
+export interface TypeModelPrefixReadonly {
+  readonly kind: 'readonly';
   readonly value: TypeModel;
 }
+
+export interface TypeModelPrefixUnique {
+  readonly kind: 'unique';
+  readonly value: TypeModel;
+}
+
+export interface TypeModelPrefixKeyof {
+  readonly kind: 'keyof';
+  readonly value: TypeModel;
+}
+
+export type TypeModelPrefix = TypeModelPrefixKeyof | TypeModelPrefixReadonly | TypeModelPrefixUnique;
 
 export interface TypeModelAny {
   readonly kind: 'any';

@@ -350,20 +350,17 @@ class DeclVisitor {
     switch (node.operator) {
       case ts.SyntaxKind.KeyOfKeyword:
         return {
-          kind: 'prefix',
-          prefix: 'keyof',
+          kind: 'keyof',
           value: this.getTypeNode(node.type),
         };
       case ts.SyntaxKind.UniqueKeyword:
         return {
-          kind: 'prefix',
-          prefix: 'unique',
+          kind: 'unique',
           value: this.getTypeNode(node.type),
         };
       case ts.SyntaxKind.ReadonlyKeyword:
         return {
-          kind: 'prefix',
-          prefix: 'readonly',
+          kind: 'readonly',
           value: this.getTypeNode(node.type),
         };
     }
