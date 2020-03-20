@@ -14,6 +14,8 @@ import {
   getPredicateName,
   getComment,
   getSymbol,
+  getSymbolName,
+  getModule,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -52,19 +54,6 @@ function getSimpleRef(refName: string): TypeModelRef {
   };
 }
 
-function getModule(node: ts.Node): string {
-  while (node) {
-    // only string literal declared top-level modules are external modules
-    if (ts.isModuleDeclaration(node) && ts.isSourceFile(node.parent) && ts.isStringLiteral(node.name)) {
-      return node.name.text;
-    }
-
-    node = node.parent;
-  }
-
-  return undefined;
-}
-
 function getPackage(node: ts.Node, availableImports: Array<string>) {
   const fn = node.getSourceFile()?.fileName;
   const base = isBaseLib(fn);
@@ -97,7 +86,7 @@ class DeclVisitor {
       return fullyQualifiedName(symbol);
     }
 
-    return createBinding(c, moduleName, symbol.name);
+    return createBinding(c, moduleName, getSymbolName(symbol));
   }
 
   private inferType(node: ts.Expression) {
@@ -441,7 +430,12 @@ class DeclVisitor {
     const decl = getDeclarationFromNode(c, node);
 
     if (decl && !ts.isTypeParameterDeclaration(decl)) {
-      this.enqueue(decl);
+      if (ts.isEnumMember(decl)) {
+        this.enqueue(decl.parent);
+      } else {
+        this.enqueue(decl);
+      }
+
       return {
         kind: 'ref',
         refName: this.normalizeName(decl),

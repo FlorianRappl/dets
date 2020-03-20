@@ -3,7 +3,7 @@
 ## 0.4.0
 
 - Enhanced the module resolution for imports
-- Provide dets in a pre-bundled format
+- Provide dets with peer dependency to TypeScript
 
 ## 0.3.3
 
