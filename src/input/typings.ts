@@ -1,11 +1,11 @@
-import { Node, isModuleDeclaration, isExportDeclaration, forEachChild, isNamedExports } from 'typescript';
+import * as ts from 'typescript';
 import { includeNode } from './node';
 import { swapName } from './utils';
 import { isNodeExported } from '../helpers';
 import { DeclVisitorContext } from '../types';
 
-export function includeTypings(context: DeclVisitorContext, node: Node) {
-  if (isModuleDeclaration(node)) {
+export function includeTypings(context: DeclVisitorContext, node: ts.Node) {
+  if (ts.isModuleDeclaration(node)) {
     const moduleName = node.name.text;
     const existing = context.modules[moduleName];
     const before = context.refs;
@@ -18,10 +18,9 @@ export function includeTypings(context: DeclVisitorContext, node: Node) {
     context.refs = before;
   } else if (isNodeExported(node)) {
     includeNode(context, node);
-  } else if (isExportDeclaration(node)) {
-    const moduleName = node.moduleSpecifier?.text;
+  } else if (ts.isExportDeclaration(node)) {
     const exportClause = node.exportClause;
-    const elements = exportClause && isNamedExports(exportClause) && exportClause.elements;
+    const elements = exportClause && ts.isNamedExports(exportClause) && exportClause.elements;
 
     if (elements) {
       // selected exports here
@@ -46,13 +45,14 @@ export function includeTypings(context: DeclVisitorContext, node: Node) {
           }
         }
       });
-    } else if (moduleName) {
+    } else if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       // * exports from a module
+      const moduleName = node.moduleSpecifier.text;
       const fileName = node.getSourceFile().resolvedModules?.get(moduleName)?.resolvedFileName;
 
       if (fileName) {
         const newFile = context.program.getSourceFile(fileName);
-        forEachChild(newFile, node => includeTypings(context, node));
+        ts.forEachChild(newFile, node => includeTypings(context, node));
       }
     }
   }

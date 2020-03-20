@@ -164,7 +164,7 @@ class DeclVisitor {
       return this.getMethodSignature(node);
     }
 
-    this.context.warn(`Saw unknown property node: ${node.kind}.`);
+    this.printWarning('property', node);
   }
 
   private getNormalProp(node: ts.TypeElement): TypeModelProp {
@@ -172,7 +172,6 @@ class DeclVisitor {
       kind: 'prop',
       name: getPropName(node.name),
       modifiers: getModifiers(node.symbol),
-      id: node.symbol?.id,
       optional: node.questionToken !== undefined,
       comment: getComment(this.context.checker, node),
       valueType: this.getPropValue(node),
@@ -196,13 +195,12 @@ class DeclVisitor {
     };
   }
 
-  private getClassMember(node: ts.ClassElement): TypeModel {
+  private getClassMember(node: ts.ClassElement): TypeModelProp {
     return {
       kind: 'prop',
       name: node.name.getText(),
       modifiers: getModifiers(node.symbol),
-      id: node.symbol.id,
-      optional: node.questionToken !== undefined,
+      optional: false,
       comment: getComment(this.context.checker, node),
       valueType: this.getPropValue(node),
     };
@@ -594,7 +592,7 @@ class DeclVisitor {
         return getSimpleRef('this');
     }
 
-    this.context.warn(`Saw unknown type node: ${node.kind}.`);
+    this.printWarning('type node', node);
   }
 
   private getExtends(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
@@ -771,6 +769,12 @@ class DeclVisitor {
     this.includeInContext(name, node, () => this.getEnum(node));
   }
 
+  private printWarning(type: string, node: ts.Node) {
+    this.context.warn(
+      `Could not resolve ${type} at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
+    );
+  }
+
   private enqueue(item: ts.Node) {
     if (item && this.queue.indexOf(item) === -1 && this.processed.indexOf(item) === -1) {
       this.queue.push(item);
@@ -799,9 +803,7 @@ class DeclVisitor {
     } else if (ts.isTypeLiteralNode(node)) {
       //ignore
     } else {
-      this.context.warn(
-        `Could not resolve type at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
-      );
+      this.printWarning('type', node);
     }
   }
 

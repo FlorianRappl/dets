@@ -22,7 +22,6 @@ export interface TypeModelProp extends WithTypeComments {
   readonly optional: boolean;
   readonly kind: 'prop';
   readonly valueType: TypeModel;
-  readonly id: number;
 }
 
 export interface TypeModelPredicate {
