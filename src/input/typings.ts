@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import { includeNode } from './node';
 import { swapName } from './utils';
-import { isNodeExported } from '../helpers';
+import { isNodeExported, isDefaultExport } from '../helpers';
 import { DeclVisitorContext } from '../types';
 
 export function includeTypings(context: DeclVisitorContext, node: ts.Node) {
@@ -20,6 +20,17 @@ export function includeTypings(context: DeclVisitorContext, node: ts.Node) {
     context.refs = before;
   } else if (isNodeExported(node)) {
     includeNode(context, node);
+
+    if (isDefaultExport(node)) {
+      context.refs[''] = {
+        kind: 'default',
+        value: {
+          kind: 'ref',
+          refName: '_default',
+          types: [],
+        },
+      };
+    }
   } else if (ts.isExportDeclaration(node)) {
     const exportClause = node.exportClause;
     const elements = exportClause && ts.isNamedExports(exportClause) && exportClause.elements;

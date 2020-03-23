@@ -627,6 +627,18 @@ class DeclVisitor {
     return clauses.map(node => this.getTypeNode(node));
   }
 
+  private getDefaultExpression(node: ts.ExportAssignment): TypeModel {
+    if (!ts.isArrowFunction(node.expression)) {
+      return {
+        kind: 'const',
+        value: this.getExpression(node.expression),
+        comment: getComment(this.context.checker, node),
+      };
+    } else {
+      return this.getMethodSignature(node.expression);
+    }
+  }
+
   private getAlias(node: ts.TypeAliasDeclaration): TypeModelAlias {
     return {
       kind: 'alias',
@@ -747,9 +759,10 @@ class DeclVisitor {
   }
 
   private includeDefaultExport(node: ts.ExportAssignment) {
-    if (node.expression) {
-      const expr = node.expression;
-      this.includeInContext('_default', expr, () => this.getExpression(expr));
+    const expr = node.expression;
+
+    if (expr) {
+      this.includeInContext('_default', expr, () => this.getDefaultExpression(node));
     } else if (ts.isFunctionDeclaration(node)) {
       this.includeInContext('_default', node, () => this.getMethodSignature(node));
     }

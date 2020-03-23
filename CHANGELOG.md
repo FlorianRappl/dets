@@ -3,6 +3,7 @@
 ## 0.4.1
 
 - Fixed truncation of inferred object literals
+- Fixed included default exports of module
 
 ## 0.4.0
 

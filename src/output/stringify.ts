@@ -21,7 +21,6 @@ import {
   TypeModelSetAccessor,
   TypeModelGetAccessor,
   TypeModelPredicate,
-  TypeModelPrefix,
   TypeModelPrefixReadonly,
 } from '../types';
 

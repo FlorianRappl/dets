@@ -132,3 +132,25 @@ declare module "test" {
   export interface Foo extends Events.EventEmitter {}
 }`);
 });
+
+test('should infere the default export correctly', () => {
+  const result = runTestFor('react6.tsx', {
+    imports: ['react', 'react-redux'],
+  });
+  expect(result).toBe(`import * as ReactRedux from 'react-redux';
+
+declare module "test" {
+  export const _default: ReactRedux.ConnectedComponent<(props: SomeVeryLongComponentNameProps) => JSX.Element, Pick<SomeVeryLongComponentNameProps, "property_a" | "property_b" | "property_c" | "property_d" | "property_e" | "property_f">>;
+
+  export interface SomeVeryLongComponentNameProps {
+    property_a: string;
+    property_b: string;
+    property_c: string;
+    property_d: string;
+    property_e: string;
+    property_f: string;
+  }
+
+  export default _default;
+}`);
+});
