@@ -19,7 +19,23 @@ import {
   UnionTypeNode,
   TypeChecker,
   isImportSpecifier,
+  isModuleDeclaration,
+  isSourceFile,
+  isStringLiteral,
 } from 'typescript';
+
+export function getModule(node: Node): string {
+  while (node) {
+    // only string literal declared top-level modules are external modules
+    if (isModuleDeclaration(node) && isSourceFile(node.parent) && isStringLiteral(node.name)) {
+      return node.name.text;
+    }
+
+    node = node.parent;
+  }
+
+  return undefined;
+}
 
 export function getComment(checker: TypeChecker, node: Node): string {
   const doc = node.symbol?.getDocumentationComment(checker);

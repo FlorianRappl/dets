@@ -29,3 +29,15 @@ test('should be able to handle const enums with values', () => {
   }
 }`);
 });
+
+test('should be able to handle exported members', () => {
+  const result = runTestFor('enum4.ts');
+  expect(result).toBe(`declare module "test" {
+  export type Bar = Foo.first;
+
+  export enum Foo {
+    first = 1,
+    second = 2,
+  }
+}`);
+});

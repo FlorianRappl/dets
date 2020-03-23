@@ -14,6 +14,8 @@ import {
   getPredicateName,
   getComment,
   getSymbol,
+  getSymbolName,
+  getModule,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -52,6 +54,30 @@ function getSimpleRef(refName: string): TypeModelRef {
   };
 }
 
+function getPackage(node: ts.Node, availableImports: Array<string>) {
+  const fn = node.getSourceFile()?.fileName;
+  const base = isBaseLib(fn);
+  const lib = getLib(fn, availableImports);
+
+  if (base) {
+    return {
+      external: true,
+      moduleName: undefined,
+      base,
+      lib: undefined,
+      fn,
+    };
+  } else {
+    return {
+      external: !!lib,
+      moduleName: (lib && getModule(node)) || lib,
+      base: false,
+      lib,
+      fn,
+    };
+  }
+}
+
 class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
   private readonly processed: Array<ts.Node> = [];
@@ -62,16 +88,15 @@ class DeclVisitor {
 
   private normalizeName(node: ts.Node) {
     const c = this.context;
-    const fn = node.getSourceFile()?.fileName;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
     const global = isGlobal(symbol);
-    const lib = getLib(fn, c.availableImports);
+    const { lib, moduleName } = getPackage(node, c.availableImports);
 
     if (global && lib) {
       return fullyQualifiedName(symbol);
     }
 
-    return createBinding(c, lib, symbol.name);
+    return createBinding(c, moduleName, getSymbolName(symbol));
   }
 
   private inferType(node: ts.Expression) {
@@ -91,14 +116,16 @@ class DeclVisitor {
   private getLiteralValue(node: ts.LiteralTypeNode): any {
     switch (node.literal.kind) {
       case ts.SyntaxKind.StringLiteral:
-        return node.literal.text;
+        return JSON.stringify(node.literal.text);
       case ts.SyntaxKind.TrueKeyword:
-        return true;
+        return 'true';
       case ts.SyntaxKind.FalseKeyword:
-        return false;
+        return 'false';
+      case ts.SyntaxKind.BigIntLiteral:
+        return node.literal.text;
       default:
         const type = this.context.checker.getTypeFromTypeNode(node) as any;
-        return type.value;
+        return type?.value;
     }
   }
 
@@ -149,7 +176,7 @@ class DeclVisitor {
       return this.getMethodSignature(node);
     }
 
-    this.context.warn(`Saw unknown property node: ${node.kind}.`);
+    this.printWarning('property', node);
   }
 
   private getNormalProp(node: ts.TypeElement): TypeModelProp {
@@ -157,7 +184,6 @@ class DeclVisitor {
       kind: 'prop',
       name: getPropName(node.name),
       modifiers: getModifiers(node.symbol),
-      id: node.symbol?.id,
       optional: node.questionToken !== undefined,
       comment: getComment(this.context.checker, node),
       valueType: this.getPropValue(node),
@@ -181,13 +207,12 @@ class DeclVisitor {
     };
   }
 
-  private getClassMember(node: ts.ClassElement): TypeModel {
+  private getClassMember(node: ts.ClassElement): TypeModelProp {
     return {
       kind: 'prop',
       name: node.name.getText(),
       modifiers: getModifiers(node.symbol),
-      id: node.symbol.id,
-      optional: node.questionToken !== undefined,
+      optional: false,
       comment: getComment(this.context.checker, node),
       valueType: this.getPropValue(node),
     };
@@ -335,20 +360,17 @@ class DeclVisitor {
     switch (node.operator) {
       case ts.SyntaxKind.KeyOfKeyword:
         return {
-          kind: 'prefix',
-          prefix: 'keyof',
+          kind: 'keyof',
           value: this.getTypeNode(node.type),
         };
       case ts.SyntaxKind.UniqueKeyword:
         return {
-          kind: 'prefix',
-          prefix: 'unique',
+          kind: 'unique',
           value: this.getTypeNode(node.type),
         };
       case ts.SyntaxKind.ReadonlyKeyword:
         return {
-          kind: 'prefix',
-          prefix: 'readonly',
+          kind: 'readonly',
           value: this.getTypeNode(node.type),
         };
     }
@@ -415,7 +437,12 @@ class DeclVisitor {
     const decl = getDeclarationFromNode(c, node);
 
     if (decl && !ts.isTypeParameterDeclaration(decl)) {
-      this.enqueue(decl);
+      if (ts.isEnumMember(decl)) {
+        this.enqueue(decl.parent);
+      } else {
+        this.enqueue(decl);
+      }
+
       return {
         kind: 'ref',
         refName: this.normalizeName(decl),
@@ -506,7 +533,10 @@ class DeclVisitor {
     } else if (ts.isIntersectionTypeNode(node)) {
       return this.getIntersection(node);
     } else if (ts.isParenthesizedTypeNode(node)) {
-      return this.getTypeNode(node.type);
+      return {
+        kind: 'parenthesis',
+        value: this.getTypeNode(node.type),
+      };
     } else if (ts.isConstructorTypeNode(node)) {
       return this.getConstructorCall(node);
     } else if (ts.isTypePredicateNode(node)) {
@@ -574,7 +604,7 @@ class DeclVisitor {
         return getSimpleRef('this');
     }
 
-    this.context.warn(`Saw unknown type node: ${node.kind}.`);
+    this.printWarning('type node', node);
   }
 
   private getExtends(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
@@ -617,9 +647,16 @@ class DeclVisitor {
     const typeParameters: Array<ts.TypeParameterDeclaration> = [];
 
     decls.forEach(m => {
-      m.heritageClauses?.forEach(c => clauses.includes(c) || clauses.push(c));
-      m.members?.forEach(p => props.includes(p) || props.push(p));
-      m.typeParameters?.forEach((t, i) => typeParameters.length === i && typeParameters.push(t));
+      m.heritageClauses?.forEach(c => {
+        clauses.includes(c) || clauses.push(c);
+      });
+      m.members?.forEach(p => {
+        const name = getPropName(p.name);
+        props.includes(p) || props.some(n => getPropName(n.name) === name) || props.push(p);
+      });
+      m.typeParameters?.forEach((t, i) => {
+        typeParameters.length === i && typeParameters.push(t);
+      });
     });
 
     return {
@@ -637,12 +674,12 @@ class DeclVisitor {
     } else if (ts.isNumericLiteral(node)) {
       return {
         kind: 'literal',
-        value: +node.text,
+        value: node.text,
       };
     } else if (ts.isStringLiteral(node)) {
       return {
         kind: 'literal',
-        value: node.text,
+        value: JSON.stringify(node.text),
       };
     } else if (node.kind === ts.SyntaxKind.TrueKeyword || node.kind === ts.SyntaxKind.FalseKeyword) {
       return {
@@ -685,23 +722,12 @@ class DeclVisitor {
 
   private includeInContext(name: string, node: ts.Node, createType: () => TypeModel) {
     const c = this.context;
-    const fn = node.parent?.getSourceFile()?.fileName;
     const symbol = c.checker.getSymbolAtLocation(node);
 
-    if (!isGlobal(symbol) && !isBaseLib(fn) && !getLib(fn, c.availableImports)) {
+    if (!isGlobal(symbol) && !getPackage(node, c.availableImports).external) {
       const existing = c.refs[name];
-      //const type = createType();
 
       if (!existing) {
-        //   if (existing.kind === 'interface' && type.kind === 'interface') {
-        //     // perform declaration merging
-        //     for (const prop of type.props) {
-        //       if (prop.kind !== 'prop' || !existing.props.some(m => m.kind === prop.kind && m.name === prop.name)) {
-        //         existing.props.push(prop);
-        //       }
-        //     }
-        //   }
-        // } else {
         c.refs[name] = createType();
       }
     }
@@ -755,6 +781,12 @@ class DeclVisitor {
     this.includeInContext(name, node, () => this.getEnum(node));
   }
 
+  private printWarning(type: string, node: ts.Node) {
+    this.context.warn(
+      `Could not resolve ${type} at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
+    );
+  }
+
   private enqueue(item: ts.Node) {
     if (item && this.queue.indexOf(item) === -1 && this.processed.indexOf(item) === -1) {
       this.queue.push(item);
@@ -783,9 +815,7 @@ class DeclVisitor {
     } else if (ts.isTypeLiteralNode(node)) {
       //ignore
     } else {
-      this.context.warn(
-        `Could not resolve type at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
-      );
+      this.printWarning('type', node);
     }
   }
 

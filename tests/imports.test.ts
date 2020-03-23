@@ -7,9 +7,9 @@ test('should handle imports from externals (deox)', () => {
   expect(result).toBe(`declare module "test" {
   export const ACTION: "ACTION";
 
-  export const action1: <_T>(...args: Array<any>) => {
+  export const action1: (<_T>(...args: Array<any>) => {
     type: "ACTION";
-  } & {
+  }) & {
     type: "ACTION";
     toString(): "ACTION";
   };
@@ -42,9 +42,9 @@ test('should handle imports from externals (deox)', () => {
     toString(): TType;
   };
 
-  export const action2: <_T>(...args: Array<any>) => {
+  export const action2: (<_T>(...args: Array<any>) => {
     type: "ACTION";
-  } & {
+  }) & {
     type: "ACTION";
     toString(): "ACTION";
   };
@@ -119,5 +119,16 @@ test('should handle partial imports in arrays', () => {
   }
 
   export type ReactText = string | number;
+}`);
+});
+
+test('should handle imports from the right modules', () => {
+  const result = runTestFor('import1.ts', {
+    imports: ['node'],
+  });
+  expect(result).toBe(`import * as Events from 'events';
+
+declare module "test" {
+  export interface Foo extends Events.EventEmitter {}
 }`);
 });

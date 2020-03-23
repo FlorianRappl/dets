@@ -1,4 +1,3 @@
-import { PseudoBigInt, Type } from 'typescript';
 import { WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps, WithTypeImplements } from './helper';
 import { TypeModel } from './model';
 
@@ -22,17 +21,11 @@ export interface TypeModelProp extends WithTypeComments {
   readonly optional: boolean;
   readonly kind: 'prop';
   readonly valueType: TypeModel;
-  readonly id: number;
 }
 
 export interface TypeModelPredicate {
   readonly kind: 'predicate';
   readonly name: string;
-  readonly value: TypeModel;
-}
-
-export interface TypeModelDefault extends WithTypeComments {
-  readonly kind: 'default';
   readonly value: TypeModel;
 }
 
@@ -44,14 +37,24 @@ export interface TypeModelVariable extends WithTypeComments {
 export interface TypeModelRef extends WithTypeArgs {
   readonly kind: 'ref';
   readonly refName: string;
-  readonly external?: Type;
 }
 
-export interface TypeModelPrefix {
-  readonly kind: 'prefix';
-  readonly prefix: string;
+export interface TypeModelPrefixReadonly {
+  readonly kind: 'readonly';
   readonly value: TypeModel;
 }
+
+export interface TypeModelPrefixUnique {
+  readonly kind: 'unique';
+  readonly value: TypeModel;
+}
+
+export interface TypeModelPrefixKeyof {
+  readonly kind: 'keyof';
+  readonly value: TypeModel;
+}
+
+export type TypeModelPrefix = TypeModelPrefixKeyof | TypeModelPrefixReadonly | TypeModelPrefixUnique;
 
 export interface TypeModelAny {
   readonly kind: 'any';
@@ -125,7 +128,7 @@ export interface TypeMemberModel extends WithTypeComments {
 
 export interface TypeModelBigIntLiteral {
   readonly kind: 'bigintLiteral';
-  readonly value: PseudoBigInt;
+  readonly value: string;
 }
 
 export interface TypeModelESSymbol {
@@ -234,6 +237,11 @@ export interface TypeModelMapped {
 export interface TypeModelInterface extends WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps {
   readonly kind: 'interface';
   readonly mapped?: TypeModelMapped;
+}
+
+export interface TypeModelParenthesis {
+  readonly kind: 'parenthesis';
+  readonly value: TypeModel;
 }
 
 export interface TypeModelTuple extends WithTypeArgs {

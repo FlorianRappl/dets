@@ -10,9 +10,9 @@ test('should handle extends with conditionals', () => {
 test('should handle default values with conditionals', () => {
   const result = runTestFor('generic2.ts');
   expect(result).toBe(`declare module "test" {
-  export type Ternary<T = undefined> = T extends undefined ? {} : {
+  export type Ternary<T = undefined> = (T extends undefined ? {} : {
     ternary: T;
-  };
+  });
 }`);
 });
 

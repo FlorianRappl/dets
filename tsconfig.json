@@ -3,7 +3,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "skipLibCheck": true,
-    "declaration": true,
+    "declaration": false,
     "target": "es6",
     "outDir": "lib"
   },

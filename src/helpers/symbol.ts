@@ -27,6 +27,14 @@ export function isGlobal(symbol: Symbol) {
   return false;
 }
 
+export function getSymbolName(symbol: Symbol): string {
+  if (symbol.flags === SymbolFlags.EnumMember) {
+    return `${symbol.parent.name}.${symbol.name}`;
+  }
+
+  return symbol.name;
+}
+
 export function getModifiers(symbol: Symbol) {
   const decorators: Array<string> = [];
 

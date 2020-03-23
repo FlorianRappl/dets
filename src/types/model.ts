@@ -42,6 +42,7 @@ import {
   TypeModelPredicate,
   TypeModelGetAccessor,
   TypeModelSetAccessor,
+  TypeModelParenthesis,
 } from './models';
 
 export type TypeModel =
@@ -70,7 +71,6 @@ export type TypeModel =
   | TypeModelFunctionParameter
   | TypeModelUnion
   | TypeModelIntersection
-  | TypeModelDefault
   | TypeModelIndex
   | TypeModelIndexedAccess
   | TypeModelConditional
@@ -88,6 +88,7 @@ export type TypeModel =
   | TypeModelClass
   | TypeModelNew
   | TypeModelGetAccessor
-  | TypeModelSetAccessor;
+  | TypeModelSetAccessor
+  | TypeModelParenthesis;
 
 export type TypeModelKinds = TypeModel['kind'];

@@ -39,3 +39,12 @@ test('should be able to handle unique keyword', () => {
   export const Foo: unique symbol;
 }`);
 });
+
+test('should be able to display big int literals', () => {
+  const result = runTestFor('const6.ts');
+  expect(result).toBe(`declare module "test" {
+  export const mybigIntLiteral: 100n;
+
+  export const mybigInt: bigint;
+}`);
+});
