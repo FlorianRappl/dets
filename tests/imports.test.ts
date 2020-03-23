@@ -154,3 +154,16 @@ declare module "test" {
   export default _default;
 }`);
 });
+
+test('should respect the global.d.ts in the Node typings', () => {
+  const result = runTestFor('import2.ts', {
+    imports: ['node'],
+  });
+  expect(result).toBe(`declare module "test" {
+  export type Foo = Buffer;
+
+  export interface Bar {
+    buffer: Buffer;
+  }
+}`);
+});

@@ -104,3 +104,20 @@ test('should export computed types with dotted arguments', () => {
   } ? U : never;
 }`);
 });
+
+test('should be able to infer correctly', () => {
+  const result = runTestFor('type9.ts');
+  expect(result).toBe(`declare module "test" {
+  export type KeyValue = {
+    COMPONENT_ERROR__LNK_LABEL: string;
+    COMPONENT_ERROR__LNK_MESSAGE: string;
+    COMPONENT_ERROR__CNTEXT_MENU_LINK_LABEL: string;
+    COMPONENT_ERRR__CNTEXT_MENU_LINK_MESSAGE: string;
+    E: string;
+    D: string;
+    C: string;
+    B: string;
+    A: string;
+  };
+}`);
+});

@@ -1,5 +1,5 @@
 import { resolve } from 'path';
-import { tslibRoot, tslibPrefix } from './constants';
+import { tslibRoot, tslibPrefix, globalFiles } from './constants';
 
 export function findAppRoot(root: string, app: string) {
   return resolve(root, app);
@@ -14,7 +14,7 @@ export function isBaseLib(path: string) {
     const parts = path.split('/');
     const part = parts.pop();
     const newPath = parts.join('/');
-    const result = newPath.endsWith(tslibRoot) && part.startsWith(tslibPrefix);
+    const result = (newPath.endsWith(tslibRoot) && part.startsWith(tslibPrefix)) || globalFiles.includes(part);
     pathCache[path] = result;
     return result;
   } else {

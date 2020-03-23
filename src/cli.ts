@@ -3,7 +3,7 @@
 import * as yargs from 'yargs';
 import { dirname, resolve } from 'path';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { generateDeclaration } from './index';
+import { exec } from 'child_process';
 
 const root = process.cwd();
 const args = yargs
@@ -59,6 +59,27 @@ function writeFile(path: string, content: string) {
   writeFileSync(full, content, 'utf8');
 }
 
+function runScript(script: string, cwd: string) {
+  return new Promise((resolve, reject) => {
+    const cp = exec(script, { cwd });
+    cp.on('close', (code, signal) => (code === 0 ? resolve() : reject(new Error(signal))));
+  });
+}
+
+function runCli() {
+  writeFile(
+    args.out,
+    require('./index').generateDeclaration({
+      root,
+      name: args.name,
+      apis: args.apis.map(getApiDecl),
+      files: args.files,
+      imports: args.imports,
+      types: args.types,
+    }),
+  );
+}
+
 if (!args.name) {
   console.error('Please provide a name for the module.');
   process.exit(1);
@@ -69,14 +90,10 @@ if (args.files.length === 0) {
   process.exit(1);
 }
 
-writeFile(
-  args.out,
-  generateDeclaration({
-    root,
-    name: args.name,
-    apis: args.apis.map(getApiDecl),
-    files: args.files,
-    imports: args.imports,
-    types: args.types,
-  }),
-);
+try {
+  require('typescript');
+  runCli();
+} catch {
+  console.warn(`TypeScript is missing. Trying to install ...`);
+  runScript('npm install typescript@3.x', resolve(__dirname, '..')).then(runCli);
+}

@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.4.2
+
+- Fixed general truncation in certain cases
+- Added support for `global.d.ts` files (#8)
+- Lazy install TypeScript for CLI commands
+
 ## 0.4.1
 
 - Fixed truncation of inferred object literals

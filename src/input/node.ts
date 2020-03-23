@@ -99,10 +99,18 @@ class DeclVisitor {
     return createBinding(c, moduleName, getSymbolName(symbol));
   }
 
-  private inferType(node: ts.Expression) {
+  private convertToTypeNodeFromType(type: ts.Type) {
     const c = this.context.checker;
-    const type = c.getTypeAtLocation(node);
-    const typeNode = c.typeToTypeNode(type, undefined, ts.NodeBuilderFlags.NoTruncation);
+    return c.typeToTypeNode(type, undefined, ts.NodeBuilderFlags.NoTruncation);
+  }
+
+  private convertToTypeNodeFromNode(node: ts.Node) {
+    const type = this.context.checker.getTypeAtLocation(node);
+    return this.convertToTypeNodeFromType(type);
+  }
+
+  private inferType(node: ts.Expression) {
+    const typeNode = this.convertToTypeNodeFromNode(node);
     return this.getTypeNode(typeNode);
   }
 
@@ -168,8 +176,7 @@ class DeclVisitor {
   }
 
   private getPropDeclaration(node: ts.PropertyDeclaration): TypeModel {
-    const checker = this.context.checker;
-    const type = node.type ?? checker.typeToTypeNode(checker.getTypeAtLocation(node));
+    const type = node.type ?? this.convertToTypeNodeFromNode(node);
     return this.getTypeNode(type);
   }
 
@@ -288,7 +295,7 @@ class DeclVisitor {
   private getReturnType(node: ts.SignatureDeclaration) {
     const checker = this.context.checker;
     const type =
-      node.type ?? checker.typeToTypeNode(checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)));
+      node.type ?? this.convertToTypeNodeFromType(checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)));
     return this.getTypeNode(type);
   }
 
@@ -554,7 +561,7 @@ class DeclVisitor {
     } else if (ts.isTypeQueryNode(node)) {
       const symbol = this.context.checker.getSymbolAtLocation(node.exprName);
       const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
-      const typeNode = this.context.checker.typeToTypeNode(type);
+      const typeNode = this.convertToTypeNodeFromType(type);
       return this.getTypeNode(typeNode);
     }
 
@@ -716,8 +723,7 @@ class DeclVisitor {
     } else if (node.initializer) {
       return this.getExpression(node.initializer);
     } else {
-      const type = this.context.checker.getTypeAtLocation(node);
-      const typeNode = this.context.checker.typeToTypeNode(type);
+      const typeNode = this.convertToTypeNodeFromNode(node);
       return this.getTypeNode(typeNode);
     }
   }
