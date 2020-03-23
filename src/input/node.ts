@@ -102,7 +102,7 @@ class DeclVisitor {
   private inferType(node: ts.Expression) {
     const c = this.context.checker;
     const type = c.getTypeAtLocation(node);
-    const typeNode = c.typeToTypeNode(type);
+    const typeNode = c.typeToTypeNode(type, undefined, ts.NodeBuilderFlags.NoTruncation);
     return this.getTypeNode(typeNode);
   }
 
@@ -154,6 +154,14 @@ class DeclVisitor {
     } else if (isDefaultExport(node) || ts.isVariableDeclaration(node) || ts.isVariableStatement(node)) {
       this.enqueue(node);
       return getSimpleRef(this.normalizeName(node));
+    } else if (ts.isPropertyAssignment(node)) {
+      return {
+        kind: 'prop',
+        modifiers: getModifiers(node.symbol),
+        name: node.symbol.name,
+        optional: node.questionToken !== undefined,
+        valueType: this.getExpression(node.initializer),
+      };
     }
 
     return getSimpleRef(node.symbol.name);

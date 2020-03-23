@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.4.1
+
+- Fixed truncation of inferred object literals
+
 ## 0.4.0
 
 - Enhanced the module resolution for imports

@@ -43,7 +43,7 @@ export function getComment(checker: TypeChecker, node: Node): string {
 }
 
 export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): Declaration {
-  if (symbol.flags === SymbolFlags.Alias) {
+  if (symbol && symbol.flags === SymbolFlags.Alias) {
     const aliasSymbol = checker.getAliasedSymbol(symbol);
     return getDeclarationFromSymbol(checker, aliasSymbol);
   } else {

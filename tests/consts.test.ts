@@ -48,3 +48,20 @@ test('should be able to display big int literals', () => {
   export const mybigInt: bigint;
 }`);
 });
+
+test('should be able to use const object literal', () => {
+  const result = runTestFor('const7.ts');
+  expect(result).toBe(`declare module "test" {
+  export const keyValue: {
+    COMPONENT_ERROR__LNK_LABEL: string;
+    COMPONENT_ERROR__LNK_MESSAGE: string;
+    COMPONENT_ERROR__CNTEXT_MENU_LINK_LABEL: string;
+    COMPONENT_ERRR__CNTEXT_MENU_LINK_MESSAGE: string;
+    E: string;
+    D: string;
+    C: string;
+    B: string;
+    A: string;
+  };
+}`);
+});
