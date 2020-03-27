@@ -22,6 +22,8 @@ import {
   isModuleDeclaration,
   isSourceFile,
   isStringLiteral,
+  isMethodDeclaration,
+  isMethodSignature,
 } from 'typescript';
 
 export function getModule(node: Node): string {
@@ -37,9 +39,21 @@ export function getModule(node: Node): string {
   return undefined;
 }
 
+export function getJsDocs(checker: TypeChecker, node: Node) {
+  if (isMethodDeclaration(node) || isMethodSignature(node)) {
+    const sign = checker.getSignatureFromDeclaration(node);
+
+    if (sign) {
+      return sign.getDocumentationComment(checker);
+    }
+  }
+
+  return node.symbol?.getDocumentationComment(checker);
+}
+
 export function getComment(checker: TypeChecker, node: Node): string {
-  const doc = node.symbol?.getDocumentationComment(checker);
-  return doc?.map(item => item.text).join('\n');
+  const doc = getJsDocs(checker, node);
+  return doc?.map(m => m.text).join('\n');
 }
 
 export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): Declaration {
