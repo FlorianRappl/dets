@@ -1,11 +1,9 @@
 import * as ts from 'typescript';
-import { createBinding } from './utils';
+import { createBinding, getPackage, getSimpleRef, isIncluded } from './utils';
 import {
   isDefaultExport,
   getModifiers,
   isGlobal,
-  isBaseLib,
-  getLib,
   fullyQualifiedName,
   getPropName,
   getParameterName,
@@ -15,7 +13,6 @@ import {
   getComment,
   getSymbol,
   getSymbolName,
-  getModule,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -45,52 +42,6 @@ import {
   TypeModelGetAccessor,
   TypeModelSetAccessor,
 } from '../types';
-
-function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement): boolean {
-  const name = getPropName(newProp.name);
-
-  for (const oldProp of props) {
-    if (oldProp.kind === newProp.kind && getPropName(oldProp.name) === name) {
-      if (!ts.isMethodSignature(newProp)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function getSimpleRef(refName: string): TypeModelRef {
-  return {
-    kind: 'ref',
-    refName,
-    types: [],
-  };
-}
-
-function getPackage(node: ts.Node, availableImports: Array<string>) {
-  const fn = node.getSourceFile()?.fileName;
-  const base = isBaseLib(fn);
-  const lib = getLib(fn, availableImports);
-
-  if (base) {
-    return {
-      external: true,
-      moduleName: undefined,
-      base,
-      lib: undefined,
-      fn,
-    };
-  } else {
-    return {
-      external: !!lib,
-      moduleName: (lib && getModule(node)) || lib,
-      base: false,
-      lib,
-      fn,
-    };
-  }
-}
 
 class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
@@ -309,7 +260,8 @@ class DeclVisitor {
   private getReturnType(node: ts.SignatureDeclaration) {
     const checker = this.context.checker;
     const type =
-      node.type ?? this.convertToTypeNodeFromType(checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)));
+      node.type ??
+      this.convertToTypeNodeFromType(checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node)));
     return this.getTypeNode(type);
   }
 
