@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.5.0
+
+- Improved preservation of overloads in interfaces
+
 ## 0.4.2
 
 - Fixed general truncation in certain cases

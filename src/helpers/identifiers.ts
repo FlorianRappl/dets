@@ -14,7 +14,6 @@ import {
   OmittedExpression,
   isBindingElement,
   ArrayBindingElement,
-  ModuleName,
 } from 'typescript';
 import { typesRoot, modulesRoot, anonymousIndicator, globalIndicator } from './constants';
 

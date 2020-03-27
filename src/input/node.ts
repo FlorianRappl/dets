@@ -46,6 +46,20 @@ import {
   TypeModelSetAccessor,
 } from '../types';
 
+function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement): boolean {
+  const name = getPropName(newProp.name);
+
+  for (const oldProp of props) {
+    if (oldProp.kind === newProp.kind && getPropName(oldProp.name) === name) {
+      if (!ts.isMethodSignature(newProp)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function getSimpleRef(refName: string): TypeModelRef {
   return {
     kind: 'ref',
@@ -678,8 +692,7 @@ class DeclVisitor {
         clauses.includes(c) || clauses.push(c);
       });
       m.members?.forEach(p => {
-        const name = getPropName(p.name);
-        props.includes(p) || props.some(n => getPropName(n.name) === name) || props.push(p);
+        props.includes(p) || isIncluded(props, p) || props.push(p);
       });
       m.typeParameters?.forEach((t, i) => {
         typeParameters.length === i && typeParameters.push(t);
