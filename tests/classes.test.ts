@@ -248,3 +248,20 @@ test('should be able to handle readonly modifier', () => {
   }
 }`);
 });
+
+test('should be able to merge a class with an interface', () => {
+  const result = runTestFor('class12.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Bar {
+    bar: string;
+  }
+
+  export interface Foo extends Bar {
+    foo: number;
+  }
+
+  export class Foo {
+    constructor(a: string, b: number);
+  }
+}`);
+});
