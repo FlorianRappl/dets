@@ -142,6 +142,8 @@ test('should infere the default export correctly', () => {
 declare module "test" {
   export const _default: ReactRedux.ConnectedComponent<(props: SomeVeryLongComponentNameProps) => JSX.Element, Pick<SomeVeryLongComponentNameProps, "property_a" | "property_b" | "property_c" | "property_d" | "property_e" | "property_f">>;
 
+  export default _default;
+
   export interface SomeVeryLongComponentNameProps {
     property_a: string;
     property_b: string;
@@ -150,8 +152,6 @@ declare module "test" {
     property_e: string;
     property_f: string;
   }
-
-  export default _default;
 }`);
 });
 
