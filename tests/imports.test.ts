@@ -167,3 +167,16 @@ test('should respect the global.d.ts in the Node typings', () => {
   }
 }`);
 });
+
+test('should import from the right module - even if submodule', () => {
+  const result = runTestFor('saga1.ts', {
+    imports: ['redux-saga/effects'],
+  });
+  expect(result).toBe(`import { CallEffect } from 'redux-saga/effects';
+
+declare module "test" {
+  export interface Foo {
+    effect: CallEffect;
+  }
+}`);
+});
