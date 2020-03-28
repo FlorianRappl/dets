@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { createBinding, getPackage, getSimpleRef, isIncluded, getDefaultRef } from './utils';
+import { createBinding, getPackage, isIncluded, getDefault, getRef } from './utils';
 import {
   isDefaultExport,
   getModifiers,
@@ -52,11 +52,69 @@ export class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
   private readonly modules: Array<ts.ModuleDeclaration> = [];
   private readonly processed: Array<ts.Node> = [];
+  private readonly names: Map<ts.Node, string> = new Map();
 
   constructor(private context: DeclVisitorContext) {
     for (const node of context.exports) {
       this.enqueue(node);
     }
+  }
+
+  private swapName(oldName: string, newName: string) {
+    const refs = this.context.refs;
+    const last = refs.pop();
+
+    if (!last) {
+      // empty on purpose
+    } else if (last.kind === 'default') {
+      const name = last.value.refName;
+
+      for (let i = refs.length; i--; ) {
+        const ref = refs[i];
+
+        if (ref.name === name) {
+          refs.splice(i, 1, {
+            ...ref,
+            name: newName,
+          });
+          break;
+        }
+      }
+    } else if ('name' in last && last.name === oldName) {
+      this.context.refs.push({
+        ...last,
+        name: newName,
+      });
+    } else {
+      this.context.refs.push(last);
+    }
+  }
+
+  private findName(node: ts.Node): string {
+    return this.names.get(node);
+  }
+
+  private createName(name: string): string {
+    const altStart = `${name}___`;
+    const count = this.context.refs.filter(m => m.name === name || m.name.startsWith(altStart)).length;
+
+    if (!count) {
+      return name;
+    } else {
+      return `${altStart}${count}`;
+    }
+  }
+
+  private getName(node: ts.Node, suggested: string): string {
+    const existing = this.findName(node);
+
+    if (!existing) {
+      const name = this.createName(suggested);
+      this.names.set(node, name);
+      return name;
+    }
+
+    return existing;
   }
 
   private normalizeName(node: ts.Node) {
@@ -65,11 +123,13 @@ export class DeclVisitor {
     const global = isGlobal(symbol);
     const { moduleName, lib } = getPackage(node, global, c.availableImports);
 
-    if (global && lib) {
+    if (!lib) {
+      return this.getName(node, getSymbolName(symbol));
+    } else if (global) {
       return fullyQualifiedName(symbol);
+    } else {
+      return createBinding(c, moduleName, getSymbolName(symbol));
     }
-
-    return createBinding(c, moduleName, getSymbolName(symbol));
   }
 
   private convertToTypeNodeFromType(type: ts.Type) {
@@ -82,19 +142,7 @@ export class DeclVisitor {
     return this.convertToTypeNodeFromType(type);
   }
 
-  private inferType(node: ts.Expression) {
-    const typeNode = this.convertToTypeNodeFromNode(node);
-    return this.getTypeNode(typeNode);
-  }
-
-  private getUnion(node: ts.UnionTypeNode): TypeModelUnion {
-    return {
-      kind: 'union',
-      types: node.types.map(m => this.getNode(m)),
-    };
-  }
-
-  private getLiteralValue(node: ts.LiteralTypeNode): any {
+  private valueFromLiteral(node: ts.LiteralTypeNode): any {
     switch (node.literal.kind) {
       case ts.SyntaxKind.StringLiteral:
         return JSON.stringify(node.literal.text);
@@ -110,10 +158,22 @@ export class DeclVisitor {
     }
   }
 
+  private getInferredType(node: ts.Expression): TypeModel {
+    const typeNode = this.convertToTypeNodeFromNode(node);
+    return this.getTypeNode(typeNode);
+  }
+
+  private getUnion(node: ts.UnionTypeNode): TypeModelUnion {
+    return {
+      kind: 'union',
+      types: node.types.map(m => this.getNode(m)),
+    };
+  }
+
   private getLiteral(node: ts.LiteralTypeNode): TypeModel {
     return {
       kind: 'literal',
-      value: this.getLiteralValue(node),
+      value: this.valueFromLiteral(node),
     };
   }
 
@@ -127,14 +187,10 @@ export class DeclVisitor {
       ts.isClassDeclaration(node)
     ) {
       this.enqueue(node);
-      return {
-        kind: 'ref',
-        refName: this.normalizeName(node),
-        types: this.getTypeParameters(node.typeParameters),
-      };
+      return getRef(this.normalizeName(node), this.getTypeParameters(node.typeParameters));
     } else if (isDefaultExport(node) || ts.isVariableDeclaration(node) || ts.isVariableStatement(node)) {
       this.enqueue(node);
-      return getSimpleRef(this.normalizeName(node));
+      return getRef(this.normalizeName(node));
     } else if (ts.isPropertyAssignment(node)) {
       return {
         kind: 'prop',
@@ -145,7 +201,7 @@ export class DeclVisitor {
       };
     }
 
-    return getSimpleRef(node.symbol.name);
+    return getRef(node.symbol.name);
   }
 
   private getPropDeclaration(node: ts.PropertyDeclaration): TypeModel {
@@ -265,7 +321,7 @@ export class DeclVisitor {
     return nodes?.map(node => this.getEnumMember(node)) ?? [];
   }
 
-  private getReturnType(node: ts.SignatureDeclaration) {
+  private getReturnType(node: ts.SignatureDeclaration): TypeModel {
     const checker = this.context.checker;
     const type =
       node.type ??
@@ -274,9 +330,11 @@ export class DeclVisitor {
   }
 
   private getFunctionDeclaration(node: ts.FunctionDeclaration): TypeModelFunction {
+    const name = this.getName(node, node.name.text);
+
     return {
       ...this.getMethodSignature(node),
-      name: node.name.text,
+      name,
     };
   }
 
@@ -304,7 +362,7 @@ export class DeclVisitor {
   private getTypeParameter(node: ts.TypeParameterDeclaration): TypeModelTypeParameter {
     return {
       kind: 'typeParameter',
-      parameter: getSimpleRef(node.name.text),
+      parameter: getRef(node.name.text),
       constraint: node.constraint && this.getTypeNode(node.constraint),
       default: node.default && this.getTypeNode(node.default),
     };
@@ -436,19 +494,10 @@ export class DeclVisitor {
 
     if (decl && !ts.isTypeParameterDeclaration(decl)) {
       this.enqueue(decl);
-
-      return {
-        kind: 'ref',
-        refName: this.normalizeName(decl),
-        types: this.getTypeArguments(node.typeArguments),
-      };
+      return getRef(this.normalizeName(decl), this.getTypeArguments(node.typeArguments));
     }
 
-    return {
-      kind: 'ref',
-      refName: getTypeRefName(node.typeName),
-      types: this.getTypeArguments(node.typeArguments),
-    };
+    return getRef(getTypeRefName(node.typeName), this.getTypeArguments(node.typeArguments));
   }
 
   private getTypeLiteral(node: ts.TypeLiteralNode): TypeModelInterface {
@@ -464,19 +513,11 @@ export class DeclVisitor {
   private getExpressionWithTypeArguments(node: ts.ExpressionWithTypeArguments): TypeModelRef {
     const decl = getDeclarationFromNode(this.context.checker, node.expression);
     this.enqueue(decl);
-    return {
-      kind: 'ref',
-      refName: this.normalizeName(decl),
-      types: this.getTypeArguments(node.typeArguments),
-    };
+    return getRef(this.normalizeName(decl), this.getTypeArguments(node.typeArguments));
   }
 
   private getArray(node: ts.ArrayTypeNode): TypeModelRef {
-    return {
-      kind: 'ref',
-      refName: 'Array',
-      types: [this.getTypeNode(node.elementType)],
-    };
+    return getRef('Array', [this.getTypeNode(node.elementType)]);
   }
 
   private getInfer(node: ts.InferTypeNode): TypeModelInfer {
@@ -497,6 +538,13 @@ export class DeclVisitor {
     return {
       kind: 'tuple',
       types: node.elementTypes.map(n => this.getTypeNode(n)),
+    };
+  }
+
+  private getParenthesis(node: ts.ParenthesizedTypeNode): TypeModel {
+    return {
+      kind: 'parenthesis',
+      value: this.getTypeNode(node.type),
     };
   }
 
@@ -528,10 +576,7 @@ export class DeclVisitor {
     } else if (ts.isIntersectionTypeNode(node)) {
       return this.getIntersection(node);
     } else if (ts.isParenthesizedTypeNode(node)) {
-      return {
-        kind: 'parenthesis',
-        value: this.getTypeNode(node.type),
-      };
+      return this.getParenthesis(node);
     } else if (ts.isConstructorTypeNode(node)) {
       return this.getConstructorCall(node);
     } else if (ts.isTypePredicateNode(node)) {
@@ -596,7 +641,7 @@ export class DeclVisitor {
         };
       case ts.SyntaxKind.ThisKeyword:
       case ts.SyntaxKind.ThisType:
-        return getSimpleRef('this');
+        return getRef('this');
     }
 
     this.printWarning('type node', node);
@@ -621,7 +666,7 @@ export class DeclVisitor {
     if (ts.isIdentifier(expr)) {
       const decl = getDeclarationFromNode(this.context.checker, expr);
       this.enqueue(decl);
-      return getSimpleRef(expr.text);
+      return getRef(expr.text);
     } else if (ts.isArrowFunction(expr)) {
       this.includeInContext(expr, () => ({
         ...this.getMethodSignature(expr),
@@ -636,13 +681,15 @@ export class DeclVisitor {
       }));
     }
 
-    return getSimpleRef(name);
+    return getRef(name);
   }
 
   private getAlias(node: ts.TypeAliasDeclaration): TypeModelAlias {
+    const name = this.getName(node, node.name.text);
+
     return {
       kind: 'alias',
-      name: node.name.text,
+      name,
       child: this.getTypeNode(node.type),
       types: this.getTypeParameters(node.typeParameters),
       comment: getComment(this.context.checker, node),
@@ -650,9 +697,18 @@ export class DeclVisitor {
   }
 
   private getClass(node: ts.ClassDeclaration): TypeModelClass {
+    const type = this.context.checker.getTypeAtLocation(node);
+    const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
+    const name = this.getName(node, node.name.text);
+
+    decls.forEach(m => {
+      this.names.set(m, name);
+      this.enqueue(m);
+    });
+
     return {
       kind: 'class',
-      name: node.name.text,
+      name,
       extends: this.getExtends(node.heritageClauses),
       implements: this.getImplements(node.heritageClauses),
       props: this.getClassMembers(node.members),
@@ -667,8 +723,10 @@ export class DeclVisitor {
     const clauses: Array<ts.HeritageClause> = [];
     const props: Array<ts.TypeElement> = [];
     const typeParameters: Array<ts.TypeParameterDeclaration> = [];
+    const name = this.getName(node, node.name.text);
 
     decls.forEach(m => {
+      this.names.set(m, name);
       m.heritageClauses?.forEach(c => {
         clauses.includes(c) || clauses.push(c);
       });
@@ -682,7 +740,7 @@ export class DeclVisitor {
 
     return {
       kind: 'interface',
-      name: node.name.text,
+      name,
       extends: this.getExtends(clauses),
       props: this.getProps(props),
       types: this.getTypeParameters(typeParameters),
@@ -710,9 +768,9 @@ export class DeclVisitor {
     } else if (ts.isIdentifier(node)) {
       const decl = getDeclarationFromNode(this.context.checker, node);
       this.enqueue(decl);
-      return getSimpleRef(node.text);
+      return getRef(node.text);
     } else {
-      return this.inferType(node);
+      return this.getInferredType(node);
     }
   }
 
@@ -728,9 +786,11 @@ export class DeclVisitor {
   }
 
   private getVariable(node: ts.VariableDeclaration): TypeModelVariable {
+    const name = this.getName(node, node.name.getText());
+
     return {
       kind: 'const',
-      name: node.name.getText(),
+      name,
       value: this.getVariableValue(node),
       comment: getComment(this.context.checker, node),
     };
@@ -738,9 +798,11 @@ export class DeclVisitor {
 
   private getEnum(node: ts.EnumDeclaration): TypeModelEnumLiteral {
     const symbol = getSymbol(this.context.checker, node);
+    const name = this.getName(node, node.name.text);
+
     return {
       kind: 'enumLiteral',
-      name: node.name.text,
+      name,
       const: symbol.flags === ts.SymbolFlags.ConstEnum,
       values: this.getEnumMembers(node.members),
       comment: getComment(this.context.checker, node),
@@ -764,14 +826,14 @@ export class DeclVisitor {
     const expr = node.expression;
 
     if (expr) {
-      this.includeInContext(expr, () => getDefaultRef(this.getDefaultExpression(node)));
+      this.includeInContext(expr, () => getDefault(this.getDefaultExpression(node)));
     } else if (ts.isFunctionDeclaration(node)) {
       const name = '_default';
       this.includeInContext(node, () => ({
         ...this.getMethodSignature(node),
         name,
       }));
-      this.includeInContext(node, () => getDefaultRef(getSimpleRef(name)));
+      this.includeInContext(node, () => getDefault(getRef(name)));
     }
   }
 
@@ -784,7 +846,7 @@ export class DeclVisitor {
   }
 
   private includeExportedInterface(node: ts.InterfaceDeclaration) {
-    const name = node.name.text;
+    const name = this.getName(node, node.name.text);
     const exists = this.context.refs.some(m => m.kind === 'interface' && m.name === name);
 
     if (!exists) {
@@ -807,36 +869,6 @@ export class DeclVisitor {
 
   private includeExportedEnum(node: ts.EnumDeclaration) {
     this.includeInContext(node, () => this.getEnum(node));
-  }
-
-  private swapName(oldName: string, newName: string) {
-    const refs = this.context.refs;
-    const last = refs.pop();
-
-    if (!last) {
-      // empty on purpose
-    } else if (last.kind === 'default') {
-      const name = last.value.refName;
-
-      for (let i = refs.length; i--; ) {
-        const ref = refs[i];
-
-        if (ref.name === name) {
-          refs.splice(i, 1, {
-            ...ref,
-            name: newName,
-          });
-          break;
-        }
-      }
-    } else if ('name' in last && last.name === oldName) {
-      this.context.refs.push({
-        ...last,
-        name: newName,
-      });
-    } else {
-      this.context.refs.push(last);
-    }
   }
 
   private includeSelectedExports(elements: ts.NodeArray<ts.ExportSpecifier>) {

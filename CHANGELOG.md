@@ -4,6 +4,7 @@
 
 - Improved preservation of overloads in interfaces
 - Fixed type location when re-exporting (#11)
+- Fixed potential name collisions when importing (#10)
 
 ## 0.4.2
 

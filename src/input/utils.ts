@@ -1,18 +1,14 @@
 import * as ts from 'typescript';
 import { getLibRefName, getPropName, isBaseLib, getModule, getLibName } from '../helpers';
-import { DeclVisitorContext, TypeModelRef, TypeModelDefault } from '../types';
+import { DeclVisitorContext, TypeModelRef, TypeModelDefault, TypeModel } from '../types';
 
-export function createBinding(context: DeclVisitorContext, lib: string | undefined, name: string) {
-  if (lib) {
-    // if we did not use the given lib yet, add it to the used libs
-    if (!context.usedImports.includes(lib)) {
-      context.usedImports.push(lib);
-    }
-
-    return `${getLibRefName(lib)}.${name}`;
+export function createBinding(context: DeclVisitorContext, lib: string, name: string) {
+  // if we did not use the given lib yet, add it to the used libs
+  if (!context.usedImports.includes(lib)) {
+    context.usedImports.push(lib);
   }
 
-  return name;
+  return `${getLibRefName(lib)}.${name}`;
 }
 
 export function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement): boolean {
@@ -29,7 +25,7 @@ export function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement
   return false;
 }
 
-export function getDefaultRef(value: TypeModelRef): TypeModelDefault {
+export function getDefault(value: TypeModelRef): TypeModelDefault {
   return {
     kind: 'default',
     name: 'default',
@@ -37,11 +33,11 @@ export function getDefaultRef(value: TypeModelRef): TypeModelDefault {
   };
 }
 
-export function getSimpleRef(refName: string): TypeModelRef {
+export function getRef(refName: string, types: Array<TypeModel> = []): TypeModelRef {
   return {
     kind: 'ref',
     refName,
-    types: [],
+    types,
   };
 }
 
