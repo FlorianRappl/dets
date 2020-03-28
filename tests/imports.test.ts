@@ -172,11 +172,11 @@ test('should import from the right module - even if submodule', () => {
   const result = runTestFor('saga1.ts', {
     imports: ['redux-saga/effects'],
   });
-  expect(result).toBe(`import { CallEffect } from 'redux-saga/effects';
+  expect(result).toBe(`import * as ReduxSagaEffects from 'redux-saga/effects';
 
 declare module "test" {
   export interface Foo {
-    effect: CallEffect;
+    effect: ReduxSagaEffects.CallEffect;
   }
 }`);
 });

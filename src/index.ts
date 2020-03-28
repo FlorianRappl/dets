@@ -1,10 +1,10 @@
 import * as ts from 'typescript';
-import { includeApi, includeTypings } from './input';
+import { includeApi, includeTypings, includeExports } from './input';
 import { stringifyDeclaration } from './output';
-import { findAppRoot } from './helpers';
+import { findAppRoot, getLibName } from './helpers';
 import { DeclVisitorContext } from './types';
 
-export function setupVisitorContext(name: string, files: Array<string>, availableImports: Array<string> = []) {
+export function setupVisitorContext(name: string, files: Array<string>) {
   const rootNames = files.filter(m => !!m);
   const program = ts.createProgram(rootNames, {
     allowJs: true,
@@ -17,7 +17,7 @@ export function setupVisitorContext(name: string, files: Array<string>, availabl
   const context: DeclVisitorContext = {
     modules: {},
     refs: {},
-    availableImports,
+    availableImports: {},
     usedImports: [],
     checker,
     program,
@@ -57,6 +57,40 @@ export function fillVisitorContextFromTypes(context: DeclVisitorContext, typings
   }
 }
 
+export function addVisitorContextImports(context: DeclVisitorContext, imports: Array<string>) {
+  const sourceFiles = context.program.getSourceFiles();
+  const remaining = [...imports];
+
+  for (const sourceFile of sourceFiles) {
+    if (remaining.length === 0) {
+      break;
+    }
+
+    sourceFile.resolvedModules?.forEach((value, key) => {
+      const index = remaining.indexOf(key);
+
+      if (index !== -1) {
+        const file = context.program.getSourceFile(value.resolvedFileName);
+        includeExports(context, key, file.symbol);
+        remaining.splice(index, 1);
+      }
+    });
+  }
+}
+
+export function addVisitorContextAmbientModules(context: DeclVisitorContext, imports: Array<string>) {
+  const modules = context.checker.getAmbientModules();
+
+  for (const module of modules) {
+    const file = module.declarations?.[0]?.getSourceFile()?.fileName;
+    const lib = getLibName(file);
+
+    if (imports.includes(lib)) {
+      includeExports(context, module.name, module);
+    }
+  }
+}
+
 export interface DeclOptions {
   name: string;
   root: string;
@@ -77,7 +111,9 @@ export function generateDeclaration(options: DeclOptions) {
     ...types.map(type => findAppRoot(root, type)),
   ];
 
-  const context = setupVisitorContext(name, sources, imports);
+  const context = setupVisitorContext(name, sources);
+  addVisitorContextImports(context, imports);
+  addVisitorContextAmbientModules(context, imports);
 
   for (const api of apis) {
     const path = findAppRoot(root, api.file);

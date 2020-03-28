@@ -14,6 +14,6 @@ declare module 'typescript' {
   }
 
   interface SourceFile {
-    resolvedModules: ts.Map<ts.ResolvedModule>;
+    resolvedModules: ts.Map<ts.ResolvedModuleFull>;
   }
 }

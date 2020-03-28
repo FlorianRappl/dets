@@ -60,8 +60,8 @@ export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): 
   if (symbol && symbol.flags === SymbolFlags.Alias) {
     const aliasSymbol = checker.getAliasedSymbol(symbol);
     return getDeclarationFromSymbol(checker, aliasSymbol);
-  } else {
-    const decl = symbol?.declarations?.[0];
+  } else if (symbol) {
+    const decl = symbol.valueDeclaration || symbol.declarations?.[0];
 
     if (decl && isImportSpecifier(decl)) {
       return getDeclarationFromNode(checker, decl.name);
@@ -69,6 +69,8 @@ export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): 
 
     return decl;
   }
+
+  return undefined;
 }
 
 export function getDeclarationFromNode(checker: TypeChecker, node: Node): Declaration {

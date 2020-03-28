@@ -3,6 +3,7 @@
 ## 0.5.0
 
 - Improved preservation of overloads in interfaces
+- Fixed type location when re-exporting (#11)
 
 ## 0.4.2
 

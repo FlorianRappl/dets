@@ -1,4 +1,4 @@
-import { TypeChecker, Program } from 'typescript';
+import { TypeChecker, Program, Node } from 'typescript';
 import { TypeModel } from './model';
 
 export interface DeclVisitorContext {
@@ -8,7 +8,7 @@ export interface DeclVisitorContext {
   refs: TypeRefs;
   ids: Array<number>;
   usedImports: Array<string>;
-  availableImports: Array<string>;
+  availableImports: Record<string, Array<Node>>;
   warn(message: string): void;
   error(message: string): void;
 }

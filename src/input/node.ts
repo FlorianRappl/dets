@@ -55,7 +55,7 @@ class DeclVisitor {
     const c = this.context;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
     const global = isGlobal(symbol);
-    const { lib, moduleName } = getPackage(node, c.availableImports);
+    const { moduleName, lib } = getPackage(node, global, c.availableImports);
 
     if (global && lib) {
       return fullyQualifiedName(symbol);
@@ -713,9 +713,9 @@ class DeclVisitor {
 
   private includeInContext(name: string, node: ts.Node, createType: () => TypeModel) {
     const c = this.context;
-    const symbol = c.checker.getSymbolAtLocation(node);
+    const symbol = getSymbol(c.checker, node);
 
-    if (!isGlobal(symbol) && !getPackage(node, c.availableImports).external) {
+    if (!isGlobal(symbol) && !getPackage(node, false, c.availableImports).external) {
       const existing = c.refs[name];
 
       if (!existing) {

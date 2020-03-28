@@ -1,6 +1,7 @@
 import {
   Identifier,
   IndexInfo,
+  Node,
   Symbol,
   PropertyName,
   isIdentifier,
@@ -113,16 +114,6 @@ export function getLibName(fileName: string) {
 export interface LibSpecifier {
   packageName: string;
   moduleName: string;
-}
-
-export function getLib(fileName: string, imports: Array<string>) {
-  const libName = getLibName(fileName);
-
-  if (libName && imports.includes(libName)) {
-    return libName;
-  }
-
-  return undefined;
 }
 
 export function getKeyName(info: IndexInfo) {
