@@ -180,3 +180,21 @@ declare module "test" {
   }
 }`);
 });
+
+test('should avoid name clashes when importing', () => {
+  const result = runTestFor('import3.ts', {
+    imports: [],
+  });
+  expect(result).toBe(`declare module "test" {
+  export interface Foo {
+    b: string;
+  }
+
+  export type Bar = Foo___1;
+
+  export interface Foo___1 {
+    a: string;
+    b: Foo___1;
+  }
+}`);
+});
