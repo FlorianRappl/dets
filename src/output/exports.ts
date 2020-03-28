@@ -10,28 +10,33 @@ import {
   stringifyImplements,
   StringifyMode,
 } from './stringify';
-import { TypeModel, TypeRefs } from '../types';
+import { TypeModelExport, TypeRefs } from '../types';
 
-export function stringifyExport(name: string, type: TypeModel) {
+export function stringifyExport(type: TypeModelExport) {
   switch (type?.kind) {
     case 'interface':
-      return `${stringifyComment(type)}export interface ${name}${stringifyTypeArgs(type)}${stringifyExtends(
+      return `${stringifyComment(type)}export interface ${type.name}${stringifyTypeArgs(type)}${stringifyExtends(
         type,
       )} ${stringifyInterface(type)}`;
     case 'class':
-      return `${stringifyComment(type)}export class ${name}${stringifyTypeArgs(type)}${stringifyExtends(
+      return `${stringifyComment(type)}export class ${type.name}${stringifyTypeArgs(type)}${stringifyExtends(
         type,
       )}${stringifyImplements(type)} ${stringifyClass(type)}`;
     case 'alias':
-      return `${stringifyComment(type)}export type ${name}${stringifyTypeArgs(type)} = ${stringifyNode(type.child)};`;
+      return `${stringifyComment(type)}export type ${type.name}${stringifyTypeArgs(type)} = ${stringifyNode(
+        type.child,
+      )};`;
     case 'enumLiteral':
-      return `${stringifyComment(type)}export ${type.const ? 'const enum' : 'enum'} ${name} ${stringifyEnum(
+      return `${stringifyComment(type)}export ${type.const ? 'const enum' : 'enum'} ${type.name} ${stringifyEnum(
         type.values,
       )}`;
     case 'const':
-      return `${stringifyComment(type)}export const ${name}: ${stringifyNode(type.value)};`;
+      return `${stringifyComment(type)}export const ${type.name}: ${stringifyNode(type.value)};`;
     case 'function':
-      return `${stringifyComment(type)}export function ${name}${stringifySignature(type, StringifyMode.property)};`;
+      return `${stringifyComment(type)}export function ${type.name}${stringifySignature(
+        type,
+        StringifyMode.property,
+      )};`;
     case 'default':
       return `${stringifyComment(type)}export default ${stringifyNode(type.value)};`;
   }
@@ -40,8 +45,8 @@ export function stringifyExport(name: string, type: TypeModel) {
 }
 
 export function stringifyExports(refs: TypeRefs) {
-  return Object.keys(refs)
-    .map(r => stringifyExport(r, refs[r]))
+  return refs
+    .map(r => stringifyExport(r))
     .filter(m => !!m)
     .join('\n\n');
 }

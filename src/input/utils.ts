@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import { getLibRefName, getPropName, isBaseLib, getModule, getLibName } from '../helpers';
-import { DeclVisitorContext, TypeModelRef } from '../types';
+import { DeclVisitorContext, TypeModelRef, TypeModelDefault } from '../types';
 
 export function createBinding(context: DeclVisitorContext, lib: string | undefined, name: string) {
   if (lib) {
@@ -15,23 +15,6 @@ export function createBinding(context: DeclVisitorContext, lib: string | undefin
   return name;
 }
 
-export function swapName(context: DeclVisitorContext, newName: string, oldName: string) {
-  if (oldName !== newName) {
-    const isdef = oldName === 'default';
-
-    if (isdef) {
-      oldName = '_default';
-    }
-
-    context.refs[newName] = context.refs[oldName];
-    delete context.refs[oldName];
-
-    if (isdef) {
-      delete context.refs.default;
-    }
-  }
-}
-
 export function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement): boolean {
   const name = getPropName(newProp.name);
 
@@ -44,6 +27,14 @@ export function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement
   }
 
   return false;
+}
+
+export function getDefaultRef(value: TypeModelRef): TypeModelDefault {
+  return {
+    kind: 'default',
+    name: 'default',
+    value,
+  };
 }
 
 export function getSimpleRef(refName: string): TypeModelRef {

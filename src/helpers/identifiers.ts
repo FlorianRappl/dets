@@ -1,7 +1,6 @@
 import {
   Identifier,
   IndexInfo,
-  Node,
   Symbol,
   PropertyName,
   isIdentifier,
@@ -15,6 +14,8 @@ import {
   OmittedExpression,
   isBindingElement,
   ArrayBindingElement,
+  StringLiteral,
+  NumericLiteral,
 } from 'typescript';
 import { typesRoot, modulesRoot, anonymousIndicator, globalIndicator } from './constants';
 
@@ -46,6 +47,18 @@ export function getPredicateName(name: Identifier | ThisTypeNode): string {
     return name.text;
   } /* is ThisTypeNode */ else {
     return 'this';
+  }
+}
+
+export function getExportName(name: Identifier | StringLiteral | NumericLiteral): string {
+  if (!name) {
+    return undefined;
+  } else if (isIdentifier(name)) {
+    return name.text;
+  } else if (isStringLiteral(name)) {
+    return name.text;
+  } /* is NumericLiteral */ else {
+    return name.text;
   }
 }
 

@@ -3,7 +3,8 @@ import { TypeModel } from './model';
 
 export interface TypeModelDefault extends WithTypeComments {
   readonly kind: 'default';
-  readonly value: TypeModel;
+  readonly name: string;
+  readonly value: TypeModelRef;
 }
 
 export interface TypeModelClass
@@ -13,6 +14,7 @@ export interface TypeModelClass
     WithTypeImplements,
     WithTypeProps {
   readonly kind: 'class';
+  readonly name: string;
 }
 
 export interface TypeModelProp extends WithTypeComments {
@@ -31,6 +33,7 @@ export interface TypeModelPredicate {
 
 export interface TypeModelVariable extends WithTypeComments {
   readonly kind: 'const';
+  readonly name: string;
   readonly value: TypeModel;
 }
 
@@ -91,6 +94,7 @@ export interface TypeModelNew extends WithTypeArgs {
 
 export interface TypeModelFunction extends WithTypeArgs {
   readonly kind: 'function';
+  readonly name: string;
   readonly comment?: string;
   readonly parameters: Array<TypeModelFunctionParameter>;
   readonly returnType: TypeModel;
@@ -116,6 +120,7 @@ export interface TypeModelLiteral {
 
 export interface TypeModelEnumLiteral extends WithTypeComments {
   readonly kind: 'enumLiteral';
+  readonly name: string;
   readonly const: boolean;
   readonly values: Array<TypeMemberModel>;
 }
@@ -236,6 +241,7 @@ export interface TypeModelMapped {
 
 export interface TypeModelInterface extends WithTypeArgs, WithTypeComments, WithTypeExtends, WithTypeProps {
   readonly kind: 'interface';
+  readonly name: string;
   readonly mapped?: TypeModelMapped;
 }
 
@@ -250,5 +256,6 @@ export interface TypeModelTuple extends WithTypeArgs {
 
 export interface TypeModelAlias extends WithTypeArgs, WithTypeComments {
   readonly kind: 'alias';
+  readonly name: string;
   readonly child: TypeModel;
 }

@@ -24,6 +24,7 @@ import {
   isStringLiteral,
   isMethodDeclaration,
   isMethodSignature,
+  isExportDeclaration,
 } from 'typescript';
 
 export function getModule(node: Node): string {
@@ -93,6 +94,10 @@ export function getSymbol(checker: TypeChecker, node: Node): Symbol {
 
 export function isDefaultExport(node: Node): node is ExportAssignment {
   return node.symbol?.name === 'default';
+}
+
+export function shouldInclude(node: Node) {
+  return isModuleDeclaration(node) || isExportDeclaration(node) || isNodeExported(node);
 }
 
 export function isNodeExported(node: Node, alsoTopLevel = false): boolean {

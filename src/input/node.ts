@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { createBinding, getPackage, getSimpleRef, isIncluded } from './utils';
+import { createBinding, getPackage, getSimpleRef, isIncluded, getDefaultRef } from './utils';
 import {
   isDefaultExport,
   getModifiers,
@@ -13,6 +13,10 @@ import {
   getComment,
   getSymbol,
   getSymbolName,
+  getExportName,
+  shouldInclude,
+  isNodeExported,
+  getDeclarationFromSymbol,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -41,14 +45,18 @@ import {
   TypeMemberModel,
   TypeModelGetAccessor,
   TypeModelSetAccessor,
+  TypeModelExport,
 } from '../types';
 
-class DeclVisitor {
+export class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
+  private readonly modules: Array<ts.ModuleDeclaration> = [];
   private readonly processed: Array<ts.Node> = [];
 
-  constructor(private context: DeclVisitorContext, node: ts.Node) {
-    this.queue.push(node);
+  constructor(private context: DeclVisitorContext) {
+    for (const node of context.exports) {
+      this.enqueue(node);
+    }
   }
 
   private normalizeName(node: ts.Node) {
@@ -265,9 +273,17 @@ class DeclVisitor {
     return this.getTypeNode(type);
   }
 
+  private getFunctionDeclaration(node: ts.FunctionDeclaration): TypeModelFunction {
+    return {
+      ...this.getMethodSignature(node),
+      name: node.name.text,
+    };
+  }
+
   private getMethodSignature(node: ts.SignatureDeclaration): TypeModelFunction {
     return {
       kind: 'function',
+      name: undefined,
       parameters: this.getFunctionParameters(node.parameters),
       returnType: this.getReturnType(node),
       types: this.getTypeParameters(node.typeParameters),
@@ -361,6 +377,7 @@ class DeclVisitor {
     const p = node.typeParameter;
     return {
       kind: 'interface',
+      name: undefined,
       extends: [],
       props: [],
       types: [],
@@ -418,11 +435,7 @@ class DeclVisitor {
     const decl = getDeclarationFromNode(c, node);
 
     if (decl && !ts.isTypeParameterDeclaration(decl)) {
-      if (ts.isEnumMember(decl)) {
-        this.enqueue(decl.parent);
-      } else {
-        this.enqueue(decl);
-      }
+      this.enqueue(decl);
 
       return {
         kind: 'ref',
@@ -441,6 +454,7 @@ class DeclVisitor {
   private getTypeLiteral(node: ts.TypeLiteralNode): TypeModelInterface {
     return {
       kind: 'interface',
+      name: undefined,
       extends: [],
       props: this.getProps(node.members),
       types: [],
@@ -600,21 +614,35 @@ class DeclVisitor {
     return clauses.map(node => this.getTypeNode(node));
   }
 
-  private getDefaultExpression(node: ts.ExportAssignment): TypeModel {
-    if (!ts.isArrowFunction(node.expression)) {
-      return {
-        kind: 'const',
-        value: this.getExpression(node.expression),
-        comment: getComment(this.context.checker, node),
-      };
+  private getDefaultExpression(node: ts.ExportAssignment): TypeModelRef {
+    const name = getExportName(node.name) ?? '_default';
+    const expr = node.expression;
+
+    if (ts.isIdentifier(expr)) {
+      const decl = getDeclarationFromNode(this.context.checker, expr);
+      this.enqueue(decl);
+      return getSimpleRef(expr.text);
+    } else if (ts.isArrowFunction(expr)) {
+      this.includeInContext(expr, () => ({
+        ...this.getMethodSignature(expr),
+        name,
+      }));
     } else {
-      return this.getMethodSignature(node.expression);
+      this.includeInContext(expr, () => ({
+        kind: 'const',
+        name,
+        value: this.getExpression(expr),
+        comment: getComment(this.context.checker, node),
+      }));
     }
+
+    return getSimpleRef(name);
   }
 
   private getAlias(node: ts.TypeAliasDeclaration): TypeModelAlias {
     return {
       kind: 'alias',
+      name: node.name.text,
       child: this.getTypeNode(node.type),
       types: this.getTypeParameters(node.typeParameters),
       comment: getComment(this.context.checker, node),
@@ -624,6 +652,7 @@ class DeclVisitor {
   private getClass(node: ts.ClassDeclaration): TypeModelClass {
     return {
       kind: 'class',
+      name: node.name.text,
       extends: this.getExtends(node.heritageClauses),
       implements: this.getImplements(node.heritageClauses),
       props: this.getClassMembers(node.members),
@@ -653,6 +682,7 @@ class DeclVisitor {
 
     return {
       kind: 'interface',
+      name: node.name.text,
       extends: this.getExtends(clauses),
       props: this.getProps(props),
       types: this.getTypeParameters(typeParameters),
@@ -677,6 +707,10 @@ class DeclVisitor {
       return {
         kind: 'boolean',
       };
+    } else if (ts.isIdentifier(node)) {
+      const decl = getDeclarationFromNode(this.context.checker, node);
+      this.enqueue(decl);
+      return getSimpleRef(node.text);
     } else {
       return this.inferType(node);
     }
@@ -696,6 +730,7 @@ class DeclVisitor {
   private getVariable(node: ts.VariableDeclaration): TypeModelVariable {
     return {
       kind: 'const',
+      name: node.name.getText(),
       value: this.getVariableValue(node),
       comment: getComment(this.context.checker, node),
     };
@@ -705,62 +740,64 @@ class DeclVisitor {
     const symbol = getSymbol(this.context.checker, node);
     return {
       kind: 'enumLiteral',
+      name: node.name.text,
       const: symbol.flags === ts.SymbolFlags.ConstEnum,
       values: this.getEnumMembers(node.members),
       comment: getComment(this.context.checker, node),
     };
   }
 
-  private includeInContext(name: string, node: ts.Node, createType: () => TypeModel) {
+  private includeInContext(node: ts.Node, createType: () => TypeModelExport) {
     const c = this.context;
     const symbol = getSymbol(c.checker, node);
 
     if (!isGlobal(symbol) && !getPackage(node, false, c.availableImports).external) {
-      const existing = c.refs[name];
-
-      if (!existing) {
-        c.refs[name] = createType();
-      }
+      c.refs.push(createType());
     }
   }
 
   private includeExportedTypeAlias(node: ts.TypeAliasDeclaration) {
-    const name = node.name.text;
-    this.includeInContext(name, node, () => this.getAlias(node));
+    this.includeInContext(node, () => this.getAlias(node));
   }
 
   private includeDefaultExport(node: ts.ExportAssignment) {
     const expr = node.expression;
 
     if (expr) {
-      this.includeInContext('_default', expr, () => this.getDefaultExpression(node));
+      this.includeInContext(expr, () => getDefaultRef(this.getDefaultExpression(node)));
     } else if (ts.isFunctionDeclaration(node)) {
-      this.includeInContext('_default', node, () => this.getMethodSignature(node));
+      const name = '_default';
+      this.includeInContext(node, () => ({
+        ...this.getMethodSignature(node),
+        name,
+      }));
+      this.includeInContext(node, () => getDefaultRef(getSimpleRef(name)));
     }
   }
 
   private includeExportedFunction(node: ts.FunctionDeclaration) {
-    const name = node.name.text;
-    this.includeInContext(name, node, () => this.getMethodSignature(node));
+    this.includeInContext(node, () => this.getFunctionDeclaration(node));
   }
 
   private includeExportedClass(node: ts.ClassDeclaration) {
-    const name = node.name.text;
-    this.includeInContext(name, node, () => this.getClass(node));
+    this.includeInContext(node, () => this.getClass(node));
   }
 
   private includeExportedInterface(node: ts.InterfaceDeclaration) {
     const name = node.name.text;
-    this.includeInContext(name, node, () => this.getInterface(node));
+    const exists = this.context.refs.some(m => m.kind === 'interface' && m.name === name);
+
+    if (!exists) {
+      this.includeInContext(node, () => this.getInterface(node));
+    }
   }
 
   private includeExportedVariable(node: ts.VariableDeclaration) {
-    const name = node.name.getText();
-    this.includeInContext(name, node, () => this.getVariable(node));
+    this.includeInContext(node, () => this.getVariable(node));
   }
 
   private includeExportedVariables(node: ts.VariableStatement) {
-    node.declarationList.declarations.map(decl => this.includeExportedVariable(decl));
+    node.declarationList.declarations.forEach(decl => this.includeExportedVariable(decl));
   }
 
   private includeImportedValue(node: ts.ImportSpecifier) {
@@ -769,8 +806,109 @@ class DeclVisitor {
   }
 
   private includeExportedEnum(node: ts.EnumDeclaration) {
+    this.includeInContext(node, () => this.getEnum(node));
+  }
+
+  private swapName(oldName: string, newName: string) {
+    const refs = this.context.refs;
+    const last = refs.pop();
+
+    if (!last) {
+      // empty on purpose
+    } else if (last.kind === 'default') {
+      const name = last.value.refName;
+
+      for (let i = refs.length; i--; ) {
+        const ref = refs[i];
+
+        if (ref.name === name) {
+          refs.splice(i, 1, {
+            ...ref,
+            name: newName,
+          });
+          break;
+        }
+      }
+    } else if ('name' in last && last.name === oldName) {
+      this.context.refs.push({
+        ...last,
+        name: newName,
+      });
+    } else {
+      this.context.refs.push(last);
+    }
+  }
+
+  private includeSelectedExports(elements: ts.NodeArray<ts.ExportSpecifier>) {
+    // selected exports here
+    elements.forEach(el => {
+      if (el.symbol) {
+        const original = this.context.checker.getAliasedSymbol(el.symbol);
+
+        if (original) {
+          const decl = getDeclarationFromSymbol(this.context.checker, original);
+
+          if (decl) {
+            this.processNode(decl);
+            this.swapName(original.name, el.symbol.name);
+          }
+        } else if (el.propertyName) {
+          // renamed selected export
+          const symbol = this.context.checker.getExportSpecifierLocalTargetSymbol(el);
+
+          if (symbol) {
+            const decl = getDeclarationFromSymbol(this.context.checker, symbol);
+
+            if (decl) {
+              this.processNode(decl);
+              this.swapName(el.propertyName.text, el.symbol.name);
+            }
+          }
+        }
+      }
+    });
+  }
+
+  private includeStarExports(node: ts.ExportDeclaration) {
+    if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      // * exports from a module
+      const moduleName = node.moduleSpecifier.text;
+      const modules = node.getSourceFile().resolvedModules;
+      const fileName = modules?.get(moduleName)?.resolvedFileName;
+
+      if (fileName) {
+        const newFile = this.context.program.getSourceFile(fileName);
+
+        ts.forEachChild(newFile, node => {
+          if (shouldInclude(node)) {
+            this.enqueue(node);
+          }
+        });
+      }
+    }
+  }
+
+  private includeExportsDeclaration(node: ts.ExportDeclaration) {
+    const { exportClause } = node;
+
+    if (exportClause && ts.isNamedExports(exportClause) && exportClause.elements) {
+      this.includeSelectedExports(exportClause.elements);
+    } else {
+      this.includeStarExports(node);
+    }
+  }
+
+  private processModule(node: ts.ModuleDeclaration) {
+    const c = this.context;
     const name = node.name.text;
-    this.includeInContext(name, node, () => this.getEnum(node));
+    const existing = c.modules[name];
+    c.modules[name] = c.refs = existing || [];
+
+    node.body.forEachChild(subNode => {
+      if (isNodeExported(subNode)) {
+        this.enqueue(subNode);
+      }
+    });
   }
 
   private printWarning(type: string, node: ts.Node) {
@@ -779,13 +917,7 @@ class DeclVisitor {
     );
   }
 
-  private enqueue(item: ts.Node) {
-    if (item && this.queue.indexOf(item) === -1 && this.processed.indexOf(item) === -1) {
-      this.queue.push(item);
-    }
-  }
-
-  private process(node: ts.Node) {
+  private processNode(node: ts.Node) {
     if (ts.isTypeAliasDeclaration(node)) {
       this.includeExportedTypeAlias(node);
     } else if (isDefaultExport(node)) {
@@ -805,22 +937,38 @@ class DeclVisitor {
     } else if (ts.isEnumDeclaration(node)) {
       this.includeExportedEnum(node);
     } else if (ts.isTypeLiteralNode(node)) {
-      //ignore
+      // empty on purpose
+    } else if (ts.isExportDeclaration(node)) {
+      this.includeExportsDeclaration(node);
+    } else if (ts.isModuleDeclaration(node)) {
+      this.modules.push(node);
     } else {
       this.printWarning('type', node);
     }
   }
 
-  processQueue() {
-    while (this.queue.length > 0) {
-      const item = this.queue.shift();
-      this.processed.push(item);
-      this.process(item);
+  private enqueue(item: ts.Node) {
+    if (!item) {
+      // empty on purpose
+    } else if (ts.isEnumMember(item)) {
+      this.enqueue(item.parent);
+    } else if (!this.queue.includes(item) && !this.processed.includes(item)) {
+      this.queue.push(item);
     }
   }
-}
 
-export function includeNode(context: DeclVisitorContext, node: ts.Node) {
-  const visitor = new DeclVisitor(context, node);
-  visitor.processQueue();
+  processQueue() {
+    while (this.queue.length || this.modules.length) {
+      while (this.queue.length > 0) {
+        const item = this.queue.shift();
+        this.processed.push(item);
+        this.processNode(item);
+      }
+
+      if (this.modules.length > 0) {
+        const mod = this.modules.shift();
+        this.processModule(mod);
+      }
+    }
+  }
 }

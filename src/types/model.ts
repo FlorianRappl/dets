@@ -45,21 +45,27 @@ import {
   TypeModelParenthesis,
 } from './models';
 
+export type TypeModelExport =
+  | TypeModelDefault
+  | TypeModelVariable
+  | TypeModelInterface
+  | TypeModelClass
+  | TypeModelFunction
+  | TypeModelEnumLiteral
+  | TypeModelAlias;
+
 export type TypeModel =
+  | TypeModelExport
   | TypeModelString
   | TypeMemberModel
-  | TypeModelDefault
   | TypeModelProp
   | TypeModelBoolean
   | TypeModelNumber
-  | TypeModelVariable
-  | TypeModelInterface
   | TypeModelUnidentified
   | TypeModelAny
   | TypeModelUnknown
   | TypeModelBigInt
   | TypeModelLiteral
-  | TypeModelEnumLiteral
   | TypeModelBigIntLiteral
   | TypeModelESSymbol
   | TypeModelUniqueESSymbol
@@ -77,18 +83,13 @@ export type TypeModel =
   | TypeModelSubstitution
   | TypeModelNonPrimitive
   | TypeModelTuple
-  | TypeModelFunction
   | TypeModelConstructor
   | TypeModelRef
   | TypeModelPrefix
   | TypeModelPredicate
-  | TypeModelAlias
   | TypeModelMapped
   | TypeModelInfer
-  | TypeModelClass
   | TypeModelNew
   | TypeModelGetAccessor
   | TypeModelSetAccessor
   | TypeModelParenthesis;
-
-export type TypeModelKinds = TypeModel['kind'];

@@ -1,16 +1,18 @@
 import { TypeChecker, Program, Node } from 'typescript';
-import { TypeModel } from './model';
+import { TypeModelExport } from './model';
+
+export type ImportRefs = Record<string, Array<Node>>;
+
+export type TypeRefs = Array<TypeModelExport>;
 
 export interface DeclVisitorContext {
   modules: Record<string, TypeRefs>;
   checker: TypeChecker;
   program: Program;
+  exports: Array<Node>;
   refs: TypeRefs;
-  ids: Array<number>;
   usedImports: Array<string>;
-  availableImports: Record<string, Array<Node>>;
+  availableImports: ImportRefs;
   warn(message: string): void;
   error(message: string): void;
 }
-
-export type TypeRefs = Record<string, TypeModel>;

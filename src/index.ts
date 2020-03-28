@@ -1,10 +1,10 @@
 import * as ts from 'typescript';
-import { includeApi, includeTypings, includeExports } from './input';
+import { includeApi, includeTypings, includeExports, DeclVisitor } from './input';
 import { stringifyDeclaration } from './output';
 import { findAppRoot, getLibName } from './helpers';
 import { DeclVisitorContext } from './types';
 
-export function setupVisitorContext(name: string, files: Array<string>) {
+export function setupVisitorContext(name: string, files: Array<string>, imports: Array<string>) {
   const rootNames = files.filter(m => !!m);
   const program = ts.createProgram(rootNames, {
     allowJs: true,
@@ -16,9 +16,10 @@ export function setupVisitorContext(name: string, files: Array<string>) {
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
     modules: {},
-    refs: {},
+    refs: [],
     availableImports: {},
     usedImports: [],
+    exports: [],
     checker,
     program,
     warn(message) {
@@ -27,13 +28,14 @@ export function setupVisitorContext(name: string, files: Array<string>) {
     error(message) {
       throw new Error(message);
     },
-    ids: [],
   };
   context.modules[name] = context.refs;
+  addAvailableImports(context, imports);
+  addAmbientModules(context, imports);
   return context;
 }
 
-export function fillVisitorContextFromApi(context: DeclVisitorContext, apiPath: string, apiName: string) {
+export function fillExportsFromApi(context: DeclVisitorContext, apiPath: string, apiName: string) {
   const api = context.program.getSourceFile(apiPath);
 
   if (api) {
@@ -45,7 +47,7 @@ export function fillVisitorContextFromApi(context: DeclVisitorContext, apiPath: 
   }
 }
 
-export function fillVisitorContextFromTypes(context: DeclVisitorContext, typingsPath: string) {
+export function fillExportsFromTypes(context: DeclVisitorContext, typingsPath: string) {
   const tp = context.program.getSourceFile(typingsPath);
 
   if (tp) {
@@ -57,7 +59,7 @@ export function fillVisitorContextFromTypes(context: DeclVisitorContext, typings
   }
 }
 
-export function addVisitorContextImports(context: DeclVisitorContext, imports: Array<string>) {
+export function addAvailableImports(context: DeclVisitorContext, imports: Array<string>) {
   const sourceFiles = context.program.getSourceFiles();
   const remaining = [...imports];
 
@@ -78,7 +80,7 @@ export function addVisitorContextImports(context: DeclVisitorContext, imports: A
   }
 }
 
-export function addVisitorContextAmbientModules(context: DeclVisitorContext, imports: Array<string>) {
+export function addAmbientModules(context: DeclVisitorContext, imports: Array<string>) {
   const modules = context.checker.getAmbientModules();
 
   for (const module of modules) {
@@ -89,6 +91,12 @@ export function addVisitorContextAmbientModules(context: DeclVisitorContext, imp
       includeExports(context, module.name, module);
     }
   }
+}
+
+export function processVisitorContext(context: DeclVisitorContext) {
+  const visitor = new DeclVisitor(context);
+  visitor.processQueue();
+  return stringifyDeclaration(context);
 }
 
 export interface DeclOptions {
@@ -111,19 +119,17 @@ export function generateDeclaration(options: DeclOptions) {
     ...types.map(type => findAppRoot(root, type)),
   ];
 
-  const context = setupVisitorContext(name, sources);
-  addVisitorContextImports(context, imports);
-  addVisitorContextAmbientModules(context, imports);
+  const context = setupVisitorContext(name, sources, imports);
 
   for (const api of apis) {
     const path = findAppRoot(root, api.file);
-    fillVisitorContextFromApi(context, path, api.name);
+    fillExportsFromApi(context, path, api.name);
   }
 
   for (const type of types) {
     const path = findAppRoot(root, type);
-    fillVisitorContextFromTypes(context, path);
+    fillExportsFromTypes(context, path);
   }
 
-  return stringifyDeclaration(context);
+  return processVisitorContext(context);
 }
