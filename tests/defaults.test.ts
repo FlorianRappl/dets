@@ -8,3 +8,10 @@ test('should handle renaming of default exports', () => {
   export function two(): string;
 }`);
 });
+
+test('should handle renaming of function default exports', () => {
+  const result = runTestFor('defaults2.ts');
+  expect(result).toBe(`declare module "test" {
+  export function three(): string;
+}`);
+});
