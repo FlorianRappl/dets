@@ -138,9 +138,10 @@ export class DeclVisitor {
     const { moduleName, lib } = getPackage(node, global, c.availableImports);
 
     if (!lib) {
-      return this.getName(node, getSymbolName(symbol));
+      const name = global ? fullyQualifiedName(symbol, '_') : getSymbolName(symbol);
+      return this.getName(node, name);
     } else if (global) {
-      return fullyQualifiedName(symbol);
+      return fullyQualifiedName(symbol, '.');
     } else {
       return createBinding(c, moduleName, getSymbolName(symbol));
     }
@@ -820,9 +821,13 @@ export class DeclVisitor {
   }
 
   private includeInContext(node: ts.Node, createType: () => TypeModelExport) {
-    const symbol = getSymbol(this.context.checker, node);
+    const c = this.context;
+    const imports = c.availableImports;
+    const symbol = getSymbol(c.checker, node);
+    const global = isGlobal(symbol);
+    const { external } = getPackage(node, global, imports);
 
-    if (!isGlobal(symbol) && !getPackage(node, false, this.context.availableImports).external) {
+    if (!external) {
       this.refs.push(createType());
     }
   }

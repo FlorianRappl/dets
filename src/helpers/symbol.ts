@@ -2,7 +2,7 @@ import { Symbol, SymbolFlags } from 'typescript';
 import { globalIndicator } from './constants';
 import { isPrivate, isProtected, isStatic, isReadonly } from './node';
 
-export function fullyQualifiedName(symbol: Symbol) {
+export function fullyQualifiedName(symbol: Symbol, delimiter: string) {
   const parts = [];
 
   do {
@@ -10,7 +10,7 @@ export function fullyQualifiedName(symbol: Symbol) {
     symbol = symbol.parent;
   } while (symbol && symbol.flags === SymbolFlags.NamespaceModule && symbol.name !== globalIndicator);
 
-  return parts.reverse().join('.');
+  return parts.reverse().join(delimiter);
 }
 
 export function isGlobal(symbol: Symbol) {

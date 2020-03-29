@@ -78,7 +78,7 @@ test('should be able to handle react classes bundled in', () => {
   expect(result).toBe(`declare module "test" {
   export class SomeClass extends Component<{}> {
     constructor(props: {});
-    render(): JSX.Element;
+    render(): JSX_Element;
   }
 
   export class Component<P, S> {
@@ -125,6 +125,8 @@ test('should be able to handle react classes bundled in', () => {
     };
   }
 
+  export interface JSX_Element extends ReactElement<any, any> {}
+
   export interface Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<P, S, SS> {}
 
   export interface Context<T> {
@@ -136,6 +138,12 @@ test('should be able to handle react classes bundled in', () => {
   export type ReactNode = ReactChild | ReactFragment | ReactPortal | boolean | null | undefined;
 
   export type ReactInstance = Component<any> | Element;
+
+  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
+    type: T;
+    props: P;
+    key: Key | null;
+  }
 
   export interface ComponentLifecycle<P, S, SS = any> extends NewLifecycle<P, S, SS>, DeprecatedLifecycle<P, S> {
     /**
@@ -175,6 +183,10 @@ test('should be able to handle react classes bundled in', () => {
     key: Key | null;
     children: ReactNode;
   }
+
+  export type Key = string | number;
+
+  export type JSXElementConstructor<P> = ((props: P) => ReactElement | null) | (new (props: P) => Component<P, any>);
 
   export interface NewLifecycle<P, S, SS> {
     /**
@@ -270,23 +282,13 @@ test('should be able to handle react classes bundled in', () => {
     unstable_observedBits?: number;
   }
 
-  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
-    type: T;
-    props: P;
-    key: Key | null;
-  }
-
   export type ReactText = string | number;
 
   export interface ReactNodeArray extends Array<ReactNode> {}
 
-  export type Key = string | number;
-
   export type WeakValidationMap<T> = {
     [K in keyof T]?: null extends T[K] ? Validator<T[K] | null | undefined> : undefined extends T[K] ? Validator<T[K] | null | undefined> : Validator<T[K]>;
   };
-
-  export type JSXElementConstructor<P> = ((props: P) => ReactElement | null) | (new (props: P) => Component<P, any>);
 
   export type Validator<T> = Validator___1<T>;
 
