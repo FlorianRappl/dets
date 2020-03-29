@@ -8,9 +8,71 @@ test('should handle manual composition of react typings', () => {
     render(): ReactChild;
   }
 
-  export interface Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<P, S, SS> {}
+  export class Component<P, S> {
+    /**
+     * If set, \`this.context\` will be set at runtime to the current value of the given Context.
+     * \n     * Usage:
+     * \n     * \`\`\`ts
+     * type MyContext = number
+     * const Ctx = React.createContext<MyContext>(0)
+     * \n     * class Foo extends React.Component {
+     *    static contextType = Ctx
+     *    context!: React.ContextType<typeof Ctx>
+     *    render () {
+     *      return <>My context's value: {this.context}</>;
+     *    }
+     * }
+     * \`\`\`
+     */
+    static contextType: Context<any>;
+    /**
+     * If using the new style context, re-declare this in your class to be the
+     * \`React.ContextType\` of your \`static contextType\`.
+     * Should be used with type annotation or static contextType.
+     * \n     * \`\`\`ts
+     * static contextType = MyContext
+     * // For TS pre-3.7:
+     * context!: React.ContextType<typeof MyContext>
+     * // For TS 3.7 and above:
+     * declare context: React.ContextType<typeof MyContext>
+     * \`\`\`
+     */
+    context: any;
+    constructor(props: Readonly<P>);
+    constructor(props: P, context?: any);
+    setState<K extends keyof S>(state: ((prevState: Readonly<S>, props: Readonly<P>) => Pick<S, K> | S | null) | (Pick<S, K> | S | null), callback?: () => void): void;
+    forceUpdate(callback?: () => void): void;
+    render(): ReactNode;
+    readonly props: Readonly<P> & Readonly<{
+      children?: ReactNode;
+    }>;
+    state: Readonly<S>;
+    refs: {
+      [key: string]: ReactInstance;
+    };
+  }
 
   export type ReactChild = ReactElement | ReactText;
+
+  export interface Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<P, S, SS> {}
+
+  export interface Context<T> {
+    Provider: Provider<T>;
+    Consumer: Consumer<T>;
+    displayName?: string;
+  }
+
+  export type ReactNode = ReactChild | ReactFragment | ReactPortal | boolean | null | undefined;
+
+  export type ReactInstance = Component<any> | Element;
+
+  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
+    type: T;
+    props: P;
+    key: Key | null;
+  }
+
+  export type ReactText = string | number;
 
   export interface ComponentLifecycle<P, S, SS = any> extends NewLifecycle<P, S, SS>, DeprecatedLifecycle<P, S> {
     /**
@@ -38,13 +100,20 @@ test('should handle manual composition of react typings', () => {
     componentDidCatch?(error: Error, errorInfo: ErrorInfo): void;
   }
 
-  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
-    type: T;
-    props: P;
+  export type Provider<T> = ProviderExoticComponent<ProviderProps<T>>;
+
+  export type Consumer<T> = ExoticComponent<ConsumerProps<T>>;
+
+  export type ReactFragment = {} | ReactNodeArray;
+
+  export interface ReactPortal extends ReactElement {
     key: Key | null;
+    children: ReactNode;
   }
 
-  export type ReactText = string | number;
+  export type Key = string | number;
+
+  export type JSXElementConstructor<P> = ((props: P) => ReactElement | null) | (new (props: P) => Component<P, any>);
 
   export interface NewLifecycle<P, S, SS> {
     /**
@@ -121,9 +190,39 @@ test('should handle manual composition of react typings', () => {
     componentStack: string;
   }
 
-  export type Key = string | number;
+  export interface ProviderExoticComponent<P> extends ExoticComponent<P> {
+    propTypes?: WeakValidationMap<P>;
+  }
 
-  export type JSXElementConstructor<P> = ((props: P) => ReactElement | null) | (new (props: P) => Component<P, any>);
+  export interface ProviderProps<T> {
+    value: T;
+    children?: ReactNode;
+  }
+
+  export interface ExoticComponent<P = {}> {
+    (props: P): ReactElement | null;
+    readonly $$typeof: symbol;
+  }
+
+  export interface ConsumerProps<T> {
+    children(value: T): ReactNode;
+    unstable_observedBits?: number;
+  }
+
+  export interface ReactNodeArray extends Array<ReactNode> {}
+
+  export type WeakValidationMap<T> = {
+    [K in keyof T]?: null extends T[K] ? Validator<T[K] | null | undefined> : undefined extends T[K] ? Validator<T[K] | null | undefined> : Validator<T[K]>;
+  };
+
+  export interface Validator<T> {
+    (props: {
+      [key: string]: any;
+    }, propName: string, componentName: string, location: string, propFullName: string): Error | null;
+    "[nominalTypeHack]"?: {
+      type: T;
+    };
+  }
 }`);
 });
 

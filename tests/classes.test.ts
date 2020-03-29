@@ -78,12 +78,64 @@ test('should be able to handle react classes bundled in', () => {
   expect(result).toBe(`declare module "test" {
   export class SomeClass extends Component<{}> {
     constructor(props: {});
-    render(): Element;
+    render(): JSX.Element;
+  }
+
+  export class Component<P, S> {
+    /**
+     * If set, \`this.context\` will be set at runtime to the current value of the given Context.
+     * \n     * Usage:
+     * \n     * \`\`\`ts
+     * type MyContext = number
+     * const Ctx = React.createContext<MyContext>(0)
+     * \n     * class Foo extends React.Component {
+     *    static contextType = Ctx
+     *    context!: React.ContextType<typeof Ctx>
+     *    render () {
+     *      return <>My context's value: {this.context}</>;
+     *    }
+     * }
+     * \`\`\`
+     */
+    static contextType: Context<any>;
+    /**
+     * If using the new style context, re-declare this in your class to be the
+     * \`React.ContextType\` of your \`static contextType\`.
+     * Should be used with type annotation or static contextType.
+     * \n     * \`\`\`ts
+     * static contextType = MyContext
+     * // For TS pre-3.7:
+     * context!: React.ContextType<typeof MyContext>
+     * // For TS 3.7 and above:
+     * declare context: React.ContextType<typeof MyContext>
+     * \`\`\`
+     */
+    context: any;
+    constructor(props: Readonly<P>);
+    constructor(props: P, context?: any);
+    setState<K extends keyof S>(state: ((prevState: Readonly<S>, props: Readonly<P>) => (Pick<S, K> | S | null)) | (Pick<S, K> | S | null), callback?: () => void): void;
+    forceUpdate(callback?: () => void): void;
+    render(): ReactNode;
+    readonly props: Readonly<P> & Readonly<{
+      children?: ReactNode;
+    }>;
+    state: Readonly<S>;
+    refs: {
+      [key: string]: ReactInstance;
+    };
   }
 
   export interface Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<P, S, SS> {}
 
-  export interface Element extends ReactElement<any, any> {}
+  export interface Context<T> {
+    Provider: Provider<T>;
+    Consumer: Consumer<T>;
+    displayName?: string;
+  }
+
+  export type ReactNode = ReactChild | ReactFragment | ReactPortal | boolean | null | undefined;
+
+  export type ReactInstance = Component<any> | Element;
 
   export interface ComponentLifecycle<P, S, SS = any> extends NewLifecycle<P, S, SS>, DeprecatedLifecycle<P, S> {
     /**
@@ -111,10 +163,17 @@ test('should be able to handle react classes bundled in', () => {
     componentDidCatch?(error: Error, errorInfo: ErrorInfo): void;
   }
 
-  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
-    type: T;
-    props: P;
+  export type Provider<T> = ProviderExoticComponent<ProviderProps<T>>;
+
+  export type Consumer<T> = ExoticComponent<ConsumerProps<T>>;
+
+  export type ReactChild = ReactElement | ReactText;
+
+  export type ReactFragment = {} | ReactNodeArray;
+
+  export interface ReactPortal extends ReactElement {
     key: Key | null;
+    children: ReactNode;
   }
 
   export interface NewLifecycle<P, S, SS> {
@@ -192,9 +251,53 @@ test('should be able to handle react classes bundled in', () => {
     componentStack: string;
   }
 
+  export interface ProviderExoticComponent<P> extends ExoticComponent<P> {
+    propTypes?: WeakValidationMap<P>;
+  }
+
+  export interface ProviderProps<T> {
+    value: T;
+    children?: ReactNode;
+  }
+
+  export interface ExoticComponent<P = {}> {
+    (props: P): (ReactElement | null);
+    readonly $$typeof: symbol;
+  }
+
+  export interface ConsumerProps<T> {
+    children(value: T): ReactNode;
+    unstable_observedBits?: number;
+  }
+
+  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
+    type: T;
+    props: P;
+    key: Key | null;
+  }
+
+  export type ReactText = string | number;
+
+  export interface ReactNodeArray extends Array<ReactNode> {}
+
   export type Key = string | number;
 
+  export type WeakValidationMap<T> = {
+    [K in keyof T]?: null extends T[K] ? Validator<T[K] | null | undefined> : undefined extends T[K] ? Validator<T[K] | null | undefined> : Validator<T[K]>;
+  };
+
   export type JSXElementConstructor<P> = ((props: P) => ReactElement | null) | (new (props: P) => Component<P, any>);
+
+  export type Validator<T> = Validator___1<T>;
+
+  export interface Validator___1<T> {
+    (props: {
+      [key: string]: any;
+    }, propName: string, componentName: string, location: string, propFullName: string): Error | null;
+    "[nominalTypeHack]"?: {
+      type: T;
+    };
+  }
 }`);
 });
 
