@@ -46,6 +46,7 @@ import {
   TypeModelGetAccessor,
   TypeModelSetAccessor,
   TypeModelExport,
+  TypeRefs,
 } from '../types';
 
 export class DeclVisitor {
@@ -53,15 +54,19 @@ export class DeclVisitor {
   private readonly modules: Array<ts.ModuleDeclaration> = [];
   private readonly processed: Array<ts.Node> = [];
   private readonly names: Map<ts.Node, string> = new Map();
+  private refs: TypeRefs;
 
   constructor(private context: DeclVisitorContext) {
+    const [defaultModule] = Object.keys(context.modules ?? {});
+    this.refs = context.modules[defaultModule] ?? [];
+
     for (const node of context.exports) {
       this.enqueue(node);
     }
   }
 
   private swapName(oldName: string, newName: string) {
-    const refs = this.context.refs;
+    const refs = this.refs;
     const last = refs.pop();
 
     if (!last) {
@@ -81,12 +86,12 @@ export class DeclVisitor {
         }
       }
     } else if ('name' in last && last.name === oldName) {
-      this.context.refs.push({
+      refs.push({
         ...last,
         name: newName,
       });
     } else {
-      this.context.refs.push(last);
+      refs.push(last);
     }
   }
 
@@ -96,13 +101,21 @@ export class DeclVisitor {
 
   private createName(name: string): string {
     const altStart = `${name}___`;
-    const count = this.context.refs.filter(m => m.name === name || m.name.startsWith(altStart)).length;
+    const available = new Set<string>();
 
-    if (!count) {
-      return name;
-    } else {
+    for (const m of this.names.values()) {
+      if (m === name || m.startsWith(altStart)) {
+        available.add(m);
+      }
+    }
+
+    const count = available.size;
+
+    if (count) {
       return `${altStart}${count}`;
     }
+
+    return name;
   }
 
   private getName(node: ts.Node, suggested: string): string {
@@ -110,7 +123,8 @@ export class DeclVisitor {
 
     if (!existing) {
       const name = this.createName(suggested);
-      this.names.set(node, name);
+      const decls = node.symbol?.declarations ?? [node];
+      decls.forEach(decl => this.names.set(decl, name));
       return name;
     }
 
@@ -701,10 +715,7 @@ export class DeclVisitor {
     const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
     const name = this.getName(node, node.name.text);
 
-    decls.forEach(m => {
-      this.names.set(m, name);
-      this.enqueue(m);
-    });
+    decls.forEach(m => this.enqueue(m));
 
     return {
       kind: 'class',
@@ -726,7 +737,6 @@ export class DeclVisitor {
     const name = this.getName(node, node.name.text);
 
     decls.forEach(m => {
-      this.names.set(m, name);
       m.heritageClauses?.forEach(c => {
         clauses.includes(c) || clauses.push(c);
       });
@@ -810,11 +820,10 @@ export class DeclVisitor {
   }
 
   private includeInContext(node: ts.Node, createType: () => TypeModelExport) {
-    const c = this.context;
-    const symbol = getSymbol(c.checker, node);
+    const symbol = getSymbol(this.context.checker, node);
 
-    if (!isGlobal(symbol) && !getPackage(node, false, c.availableImports).external) {
-      c.refs.push(createType());
+    if (!isGlobal(symbol) && !getPackage(node, false, this.context.availableImports).external) {
+      this.refs.push(createType());
     }
   }
 
@@ -847,7 +856,7 @@ export class DeclVisitor {
 
   private includeExportedInterface(node: ts.InterfaceDeclaration) {
     const name = this.getName(node, node.name.text);
-    const exists = this.context.refs.some(m => m.kind === 'interface' && m.name === name);
+    const exists = this.refs.some(m => m.kind === 'interface' && m.name === name);
 
     if (!exists) {
       this.includeInContext(node, () => this.getInterface(node));
@@ -934,7 +943,7 @@ export class DeclVisitor {
     const c = this.context;
     const name = node.name.text;
     const existing = c.modules[name];
-    c.modules[name] = c.refs = existing || [];
+    c.modules[name] = this.refs = existing || [];
 
     node.body.forEachChild(subNode => {
       if (isNodeExported(subNode)) {

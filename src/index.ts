@@ -15,8 +15,9 @@ export function setupVisitorContext(name: string, files: Array<string>, imports:
   });
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
-    modules: {},
-    refs: [],
+    modules: {
+      [name]: [],
+    },
     availableImports: {},
     usedImports: [],
     exports: [],
@@ -29,7 +30,6 @@ export function setupVisitorContext(name: string, files: Array<string>, imports:
       throw new Error(message);
     },
   };
-  context.modules[name] = context.refs;
   addAvailableImports(context, imports);
   addAmbientModules(context, imports);
   return context;

@@ -198,3 +198,14 @@ test('should avoid name clashes when importing', () => {
   }
 }`);
 });
+
+test('should avoid name clashes when aliasing', () => {
+  const result = runTestFor('import4.ts', {
+    imports: [],
+  });
+  expect(result).toBe(`declare module "test" {
+  export type Foo<T> = Foo___1<T>;
+
+  export interface Foo___1<T> {}
+}`);
+});

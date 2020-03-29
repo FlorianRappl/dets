@@ -10,7 +10,6 @@ export interface DeclVisitorContext {
   checker: TypeChecker;
   program: Program;
   exports: Array<Node>;
-  refs: TypeRefs;
   usedImports: Array<string>;
   availableImports: ImportRefs;
   warn(message: string): void;
