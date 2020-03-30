@@ -600,9 +600,14 @@ export class DeclVisitor {
       return this.getTuple(node);
     } else if (ts.isTypeQueryNode(node)) {
       const symbol = this.context.checker.getSymbolAtLocation(node.exprName);
-      const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
-      const typeNode = this.convertToTypeNodeFromType(type);
-      return this.getTypeNode(typeNode);
+
+      if (symbol !== undefined) {
+        const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
+        const typeNode = this.convertToTypeNodeFromType(type);
+        return this.getTypeNode(typeNode);
+      }
+
+      return getRef(`typeof ${getTypeRefName(node.exprName)}`);
     }
 
     switch (node.kind) {
