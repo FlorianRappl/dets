@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.5.1
+
+- Fixed undefined typeof
+
 ## 0.5.0
 
 - Improved preservation of overloads in interfaces
