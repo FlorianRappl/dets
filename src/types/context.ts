@@ -1,7 +1,9 @@
 import { TypeChecker, Program, Node } from 'typescript';
 import { TypeModelExport } from './model';
 
-export type ImportRefs = Record<string, Array<Node>>;
+export type ImportDefs = Record<string, Node>;
+
+export type ImportRefs = Record<string, ImportDefs>;
 
 export type TypeRefs = Array<TypeModelExport>;
 

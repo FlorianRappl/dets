@@ -441,3 +441,29 @@ test('should not include globals from imported globals if specified', () => {
   export const foo: JSX.Element;
 }`);
 });
+
+test('should not include types from imported libs when indirectly referenced', () => {
+  const result = runTestFor('vue1.ts', {
+    imports: ['vue']
+  });
+  expect(result).toBe(`import * as Vue from 'vue';
+
+declare module "test" {
+  export interface MyComponent {
+    content: Vue.Component;
+  }
+}`);
+});
+
+test('should not include default export in case of import', () => {
+  const result = runTestFor('vue2.ts', {
+    imports: ['vue']
+  });
+  expect(result).toBe(`import * as Vue from 'vue';
+
+declare module "test" {
+  export interface MyComponent {
+    content: Vue.default;
+  }
+}`);
+});
