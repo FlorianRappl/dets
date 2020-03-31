@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.5.3
+
+- Fixed invalid file references
+
 ## 0.5.2
 
 - Fixed referencing of indirect symbols

@@ -70,10 +70,11 @@ export function addAvailableImports(context: DeclVisitorContext, imports: Array<
 
     sourceFile.resolvedModules?.forEach((value, key) => {
       const index = remaining.indexOf(key);
+      const fileName = value?.resolvedFileName;
 
-      if (index !== -1) {
-        const file = context.program.getSourceFile(value.resolvedFileName);
-        includeExports(context, key, file.symbol);
+      if (index !== -1 && fileName) {
+        const file = context.program.getSourceFile(fileName);
+        includeExports(context, key, file?.symbol);
         remaining.splice(index, 1);
       }
     });
