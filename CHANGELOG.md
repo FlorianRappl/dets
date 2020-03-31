@@ -1,8 +1,12 @@
 # Changelog for dets
 
+## 0.5.2
+
+- Fixed referencing of indirect symbols
+
 ## 0.5.1
 
-- Fixed undefined typeof
+- Fixed undefined `typeof` declaration
 
 ## 0.5.0
 
