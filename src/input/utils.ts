@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import { getLibRefName, getPropName, isBaseLib, getModule, getLibName } from '../helpers';
-import { DeclVisitorContext, TypeModelRef, TypeModelDefault, TypeModel } from '../types';
+import { DeclVisitorContext, TypeModelRef, TypeModelDefault, TypeModel, ImportRefs, ImportDefs } from '../types';
 
 export function createBinding(context: DeclVisitorContext, lib: string, name: string) {
   // if we did not use the given lib yet, add it to the used libs
@@ -41,7 +41,19 @@ export function getRef(refName: string, types: Array<TypeModel> = []): TypeModel
   };
 }
 
-export function getPackage(node: ts.Node, global: boolean, imports: Record<string, Array<ts.Node>>) {
+function getSymbolName(imports: ImportDefs, node: ts.Node): string {
+  if (imports) {
+    for (const name of Object.keys(imports)) {
+      if (imports[name] === node) {
+        return name;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+export function getPackage(node: ts.Node, global: boolean, imports: ImportRefs) {
   const fn = node.getSourceFile()?.fileName;
   const base = isBaseLib(fn) || false;
 
@@ -51,13 +63,15 @@ export function getPackage(node: ts.Node, global: boolean, imports: Record<strin
       if (global) {
         return name === libName;
       } else {
-        return imports[name].includes(node);
+        return Object.values(imports[name]).includes(node);
       }
     });
+    const symbolName = getSymbolName(imports[lib], node);
 
     return {
       external: !!lib,
       moduleName: (lib && getModule(node)) || lib,
+      symbolName,
       base,
       lib,
       fn,
@@ -67,6 +81,7 @@ export function getPackage(node: ts.Node, global: boolean, imports: Record<strin
   return {
     external: true,
     moduleName: undefined,
+    symbolName: undefined,
     base,
     lib: undefined,
     fn,

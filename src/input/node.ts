@@ -135,7 +135,7 @@ export class DeclVisitor {
     const c = this.context;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
     const global = isGlobal(symbol);
-    const { moduleName, lib } = getPackage(node, global, c.availableImports);
+    const { moduleName, lib, symbolName } = getPackage(node, global, c.availableImports);
 
     if (!lib) {
       const name = global ? fullyQualifiedName(symbol, '_') : getSymbolName(symbol);
@@ -143,7 +143,7 @@ export class DeclVisitor {
     } else if (global) {
       return fullyQualifiedName(symbol, '.');
     } else {
-      return createBinding(c, moduleName, getSymbolName(symbol));
+      return createBinding(c, moduleName, symbolName ?? getSymbolName(symbol));
     }
   }
 

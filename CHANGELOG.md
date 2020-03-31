@@ -3,6 +3,7 @@
 ## 0.5.2
 
 - Fixed referencing of indirect symbols
+- Improved usage of default imports
 
 ## 0.5.1
 

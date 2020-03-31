@@ -454,3 +454,16 @@ declare module "test" {
   }
 }`);
 });
+
+test('should not include default export in case of import', () => {
+  const result = runTestFor('vue2.ts', {
+    imports: ['vue']
+  });
+  expect(result).toBe(`import * as Vue from 'vue';
+
+declare module "test" {
+  export interface MyComponent {
+    content: Vue.default;
+  }
+}`);
+});
