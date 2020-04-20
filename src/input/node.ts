@@ -72,17 +72,19 @@ export class DeclVisitor {
     if (!last) {
       // empty on purpose
     } else if (last.kind === 'default') {
-      const name = last.value.refName;
+      if (last.value.kind === 'ref') {
+        const name = last.value.refName;
 
-      for (let i = refs.length; i--; ) {
-        const ref = refs[i];
+        for (let i = refs.length; i--; ) {
+          const ref = refs[i];
 
-        if (ref.name === name) {
-          refs.splice(i, 1, {
-            ...ref,
-            name: newName,
-          });
-          break;
+          if (ref.name === name) {
+            refs.splice(i, 1, {
+              ...ref,
+              name: newName,
+            });
+            break;
+          }
         }
       }
     } else if ('name' in last && last.name === oldName) {
@@ -719,7 +721,7 @@ export class DeclVisitor {
   private getClass(node: ts.ClassDeclaration): TypeModelClass {
     const type = this.context.checker.getTypeAtLocation(node);
     const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
-    const name = this.getName(node, node.name.text);
+    const name = this.getName(node, node.name?.text);
 
     decls.forEach(m => this.enqueue(m));
 
@@ -853,6 +855,8 @@ export class DeclVisitor {
         name,
       }));
       this.includeInContext(node, () => getDefault(getRef(name)));
+    } else if (ts.isClassDeclaration(node)) {
+      this.includeInContext(node, () => getDefault(this.getClass(node)));
     }
   }
 

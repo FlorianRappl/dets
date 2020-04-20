@@ -250,6 +250,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifyIndexedAccess(type);
     case 'index':
       return stringifyIndex(type);
+    case 'class':
+      return `class ${stringifyClass(type)}`;
     case 'constructor':
       return stringifyConstructor(type);
     case 'mapped':
