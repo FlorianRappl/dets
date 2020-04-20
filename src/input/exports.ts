@@ -1,18 +1,22 @@
 import * as ts from 'typescript';
-import { getDeclarationFromNode, getParameterName } from '../helpers';
+import { getDeclarationFromNode, getParameterName, isDefaultExport } from '../helpers';
 import { DeclVisitorContext } from '../types';
 
 export function includeExports(context: DeclVisitorContext, key: string, symbol: ts.Symbol) {
   const defs = {};
 
   if (symbol) {
-    context.checker.getExportsOfModule(symbol).forEach(exp => {
+    context.checker.getExportsOfModule(symbol).forEach((exp) => {
       const decl = exp.valueDeclaration || exp.declarations?.[0];
 
       if (!decl) {
         // skip - not really defined
       } else if (ts.isExportSpecifier(decl)) {
-        defs[decl.name.text] = getDeclarationFromNode(context.checker, decl);
+        const name = decl.name?.text;
+
+        if (name) {
+          defs[name] = getDeclarationFromNode(context.checker, decl);
+        }
       } else if (ts.isExportAssignment(decl)) {
         defs['default'] = getDeclarationFromNode(context.checker, decl);
       } else if (ts.isVariableDeclaration(decl)) {
@@ -24,7 +28,11 @@ export function includeExports(context: DeclVisitorContext, key: string, symbol:
         ts.isTypeAliasDeclaration(decl) ||
         ts.isEnumDeclaration(decl)
       ) {
-        defs[decl.name.text] = decl;
+        const name = isDefaultExport(decl) ? 'default' : decl.name?.text;
+
+        if (name) {
+          defs[name] = decl;
+        }
       } else if (ts.isMethodDeclaration(decl) || ts.isPropertyDeclaration(decl) || ts.isModuleDeclaration(decl)) {
         // skip - mostly from ambient modules
       } else {
