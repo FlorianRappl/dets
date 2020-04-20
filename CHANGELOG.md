@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.5.4
+
+- Fixed problem with default export in ambient modules
+- Improved support for default (class) export
+
 ## 0.5.3
 
 - Fixed invalid file references
