@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.5.5
+
+- Ignore floating import nodes
+
 ## 0.5.4
 
 - Fixed problem with default export in ambient modules

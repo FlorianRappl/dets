@@ -997,6 +997,8 @@ export class DeclVisitor {
       this.includeExportsDeclaration(node);
     } else if (ts.isModuleDeclaration(node)) {
       this.modules.push(node);
+    } else if (ts.isImportTypeNode(node)) {
+      // empty on purpose
     } else {
       this.printWarning('type', node);
     }
