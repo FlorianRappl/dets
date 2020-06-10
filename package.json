@@ -52,7 +52,7 @@
     "@types/react-router-dom": "^5.1.5",
     "@types/styled-components": "^5.1.0",
     "@types/yargs": "^15.0.5",
-    "@zeit/ncc": "^0.21.1",
+    "@zeit/ncc": "^0.22.3",
     "deox": "^3.2.1",
     "glob": "^7.1.6",
     "jest": "^26.0.1",
