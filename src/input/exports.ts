@@ -35,6 +35,8 @@ export function includeExports(context: DeclVisitorContext, key: string, symbol:
         }
       } else if (ts.isMethodDeclaration(decl) || ts.isPropertyDeclaration(decl) || ts.isModuleDeclaration(decl)) {
         // skip - mostly from ambient modules
+      } else if (ts.isImportEqualsDeclaration(decl)) {
+        //skip - automatically "introduced"
       } else {
         context.warn(`Skipping import of unknown node (kind: ${decl.kind}).`);
       }

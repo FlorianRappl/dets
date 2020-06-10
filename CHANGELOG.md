@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.6.0
+
+- Updated dependencies
+- Added import equals declaration
+- Added support for ref comments (#14)
+
 ## 0.5.5
 
 - Ignore floating import nodes

@@ -11,15 +11,22 @@ export function runTestFor(name: string, options: Partial<DeclOptions> = {}) {
   });
 }
 
-export function getPiralCorePath() {
-  const piralCoreRoot = 'piral-core/lib/types/api';
-  const piralCorePath = require.resolve(piralCoreRoot);
-  return piralCorePath.replace(/\.js$/, '.d.ts');
+function resolveTypes(typeRoot: string) {
+  const typePath = require.resolve(typeRoot);
+  return typePath.replace(/\.js$/, '.d.ts');
 }
 
-export function getPiralCoreApi() {
+export function getPiralBaseTypes() {
+  return resolveTypes('piral-base/lib/types');
+}
+
+export function getPiralCoreTypes() {
+  return resolveTypes('piral-core/lib/types');
+}
+
+export function getPiralBaseApi() {
   return {
-    file: getPiralCorePath(),
+    file: getPiralBaseTypes(),
     name: 'PiletApi',
   };
 }

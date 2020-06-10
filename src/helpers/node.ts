@@ -54,7 +54,7 @@ export function getJsDocs(checker: TypeChecker, node: Node) {
 
 export function getComment(checker: TypeChecker, node: Node): string {
   const doc = getJsDocs(checker, node);
-  return doc?.map(m => m.text).join('\n');
+  return doc?.map((m) => m.text).join('\n');
 }
 
 export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): Declaration {
