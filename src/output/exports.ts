@@ -38,7 +38,8 @@ export function stringifyExport(type: TypeModelExport) {
         StringifyMode.property,
       )};`;
     case 'default':
-      return `${stringifyComment(type)}export default ${stringifyNode(type.value)};`;
+      const sc = type.value.kind === 'class' ? '' : ';';
+      return `${stringifyComment(type)}export default ${stringifyNode(type.value)}${sc}`;
   }
 
   return '';
@@ -46,7 +47,7 @@ export function stringifyExport(type: TypeModelExport) {
 
 export function stringifyExports(refs: TypeRefs) {
   return refs
-    .map(r => stringifyExport(r))
-    .filter(m => !!m)
+    .map((r) => stringifyExport(r))
+    .filter((m) => !!m)
     .join('\n\n');
 }

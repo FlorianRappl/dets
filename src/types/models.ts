@@ -4,7 +4,7 @@ import { TypeModel } from './model';
 export interface TypeModelDefault extends WithTypeComments {
   readonly kind: 'default';
   readonly name: string;
-  readonly value: TypeModelRef;
+  readonly value: TypeModelRef | TypeModelClass;
 }
 
 export interface TypeModelClass

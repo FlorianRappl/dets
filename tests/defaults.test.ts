@@ -24,3 +24,13 @@ test('should handle a plain default exports', () => {
   export const foo: "hello";
 }`);
 });
+
+test('should handle a default class', () => {
+  const result = runTestFor('defaults4.ts');
+  expect(result).toBe(`declare module "test" {
+  export default class {
+    togglePopover(): void;
+    closePopover(): void;
+  }
+}`);
+});

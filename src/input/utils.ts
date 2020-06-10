@@ -1,6 +1,14 @@
 import * as ts from 'typescript';
 import { getLibRefName, getPropName, isBaseLib, getModule, getLibName } from '../helpers';
-import { DeclVisitorContext, TypeModelRef, TypeModelDefault, TypeModel, ImportRefs, ImportDefs } from '../types';
+import {
+  DeclVisitorContext,
+  TypeModelRef,
+  TypeModelDefault,
+  TypeModel,
+  ImportRefs,
+  ImportDefs,
+  TypeModelClass,
+} from '../types';
 
 export function createBinding(context: DeclVisitorContext, lib: string, name: string) {
   // if we did not use the given lib yet, add it to the used libs
@@ -25,7 +33,7 @@ export function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement
   return false;
 }
 
-export function getDefault(value: TypeModelRef): TypeModelDefault {
+export function getDefault(value: TypeModelRef | TypeModelClass): TypeModelDefault {
   return {
     kind: 'default',
     name: 'default',
@@ -59,7 +67,7 @@ export function getPackage(node: ts.Node, global: boolean, imports: ImportRefs) 
 
   if (!base) {
     const libName = getLibName(fn);
-    const [lib] = Object.keys(imports).filter(name => {
+    const [lib] = Object.keys(imports).filter((name) => {
       if (global) {
         return name === libName;
       } else {
