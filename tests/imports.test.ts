@@ -467,3 +467,12 @@ declare module "test" {
   }
 }`);
 });
+
+test('should allow using import equals statement', () => {
+  const result = runTestFor('import5.ts');
+  expect(result).toBe(`declare module "test" {
+  export type Foo<T> = Foo___1<T>;
+
+  export interface Foo___1<T> {}
+}`);
+});
