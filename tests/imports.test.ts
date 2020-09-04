@@ -409,7 +409,6 @@ test('should include globals from imported globals if bundled in', () => {
 
   export interface ConsumerProps<T> {
     children(value: T): ReactNode;
-    unstable_observedBits?: number;
   }
 
   export type ReactText = string | number;

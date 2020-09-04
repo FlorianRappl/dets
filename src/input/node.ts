@@ -171,7 +171,7 @@ export class DeclVisitor {
         return node.literal.text;
       default:
         const type = this.context.checker.getTypeFromTypeNode(node) as any;
-        return type?.value;
+        return type?.intrinsicName ?? type?.value;
     }
   }
 
@@ -554,7 +554,7 @@ export class DeclVisitor {
   private getTuple(node: ts.TupleTypeNode): TypeModelTuple {
     return {
       kind: 'tuple',
-      types: node.elementTypes.map(n => this.getTypeNode(n)),
+      types: (node["elementTypes"] ?? node.elements).map(n => this.getTypeNode(n)),
     };
   }
 

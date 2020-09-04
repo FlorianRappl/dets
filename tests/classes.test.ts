@@ -279,7 +279,6 @@ test('should be able to handle react classes bundled in', () => {
 
   export interface ConsumerProps<T> {
     children(value: T): ReactNode;
-    unstable_observedBits?: number;
   }
 
   export type ReactText = string | number;

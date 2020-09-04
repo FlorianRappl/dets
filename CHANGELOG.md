@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.7.0
+
+- Updated dependencies
+- Added support for TypeScript 4
+
 ## 0.6.0
 
 - Updated dependencies

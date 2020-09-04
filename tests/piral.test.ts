@@ -315,7 +315,27 @@ declare module "test" {
   }
 
   export interface PiralPiletConfiguration {
+    /**
+     * The callback for defining how a dependency will be fetched.
+     */
+    fetchDependency?: PiletDependencyFetcher;
+    /**
+     * Function to get the dependencies for a given module.
+     */
+    getDependencies?: PiletDependencyGetter;
+    /**
+     * Function to load the modules asynchronously, e.g., from a server 🚚.
+     */
     requestPilets?: PiletRequester;
+    /**
+     * Function to define how to load a pilet given its metadata.
+     */
+    loadPilet?: PiletLoader;
+    /**
+     * Determines that pilets are loaded asynchronously, essentially showing the
+     * app right away without waiting for the pilets to load and evaluate.
+     */
+    async?: boolean | PiletLoadingStrategy;
     /**
      * Determines the modules, which are available already from the start 🚀.
      * The given modules are all already evaluated.
@@ -330,19 +350,6 @@ declare module "test" {
   }
 
   export interface PiralStateConfiguration {
-    /**
-     * The callback for defining how a dependency will be fetched.
-     */
-    fetchDependency?: PiletDependencyFetcher;
-    /**
-     * Function to get the dependencies for a given module.
-     */
-    getDependencies?: PiletDependencyGetter;
-    /**
-     * Determines that pilets are loaded asynchronously, essentially showing the
-     * app right away without waiting for the pilets to load and evaluate.
-     */
-    async?: boolean | PiletLoadingStrategy;
     /**
      * Optionally, sets up the initial state of the application 📦.
      */
@@ -782,6 +789,13 @@ declare module "test" {
     expires: number;
   }
 
+  export interface PiralUnloadPiletEvent {
+    /**
+     * The name of the pilet to be unloaded.
+     */
+    name: string;
+  }
+
   /**
    * Listener for Piral app shell events.
    */
@@ -795,6 +809,7 @@ declare module "test" {
   export interface PiralEventMap extends PiralCustomEventMap {
     [custom: string]: any;
     "store-data": PiralStoreDataEvent;
+    "unload-pilet": PiralUnloadPiletEvent;
   }
 
   export interface PiletMetadataV0 {
@@ -894,6 +909,10 @@ declare module "test" {
      */
     pilets?: Array<Pilet>;
     /**
+     * Optionally, defines how to load a pilet.
+     */
+    loadPilet?: PiletLoader;
+    /**
      * The callback for defining how a dependency will be fetched.
      */
     fetchDependency?: PiletDependencyFetcher;
@@ -918,6 +937,13 @@ declare module "test" {
    */
   export interface PiletsLoaded {
     (error: Error | undefined, pilets: Array<Pilet>): void;
+  }
+
+  /**
+   * The callback to be used to load a single pilet.
+   */
+  export interface PiletLoader {
+    (meta: PiletMetadata): Promise<Pilet>;
   }
 
   /**
