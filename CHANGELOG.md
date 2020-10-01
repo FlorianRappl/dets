@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.7.1
+
+- Updated dependencies
+- Fixed handling of incomplete props (#17)
+
 ## 0.7.0
 
 - Updated dependencies

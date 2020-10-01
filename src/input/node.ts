@@ -566,7 +566,11 @@ export class DeclVisitor {
   }
 
   private getTypeNode(node: ts.TypeNode): TypeModel {
-    if (ts.isUnionTypeNode(node)) {
+    if (!node) {
+      return {
+        kind: 'any',
+      };
+    } else if (ts.isUnionTypeNode(node)) {
       return this.getUnion(node);
     } else if (ts.isLiteralTypeNode(node)) {
       return this.getLiteral(node);
