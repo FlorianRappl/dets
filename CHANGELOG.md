@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.7.2
+
+- Fixed handling of missing properties
+
 ## 0.7.1
 
 - Updated dependencies

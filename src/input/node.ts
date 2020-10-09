@@ -315,6 +315,8 @@ export class DeclVisitor {
         members.push(this.getGetAccessor(node));
       } else if (ts.isSetAccessor(node)) {
         members.push(this.getSetAccessor(node));
+      } else if (ts.isIndexSignatureDeclaration(node)) {
+        members.push(this.getIndexProp(node));
       } else {
         members.push(this.getClassMember(node));
       }
