@@ -47,25 +47,29 @@ export function getJsDocs(checker: TypeChecker, node: Node) {
     if (sign) {
       return {
         comment: sign.getDocumentationComment(checker),
-        tags: sign.getJsDocTags()
+        tags: sign.getJsDocTags(),
       };
     }
   }
 
   return {
-    comment: node.symbol?.getDocumentationComment(checker)
+    comment: node.symbol?.getDocumentationComment(checker),
   };
 }
 
 export function getComment(checker: TypeChecker, node: Node): string {
   const doc = getJsDocs(checker, node);
 
-  const tags = doc.tags?.map((m) =>
-    `@${m.name}${['example'].includes(m.name) ? '\n' : (m.text ? ' ' : '')}${m.text ? m.text : ''}`
+  const tags = doc.tags?.map(
+    (m) => `@${m.name}${['example'].includes(m.name) ? '\n' : m.text ? ' ' : ''}${m.text ? m.text : ''}`,
   );
 
-  let result: string[] = doc.comment ? doc.comment.map((m) => m.text) : [];
-  tags ? result.push(...tags) : [];
+  const result: Array<string> = doc.comment ? doc.comment.map((m) => m.text) : [];
+
+  if (tags) {
+    result.push(...tags);
+  }
+
   return result.join('\n');
 }
 

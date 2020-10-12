@@ -1,4 +1,5 @@
 import { TypeChecker, Program, Node } from 'typescript';
+import { Logger } from './log';
 import { TypeModelExport } from './model';
 
 export type ImportDefs = Record<string, Node>;
@@ -14,6 +15,5 @@ export interface DeclVisitorContext {
   exports: Array<Node>;
   usedImports: Array<string>;
   availableImports: ImportRefs;
-  warn(message: string): void;
-  error(message: string): void;
+  log: Logger;
 }

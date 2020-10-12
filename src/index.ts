@@ -2,10 +2,11 @@ import * as ts from 'typescript';
 import { includeApi, includeTypings, includeExports, DeclVisitor } from './input';
 import { stringifyDeclaration } from './output';
 import { findAppRoot, getLibName } from './helpers';
-import { DeclVisitorContext } from './types';
+import { defaultLogger, wrapLogger } from './logger';
+import { DeclVisitorContext, Logger, LogLevel } from './types';
 
-export function setupVisitorContext(name: string, files: Array<string>, imports: Array<string>) {
-  const rootNames = files.filter(m => !!m);
+export function setupVisitorContext(name: string, files: Array<string>, imports: Array<string>, log: Logger) {
+  const rootNames = files.filter((m) => !!m);
   const program = ts.createProgram(rootNames, {
     allowJs: true,
     esModuleInterop: true,
@@ -23,12 +24,7 @@ export function setupVisitorContext(name: string, files: Array<string>, imports:
     exports: [],
     checker,
     program,
-    warn(message) {
-      console.warn(message);
-    },
-    error(message) {
-      throw new Error(message);
-    },
+    log,
   };
   addAvailableImports(context, imports);
   addAmbientModules(context, imports);
@@ -39,9 +35,9 @@ export function fillExportsFromApi(context: DeclVisitorContext, apiPath: string,
   const api = context.program.getSourceFile(apiPath);
 
   if (api) {
-    ts.forEachChild(api, node => includeApi(context, node, apiName));
+    ts.forEachChild(api, (node) => includeApi(context, node, apiName));
   } else {
-    context.error(
+    context.log.error(
       `Cannot find the "${apiPath}" module. Are you sure it exists? Please run "npm i" to install missing modules.`,
     );
   }
@@ -51,9 +47,9 @@ export function fillExportsFromTypes(context: DeclVisitorContext, typingsPath: s
   const tp = context.program.getSourceFile(typingsPath);
 
   if (tp) {
-    ts.forEachChild(tp, node => includeTypings(context, node));
+    ts.forEachChild(tp, (node) => includeTypings(context, node));
   } else {
-    context.warn(
+    context.log.warn(
       'Cannot find the provided typings. Check the "typings" field of your "package.json" for the correct path.',
     );
   }
@@ -110,27 +106,41 @@ export interface DeclOptions {
     name: string;
   }>;
   imports?: Array<string>;
+  logger?: Logger;
+  logLevel?: LogLevel;
 }
 
 export function generateDeclaration(options: DeclOptions) {
-  const { name, root, imports = [], files = [], types = [], apis = [] } = options;
+  const { name, root, imports = [], files = [], types = [], apis = [], logger = defaultLogger, logLevel = 3 } = options;
+  const log = wrapLogger(logger, logLevel);
+
+  log.verbose(`Aggregating the sources from "${root}".`);
+
   const sources = [
-    ...files.map(file => findAppRoot(root, file)),
-    ...apis.map(api => findAppRoot(root, api.file)),
-    ...types.map(type => findAppRoot(root, type)),
+    ...files.map((file) => findAppRoot(root, file)),
+    ...apis.map((api) => findAppRoot(root, api.file)),
+    ...types.map((type) => findAppRoot(root, type)),
   ];
 
-  const context = setupVisitorContext(name, sources, imports);
+  log.verbose(`Setting up a visitor context for "${name}".`);
+
+  const context = setupVisitorContext(name, sources, imports, log);
+
+  log.verbose(`Starting API gathering in "${root}".`);
 
   for (const api of apis) {
     const path = findAppRoot(root, api.file);
     fillExportsFromApi(context, path, api.name);
   }
 
+  log.verbose(`Starting type aggregation from "${root}".`);
+
   for (const type of types) {
     const path = findAppRoot(root, type);
     fillExportsFromTypes(context, path);
   }
+
+  log.verbose(`Processing the visitor context.`);
 
   return processVisitorContext(context);
 }

@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.8.0
+
+- Added support for tags in comments (#19)
+- Added log levels with custom logging support (#18)
+
 ## 0.7.2
 
 - Fixed handling of missing properties

@@ -126,7 +126,7 @@ export class DeclVisitor {
     if (!existing) {
       const name = this.createName(suggested);
       const decls = node.symbol?.declarations ?? [node];
-      decls.forEach(decl => this.names.set(decl, name));
+      decls.forEach((decl) => this.names.set(decl, name));
       return name;
     }
 
@@ -183,7 +183,7 @@ export class DeclVisitor {
   private getUnion(node: ts.UnionTypeNode): TypeModelUnion {
     return {
       kind: 'union',
-      types: node.types.map(m => this.getNode(m)),
+      types: node.types.map((m) => this.getNode(m)),
     };
   }
 
@@ -282,7 +282,7 @@ export class DeclVisitor {
   private getProps(nodes: ReadonlyArray<ts.TypeElement>): Array<TypeModel> {
     const props: Array<TypeModel> = [];
 
-    nodes?.forEach(node => {
+    nodes?.forEach((node) => {
       if (ts.isIndexSignatureDeclaration(node)) {
         props.push(this.getIndexProp(node));
       } else if (ts.isCallSignatureDeclaration(node)) {
@@ -304,7 +304,7 @@ export class DeclVisitor {
   private getClassMembers(nodes: ReadonlyArray<ts.ClassElement>): Array<TypeModel> {
     const members: Array<TypeModel> = [];
 
-    nodes?.forEach(node => {
+    nodes?.forEach((node) => {
       if (ts.isConstructorDeclaration(node)) {
         members.push(this.getConstructor(node));
       } else if (ts.isCallSignatureDeclaration(node)) {
@@ -337,7 +337,7 @@ export class DeclVisitor {
   }
 
   private getEnumMembers(nodes: ReadonlyArray<ts.EnumMember>): Array<TypeMemberModel> {
-    return nodes?.map(node => this.getEnumMember(node)) ?? [];
+    return nodes?.map((node) => this.getEnumMember(node)) ?? [];
   }
 
   private getReturnType(node: ts.SignatureDeclaration): TypeModel {
@@ -388,11 +388,11 @@ export class DeclVisitor {
   }
 
   private getTypeParameters(nodes: ReadonlyArray<ts.TypeParameterDeclaration>): Array<TypeModel> {
-    return nodes?.map(node => this.getTypeParameter(node)) ?? [];
+    return nodes?.map((node) => this.getTypeParameter(node)) ?? [];
   }
 
   private getTypeArguments(nodes: ReadonlyArray<ts.TypeNode>): Array<TypeModel> {
-    return nodes?.map(node => this.getTypeNode(node)) ?? [];
+    return nodes?.map((node) => this.getTypeNode(node)) ?? [];
   }
 
   private getFunctionParameterValue(node: ts.ParameterDeclaration): TypeModel {
@@ -419,7 +419,7 @@ export class DeclVisitor {
   }
 
   private getFunctionParameters(nodes: ReadonlyArray<ts.ParameterDeclaration>): Array<TypeModelFunctionParameter> {
-    return nodes?.map(node => this.getFunctionParameter(node)) ?? [];
+    return nodes?.map((node) => this.getFunctionParameter(node)) ?? [];
   }
 
   private getIndexAccess(node: ts.IndexedAccessTypeNode): TypeModelIndexedAccess {
@@ -549,14 +549,14 @@ export class DeclVisitor {
   private getIntersection(node: ts.IntersectionTypeNode): TypeModelIntersection {
     return {
       kind: 'intersection',
-      types: node.types.map(n => this.getTypeNode(n)),
+      types: node.types.map((n) => this.getTypeNode(n)),
     };
   }
 
   private getTuple(node: ts.TupleTypeNode): TypeModelTuple {
     return {
       kind: 'tuple',
-      types: (node["elementTypes"] ?? node.elements).map(n => this.getTypeNode(n)),
+      types: (node['elementTypes'] ?? node.elements).map((n) => this.getTypeNode(n)),
     };
   }
 
@@ -677,14 +677,14 @@ export class DeclVisitor {
 
   private getExtends(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
     const clauses: Array<ts.ExpressionWithTypeArguments> = [];
-    nodes?.forEach(node => node.token === ts.SyntaxKind.ExtendsKeyword && clauses.push(...node.types));
-    return clauses.map(node => this.getTypeNode(node));
+    nodes?.forEach((node) => node.token === ts.SyntaxKind.ExtendsKeyword && clauses.push(...node.types));
+    return clauses.map((node) => this.getTypeNode(node));
   }
 
   private getImplements(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
     const clauses: Array<ts.ExpressionWithTypeArguments> = [];
-    nodes?.forEach(node => node.token === ts.SyntaxKind.ImplementsKeyword && clauses.push(...node.types));
-    return clauses.map(node => this.getTypeNode(node));
+    nodes?.forEach((node) => node.token === ts.SyntaxKind.ImplementsKeyword && clauses.push(...node.types));
+    return clauses.map((node) => this.getTypeNode(node));
   }
 
   private getDefaultExpression(node: ts.ExportAssignment): TypeModelRef {
@@ -729,7 +729,7 @@ export class DeclVisitor {
     const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
     const name = this.getName(node, node.name?.text);
 
-    decls.forEach(m => this.enqueue(m));
+    decls.forEach((m) => this.enqueue(m));
 
     return {
       kind: 'class',
@@ -750,11 +750,11 @@ export class DeclVisitor {
     const typeParameters: Array<ts.TypeParameterDeclaration> = [];
     const name = this.getName(node, node.name.text);
 
-    decls.forEach(m => {
-      m.heritageClauses?.forEach(c => {
+    decls.forEach((m) => {
+      m.heritageClauses?.forEach((c) => {
         clauses.includes(c) || clauses.push(c);
       });
-      m.members?.forEach(p => {
+      m.members?.forEach((p) => {
         props.includes(p) || isIncluded(props, p) || props.push(p);
       });
       m.typeParameters?.forEach((t, i) => {
@@ -876,7 +876,7 @@ export class DeclVisitor {
 
   private includeExportedInterface(node: ts.InterfaceDeclaration) {
     const name = this.getName(node, node.name.text);
-    const exists = this.refs.some(m => m.kind === 'interface' && m.name === name);
+    const exists = this.refs.some((m) => m.kind === 'interface' && m.name === name);
 
     if (!exists) {
       this.includeInContext(node, () => this.getInterface(node));
@@ -888,7 +888,7 @@ export class DeclVisitor {
   }
 
   private includeExportedVariables(node: ts.VariableStatement) {
-    node.declarationList.declarations.forEach(decl => this.includeExportedVariable(decl));
+    node.declarationList.declarations.forEach((decl) => this.includeExportedVariable(decl));
   }
 
   private includeImportedValue(node: ts.ImportSpecifier) {
@@ -902,7 +902,7 @@ export class DeclVisitor {
 
   private includeSelectedExports(elements: ts.NodeArray<ts.ExportSpecifier>) {
     // selected exports here
-    elements.forEach(el => {
+    elements.forEach((el) => {
       if (el.symbol) {
         const original = this.context.checker.getAliasedSymbol(el.symbol);
 
@@ -940,7 +940,7 @@ export class DeclVisitor {
       if (fileName) {
         const newFile = this.context.program.getSourceFile(fileName);
 
-        ts.forEachChild(newFile, node => {
+        ts.forEachChild(newFile, (node) => {
           if (shouldInclude(node)) {
             this.enqueue(node);
           }
@@ -965,7 +965,7 @@ export class DeclVisitor {
     const existing = c.modules[name];
     c.modules[name] = this.refs = existing || [];
 
-    node.body.forEachChild(subNode => {
+    node.body.forEachChild((subNode) => {
       if (isNodeExported(subNode)) {
         this.enqueue(subNode);
       }
@@ -973,7 +973,7 @@ export class DeclVisitor {
   }
 
   private printWarning(type: string, node: ts.Node) {
-    this.context.warn(
+    this.context.log.warn(
       `Could not resolve ${type} at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
     );
   }

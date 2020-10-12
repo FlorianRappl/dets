@@ -38,7 +38,7 @@ export function includeExports(context: DeclVisitorContext, key: string, symbol:
       } else if (ts.isImportEqualsDeclaration(decl)) {
         //skip - automatically "introduced"
       } else {
-        context.warn(`Skipping import of unknown node (kind: ${decl.kind}).`);
+        context.log.warn(`Skipping import of unknown node (kind: ${decl.kind}).`);
       }
     });
   }
