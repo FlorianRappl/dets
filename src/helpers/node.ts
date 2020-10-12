@@ -45,16 +45,28 @@ export function getJsDocs(checker: TypeChecker, node: Node) {
     const sign = checker.getSignatureFromDeclaration(node);
 
     if (sign) {
-      return sign.getDocumentationComment(checker);
+      return {
+        comment: sign.getDocumentationComment(checker),
+        tags: sign.getJsDocTags()
+      };
     }
   }
 
-  return node.symbol?.getDocumentationComment(checker);
+  return {
+    comment: node.symbol?.getDocumentationComment(checker)
+  };
 }
 
 export function getComment(checker: TypeChecker, node: Node): string {
   const doc = getJsDocs(checker, node);
-  return doc?.map((m) => m.text).join('\n');
+
+  const tags = doc.tags?.map((m) =>
+    `@${m.name}${['example'].includes(m.name) ? '\n' : (m.text ? ' ' : '')}${m.text ? m.text : ''}`
+  );
+
+  let result: string[] = doc.comment ? doc.comment.map((m) => m.text) : [];
+  tags ? result.push(...tags) : [];
+  return result.join('\n');
 }
 
 export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): Declaration {

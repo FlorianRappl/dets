@@ -27,14 +27,20 @@ declare module "test" {
   export interface EventEmitter {
     /**
      * Attaches a new event listener.
+     * @param type The type of the event to listen for.
+     * @param callback The callback to trigger.
      */
     on<K extends keyof PiralEventMap>(type: K, callback: Listener<PiralEventMap[K]>): EventEmitter;
     /**
      * Detaches an existing event listener.
+     * @param type The type of the event to listen for.
+     * @param callback The callback to trigger.
      */
     off<K extends keyof PiralEventMap>(type: K, callback: Listener<PiralEventMap[K]>): EventEmitter;
     /**
      * Emits a new event with the given type.
+     * @param type The type of the event to emit.
+     * @param arg The payload of the event.
      */
     emit<K extends keyof PiralEventMap>(type: K, arg: PiralEventMap[K]): EventEmitter;
   }
@@ -50,39 +56,57 @@ declare module "test" {
   export interface PiletCoreApi {
     /**
      * Gets a shared data value.
+     * @param name The name of the data to retrieve.
      */
     getData<TKey extends string>(name: TKey): SharedData[TKey];
     /**
      * Sets the data using a given name. The name needs to be used exclusively by the current pilet.
      * Using the name occupied by another pilet will result in no change.
+     * @param name The name of the data to store.
+     * @param value The value of the data to store.
+     * @param options The optional configuration for storing this piece of data.
+     * @returns True if the data could be set, otherwise false.
      */
     setData<TKey extends string>(name: TKey, value: SharedData[TKey], options?: DataStoreOptions): boolean;
     /**
      * Registers a route for predefined page component.
      * The route needs to be unique and can contain params.
      * Params are following the path-to-regexp notation, e.g., :id for an id parameter.
+     * @param route The route to register.
+     * @param Component The component to render the page.
+     * @param meta The optional metadata to use.
      */
     registerPage(route: string, Component: AnyComponent<PageComponentProps>, meta?: PiralPageMeta): void;
     /**
      * Unregisters the page identified by the given route.
+     * @param route The route that was previously registered.
      */
     unregisterPage(route: string): void;
     /**
      * Registers an extension component with a predefined extension component.
      * The name must refer to the extension slot.
+     * @param name The global name of the extension slot.
+     * @param Component The component to be rendered.
+     * @param defaults Optionally, sets the default values for the expected data.
      */
     registerExtension<TName>(name: TName extends string ? TName : string, Component: AnyComponent<ExtensionComponentProps<TName>>, defaults?: TName): void;
     /**
      * Unregisters a global extension component.
      * Only previously registered extension components can be unregistered.
+     * @param name The name of the extension slot to unregister from.
+     * @param Component The registered extension component to unregister.
      */
     unregisterExtension<TName>(name: TName extends string ? TName : string, Component: AnyComponent<ExtensionComponentProps<TName>>): void;
     /**
      * React component for displaying extensions for a given name.
+     * @param props The extension's rendering props.
+     * @return The created React element.
      */
     Extension<TName>(props: ExtensionSlotProps<TName>): React.ReactElement | null;
     /**
      * Renders an extension in a plain DOM component.
+     * @param element The DOM element or shadow root as a container for rendering the extension.
+     * @param props The extension's rendering props.
      */
     renderHtmlExtension<TName>(element: HTMLElement | ShadowRoot, props: ExtensionSlotProps<TName>): void;
   }
@@ -181,14 +205,21 @@ declare module "test" {
   export interface ForeignComponent<TProps> {
     /**
      * Called when the component is mounted.
+     * @param element The container hosting the element.
+     * @param props The props to transport.
+     * @param ctx The associated context.
      */
     mount(element: HTMLElement, props: TProps, ctx: ComponentContext): void;
     /**
      * Called when the component should be updated.
+     * @param element The container hosting the element.
+     * @param props The props to transport.
+     * @param ctx The associated context.
      */
     update?(element: HTMLElement, props: TProps, ctx: ComponentContext): void;
     /**
      * Called when a component is unmounted.
+     * @param element The container that was hosting the element.
      */
     unmount?(element: HTMLElement): void;
   }
@@ -455,6 +486,7 @@ declare module "test" {
     empty?(): React.ReactNode;
     /**
      * Defines how the provided nodes should be rendered.
+     * @param nodes The rendered extension nodes.
      */
     render?(nodes: Array<React.ReactNode>): React.ReactElement<any, any> | null;
     /**
@@ -649,22 +681,30 @@ declare module "test" {
   export interface PiralActions extends PiralCustomActions {
     /**
      * Initializes the application shell.
+     * @param loading The current loading state.
+     * @param error The application error, if any.
+     * @param modules The loaded pilets.
      */
     initialize(loading: boolean, error: Error | undefined, modules: Array<Pilet>): void;
     /**
      * Injects a pilet at runtime - removes the pilet from registry first if available.
+     * @param pilet The pilet to be injected.
      */
     injectPilet(pilet: Pilet): void;
     /**
      * Defines a single action for Piral.
+     * @param actionName The name of the action to define.
+     * @param action The action to include.
      */
     defineAction<T extends keyof PiralActions>(actionName: T, action: PiralAction<PiralActions[T]>): void;
     /**
      * Defines a set of actions for Piral.
+     * @param actions The actions to define.
      */
     defineActions(actions: PiralDefineActions): void;
     /**
      * Reads the value of a shared data item.
+     * @param name The name of the shared item.
      */
     readDataValue(name: string): any;
     /**
@@ -672,58 +712,84 @@ declare module "test" {
      * possible if the name belongs to the provided owner or has not
      * been taken yet.
      * Setting the value to null will release it.
+     * @param name The name of the shared data item.
+     * @param value The value of the shared data item.
+     * @param owner The owner of the shared data item.
+     * @param target The target storage locatation.
+     * @param expiration The time for when to dispose the shared item.
      */
     tryWriteDataItem(name: string, value: any, owner: string, target: DataStoreTarget, expiration: number): boolean;
     /**
      * Performs a layout change.
+     * @param current The layout to take.
      */
     changeLayout(current: LayoutType): void;
     /**
      * Registers a new route to be resolved.
+     * @param route The route to register.
+     * @param value The page to be rendered on the route.
      */
     registerPage(route: string, value: PageRegistration): void;
     /**
      * Unregisters an existing route.
+     * @param route The route to be removed.
      */
     unregisterPage(route: string): void;
     /**
      * Registers a new extension.
+     * @param name The name of the extension category.
+     * @param value The extension registration.
      */
     registerExtension(name: string, value: ExtensionRegistration): void;
     /**
      * Unregisters an existing extension.
+     * @param name The name of the extension category.
+     * @param value The extension that will be removed.
      */
     unregisterExtension(name: string, reference: any): void;
     /**
      * Sets the common component to render.
+     * @param name The name of the component.
+     * @param component The component to use for rendering.
      */
     setComponent<TKey extends keyof ComponentsState>(name: TKey, component: ComponentsState[TKey]): void;
     /**
      * Sets the error component to render.
+     * @param type The type of the error.
+     * @param component The component to use for rendering.
      */
     setErrorComponent<TKey extends keyof ErrorComponentsState>(type: TKey, component: ErrorComponentsState[TKey]): void;
     /**
      * Sets the common routes to render.
+     * @param path The name of the component.
+     * @param component The component to use for rendering.
      */
     setRoute<T = {}>(path: string, component: React.ComponentType<ReactRouter.RouteComponentProps<T>>): void;
     /**
      * Includes a new provider as a sub-provider to the current provider.
+     * @param provider The provider to include.
      */
     includeProvider(provider: JSX.Element): void;
     /**
      * Destroys (i.e., resets) the given portal instance.
+     * @param id The id of the portal to destroy.
      */
     destroyPortal(id: string): void;
     /**
      * Includes the provided portal in the rendering pipeline.
+     * @param id The id of the portal to use.
+     * @param entry The child to render.
      */
     showPortal(id: string, entry: React.ReactPortal): void;
     /**
      * Dispatches a state change.
+     * @param update The update function creating a new state.
      */
     dispatch(update: (state: GlobalState) => GlobalState): void;
     /**
      * Reads the selected part of the global state.
+     * @param select The selector for getting the desired part.
+     * @returns The desired part.
      */
     readState<S>(select: (state: GlobalState) => S): S;
   }
@@ -750,14 +816,19 @@ declare module "test" {
   export interface PiralStorage {
     /**
      * Sets the value of an item.
+     * @param name The name of the item to set.
+     * @param data The new value of the item.
+     * @param expires Optional expiration information.
      */
     setItem(name: string, data: string, expires?: string): void;
     /**
      * Gets the value of an item.
+     * @param name The name of the item to look for.
      */
     getItem(name: string): string | null;
     /**
      * Removes an item from the storage.
+     * @param name The name of the item to remove.
      */
     removeItem(name: string): void;
   }
@@ -882,10 +953,12 @@ declare module "test" {
   export interface PiletApp {
     /**
      * Integrates the evaluated pilet into the application.
+     * @param api The API to access the application.
      */
     setup(api: PiletApi): void | Promise<void>;
     /**
      * Optional function for cleanup.
+     * @param api The API to access the application.
      */
     teardown?(api: PiletApi): void;
   }
