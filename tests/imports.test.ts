@@ -340,6 +340,9 @@ test('should include globals from imported globals if bundled in', () => {
      * Avoid introducing any side-effects or subscriptions in this method.
      * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
+     * @deprecated 16.3, use componentDidMount or the constructor instead; will stop working in React 17
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path
      */
     componentWillMount?(): void;
     /**
@@ -348,6 +351,9 @@ test('should include globals from imported globals if bundled in', () => {
      * \n     * This method will not stop working in React 17.
      * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
+     * @deprecated 16.3, use componentDidMount or the constructor instead
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#initializing-state
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path
      */
     UNSAFE_componentWillMount?(): void;
     /**
@@ -357,6 +363,9 @@ test('should include globals from imported globals if bundled in', () => {
      * \n     * Calling \`Component#setState\` generally does not trigger this method.
      * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
+     * @deprecated 16.3, use static getDerivedStateFromProps instead; will stop working in React 17
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path
      */
     componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
     /**
@@ -367,6 +376,9 @@ test('should include globals from imported globals if bundled in', () => {
      * \n     * This method will not stop working in React 17.
      * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
+     * @deprecated 16.3, use static getDerivedStateFromProps instead
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#updating-state-based-on-props
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path
      */
     UNSAFE_componentWillReceiveProps?(nextProps: Readonly<P>, nextContext: any): void;
     /**
@@ -374,6 +386,9 @@ test('should include globals from imported globals if bundled in', () => {
      * \n     * Note: You cannot call \`Component#setState\` here.
      * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
+     * @deprecated 16.3, use getSnapshotBeforeUpdate instead; will stop working in React 17
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path
      */
     componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
     /**
@@ -382,6 +397,9 @@ test('should include globals from imported globals if bundled in', () => {
      * \n     * This method will not stop working in React 17.
      * \n     * Note: the presence of getSnapshotBeforeUpdate or getDerivedStateFromProps
      * prevents this from being invoked.
+     * @deprecated 16.3, use getSnapshotBeforeUpdate instead
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#reading-dom-properties-before-an-update
+     * @see https://reactjs.org/blog/2018/03/27/update-on-async-rendering.html#gradual-migration-path
      */
     UNSAFE_componentWillUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>, nextContext: any): void;
   }
