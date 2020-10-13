@@ -3,7 +3,8 @@
 ## 0.8.0
 
 - Added support for tags in comments (#19)
-- Added log levels with custom logging support (#18)
+- Added log levels with custom log provider support (#18)
+- Added more verbose logging to node context
 
 ## 0.7.2
 
