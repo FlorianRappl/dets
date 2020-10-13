@@ -58,6 +58,7 @@ export function fillExportsFromTypes(context: DeclVisitorContext, typingsPath: s
 export function addAvailableImports(context: DeclVisitorContext, imports: Array<string>) {
   const sourceFiles = context.program.getSourceFiles();
   const remaining = [...imports];
+  context.log.verbose(`Adding ${imports.length} imports from ${sourceFiles.length} source files.`);
 
   for (const sourceFile of sourceFiles) {
     if (remaining.length === 0) {
@@ -68,7 +69,11 @@ export function addAvailableImports(context: DeclVisitorContext, imports: Array<
       const index = remaining.indexOf(key);
       const fileName = value?.resolvedFileName;
 
-      if (index !== -1 && fileName) {
+      if (!fileName) {
+        context.log.verbose(`Skipping module without filename: ${value}.`);
+      } else if (index === -1) {
+        context.log.verbose(`Skipping module "${fileName}" as it does not match.`);
+      } else {
         const file = context.program.getSourceFile(fileName);
         includeExports(context, key, file?.symbol);
         remaining.splice(index, 1);
@@ -79,6 +84,7 @@ export function addAvailableImports(context: DeclVisitorContext, imports: Array<
 
 export function addAmbientModules(context: DeclVisitorContext, imports: Array<string>) {
   const modules = context.checker.getAmbientModules();
+  context.log.verbose(`Adding ${modules.length} ambient modules.`);
 
   for (const module of modules) {
     const file = module.declarations?.[0]?.getSourceFile()?.fileName;

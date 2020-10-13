@@ -65,6 +65,20 @@ export class DeclVisitor {
     }
   }
 
+  private logVerbose(message: string) {
+    this.context.log.verbose(message);
+  }
+
+  private logWarn(message: string) {
+    this.context.log.warn(message);
+  }
+
+  private printWarning(type: string, node: ts.Node) {
+    this.logWarn(
+      `Could not resolve ${type} at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
+    );
+  }
+
   private swapName(oldName: string, newName: string) {
     const refs = this.refs;
     const last = refs.pop();
@@ -124,6 +138,7 @@ export class DeclVisitor {
     const existing = this.findName(node);
 
     if (!existing) {
+      this.logVerbose(`Missing "name". Retrieving with suggestion "${suggested}".`);
       const name = this.createName(suggested);
       const decls = node.symbol?.declarations ?? [node];
       decls.forEach((decl) => this.names.set(decl, name));
@@ -170,6 +185,7 @@ export class DeclVisitor {
       case ts.SyntaxKind.BigIntLiteral:
         return node.literal.text;
       default:
+        this.logVerbose(`No match for literal node kind "${node.literal.kind}". Trying to get from type node...`);
         const type = this.context.checker.getTypeFromTypeNode(node) as any;
         return type?.intrinsicName ?? type?.value;
     }
@@ -218,6 +234,7 @@ export class DeclVisitor {
       };
     }
 
+    this.logVerbose(`Node is presumably a reference. Found kind "${node.kind}".`);
     return getRef(node.symbol.name);
   }
 
@@ -294,6 +311,7 @@ export class DeclVisitor {
       } else if (ts.isSetAccessor(node)) {
         props.push(this.getSetAccessor(node));
       } else {
+        this.logVerbose(`Getting props - assuming node of kind "${node?.kind}" is a normal prop.`);
         props.push(this.getNormalProp(node));
       }
     });
@@ -318,6 +336,7 @@ export class DeclVisitor {
       } else if (ts.isIndexSignatureDeclaration(node)) {
         members.push(this.getIndexProp(node));
       } else {
+        this.logVerbose(`Getting class members - assuming node of kind "${node?.kind}" is a class member.`);
         members.push(this.getClassMember(node));
       }
     });
@@ -401,6 +420,7 @@ export class DeclVisitor {
     } else if (node.initializer) {
       return this.getExpression(node.initializer);
     } else {
+      this.logVerbose(`Found unidentified node of kind "${node.kind}" in function parameter value. Falling back to "any".`);
       return {
         kind: 'any',
       };
@@ -447,6 +467,8 @@ export class DeclVisitor {
           kind: 'readonly',
           value: this.getTypeNode(node.type),
         };
+      default:
+        this.logWarn(`Found unknown type operator node of kind "${node.kind}".`);
     }
   }
 
@@ -677,13 +699,29 @@ export class DeclVisitor {
 
   private getExtends(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
     const clauses: Array<ts.ExpressionWithTypeArguments> = [];
-    nodes?.forEach((node) => node.token === ts.SyntaxKind.ExtendsKeyword && clauses.push(...node.types));
+
+    nodes?.forEach((node) => {
+      if (node.token === ts.SyntaxKind.ExtendsKeyword) {
+        clauses.push(...node.types);
+      } else {
+        this.logVerbose(`Skipping unidentified node of kind "${node.kind}" in extends section.`);
+      }
+    });
+
     return clauses.map((node) => this.getTypeNode(node));
   }
 
   private getImplements(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {
     const clauses: Array<ts.ExpressionWithTypeArguments> = [];
-    nodes?.forEach((node) => node.token === ts.SyntaxKind.ImplementsKeyword && clauses.push(...node.types));
+
+    nodes?.forEach((node) => {
+      if (node.token === ts.SyntaxKind.ImplementsKeyword) {
+        clauses.push(...node.types);
+      } else {
+        this.logVerbose(`Skipping unidentified node of kind "${node.kind}" in implements section.`);
+      }
+    });
+
     return clauses.map((node) => this.getTypeNode(node));
   }
 
@@ -838,10 +876,12 @@ export class DeclVisitor {
     const imports = c.availableImports;
     const symbol = getSymbol(c.checker, node);
     const global = isGlobal(symbol);
-    const { external } = getPackage(node, global, imports);
+    const { external, fn } = getPackage(node, global, imports);
 
     if (!external) {
       this.refs.push(createType());
+    } else {
+      this.logVerbose(`Node from "${fn}" is external and should not be included.`);
     }
   }
 
@@ -863,6 +903,8 @@ export class DeclVisitor {
       this.includeInContext(node, () => getDefault(getRef(name)));
     } else if (ts.isClassDeclaration(node)) {
       this.includeInContext(node, () => getDefault(this.getClass(node)));
+    } else {
+      this.printWarning('default export', node);
     }
   }
 
@@ -880,6 +922,8 @@ export class DeclVisitor {
 
     if (!exists) {
       this.includeInContext(node, () => this.getInterface(node));
+    } else {
+      this.logVerbose(`Skipping already included interface "${name}".`);
     }
   }
 
@@ -972,12 +1016,6 @@ export class DeclVisitor {
     });
   }
 
-  private printWarning(type: string, node: ts.Node) {
-    this.context.log.warn(
-      `Could not resolve ${type} at position ${node.pos} of "${node.getSourceFile()?.fileName}". Kind: ${node.kind}.`,
-    );
-  }
-
   private processNode(node: ts.Node) {
     if (ts.isTypeAliasDeclaration(node)) {
       this.includeExportedTypeAlias(node);
@@ -999,12 +1037,14 @@ export class DeclVisitor {
       this.includeExportedEnum(node);
     } else if (ts.isTypeLiteralNode(node)) {
       // empty on purpose
+      this.logVerbose(`Skipping type literal node: ${node}`);
     } else if (ts.isExportDeclaration(node)) {
       this.includeExportsDeclaration(node);
     } else if (ts.isModuleDeclaration(node)) {
       this.modules.push(node);
     } else if (ts.isImportTypeNode(node)) {
       // empty on purpose
+      this.logVerbose(`Skipping import type node: ${node}`);
     } else {
       this.printWarning('type', node);
     }
