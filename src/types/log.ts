@@ -5,4 +5,4 @@ export interface Logger {
   verbose(message: string): void;
 }
 
-export type LogLevel = 1 | 2 | 3 | 4 | 5;
+export type LogLevel = 0 | 1 | 2 | 3 | 4 | 5;

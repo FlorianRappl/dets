@@ -1,9 +1,9 @@
 {
   "name": "dets",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A TypeScript declaration file bundler.",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "start": "ts-node example/play.ts",
     "build": "npm run bundle && npm run transpile && cp lib/cli.js dist/ && npm run declare",
@@ -51,7 +51,7 @@
     "@types/react-router": "5.1.8",
     "@types/react-router-dom": "5.1.5",
     "@types/styled-components": "5.1.3",
-    "@types/yargs": "^15.0.7",
+    "@types/yargs": "^15.0.8",
     "@zeit/ncc": "^0.22.3",
     "deox": "3.2.1",
     "glob": "^7.1.6",

@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.8.1
+
+- Updated log levels to include `disabled`
+- Moved `main` field to use pre-bundled version
+- Corrected `types` field
+
 ## 0.8.0
 
 - Added support for tags in comments (#19)
