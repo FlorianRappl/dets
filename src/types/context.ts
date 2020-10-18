@@ -8,6 +8,10 @@ export type ImportRefs = Record<string, ImportDefs>;
 
 export type TypeRefs = Array<TypeModelExport>;
 
+export interface DeclVisitorFlags {
+  noIgnore: boolean;
+}
+
 export interface DeclVisitorContext {
   modules: Record<string, TypeRefs>;
   checker: TypeChecker;
@@ -16,4 +20,5 @@ export interface DeclVisitorContext {
   usedImports: Array<string>;
   availableImports: ImportRefs;
   log: Logger;
+  flags: DeclVisitorFlags;
 }

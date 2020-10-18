@@ -25,6 +25,8 @@ import {
   isMethodDeclaration,
   isMethodSignature,
   isExportDeclaration,
+  JSDocTagInfo,
+  SymbolDisplayPart,
 } from 'typescript';
 
 export function getModule(node: Node): string {
@@ -54,14 +56,13 @@ export function getJsDocs(checker: TypeChecker, node: Node) {
 
   return {
     comment: node.symbol?.getDocumentationComment(checker),
+    tags: node.symbol?.getJsDocTags(),
   };
 }
 
-export function getComment(checker: TypeChecker, node: Node): string {
-  const doc = getJsDocs(checker, node);
-
+export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?: Array<JSDocTagInfo> }): string {
   const tags = doc.tags?.map(
-    (m) => `@${m.name}${['example'].includes(m.name) ? '\n' : m.text ? ' ' : ''}${m.text ? m.text : ''}`,
+    (m) => `@${m.name}${newLineTags.includes(m.name) ? '\n' : m.text ? ' ' : ''}${m.text ? m.text : ''}`,
   );
 
   const result: Array<string> = doc.comment ? doc.comment.map((m) => m.text) : [];
@@ -71,6 +72,23 @@ export function getComment(checker: TypeChecker, node: Node): string {
   }
 
   return result.join('\n');
+}
+
+const newLineTags = ['example'];
+
+export function getCommentOrDrop(checker: TypeChecker, node: Node, canDrop = false) {
+  const doc = getJsDocs(checker, node);
+
+  if (canDrop && doc.tags?.some((m) => m.name === 'ignore')) {
+    return true;
+  }
+
+  return stringifyJsDocs(doc);
+}
+
+export function getComment(checker: TypeChecker, node: Node) {
+  const doc = getJsDocs(checker, node);
+  return stringifyJsDocs(doc);
 }
 
 export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): Declaration {

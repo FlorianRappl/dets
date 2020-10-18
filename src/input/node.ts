@@ -17,6 +17,7 @@ import {
   shouldInclude,
   isNodeExported,
   getDeclarationFromSymbol,
+  getCommentOrDrop,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -258,14 +259,23 @@ export class DeclVisitor {
   }
 
   private getNormalProp(node: ts.TypeElement): TypeModelProp {
-    return {
-      kind: 'prop',
-      name: getPropName(node.name),
-      modifiers: getModifiers(node.symbol),
-      optional: node.questionToken !== undefined,
-      comment: getComment(this.context.checker, node),
-      valueType: this.getPropValue(node),
-    };
+    const { checker, flags } = this.context;
+    const canDrop = !flags.noIgnore;
+    const comment = getCommentOrDrop(checker, node, canDrop);
+
+    if (typeof comment === 'string') {
+      return {
+        kind: 'prop',
+        name: getPropName(node.name),
+        modifiers: getModifiers(node.symbol),
+        optional: node.questionToken !== undefined,
+        comment,
+        valueType: this.getPropValue(node),
+      };
+    }
+
+    this.logVerbose(`The prop "${getPropName(node.name)}" was skipped due to @ignore.`);
+    return undefined;
   }
 
   private getIndexProp(node: ts.IndexSignatureDeclaration): TypeModelIndex {
@@ -286,14 +296,23 @@ export class DeclVisitor {
   }
 
   private getClassMember(node: ts.ClassElement): TypeModelProp {
-    return {
-      kind: 'prop',
-      name: node.name.getText(),
-      modifiers: getModifiers(node.symbol),
-      optional: false,
-      comment: getComment(this.context.checker, node),
-      valueType: this.getPropValue(node),
-    };
+    const { checker, flags } = this.context;
+    const canDrop = !flags.noIgnore;
+    const comment = getCommentOrDrop(checker, node, canDrop);
+
+    if (typeof comment === 'string') {
+      return {
+        kind: 'prop',
+        name: node.name.getText(),
+        modifiers: getModifiers(node.symbol),
+        optional: false,
+        comment,
+        valueType: this.getPropValue(node),
+      };
+    }
+
+    this.logVerbose(`The member "${node.name.getText()}" was skipped due to @ignore.`);
+    return undefined;
   }
 
   private getProps(nodes: ReadonlyArray<ts.TypeElement>): Array<TypeModel> {
@@ -307,12 +326,15 @@ export class DeclVisitor {
       } else if (ts.isConstructSignatureDeclaration(node)) {
         props.push(this.getConstructorCall(node));
       } else if (ts.isGetAccessor(node)) {
-        props.push(this.getGetAccessor(node));
+        const prop = this.getGetAccessor(node);
+        prop && props.push(prop);
       } else if (ts.isSetAccessor(node)) {
-        props.push(this.getSetAccessor(node));
+        const prop = this.getSetAccessor(node);
+        prop && props.push(prop);
       } else {
         this.logVerbose(`Getting props - assuming node of kind "${node?.kind}" is a normal prop.`);
-        props.push(this.getNormalProp(node));
+        const prop = this.getNormalProp(node);
+        prop && props.push(prop);
       }
     });
 
@@ -330,14 +352,17 @@ export class DeclVisitor {
       } else if (ts.isConstructSignatureDeclaration(node)) {
         members.push(this.getConstructorCall(node));
       } else if (ts.isGetAccessor(node)) {
-        members.push(this.getGetAccessor(node));
+        const member = this.getGetAccessor(node);
+        member && members.push(member);
       } else if (ts.isSetAccessor(node)) {
-        members.push(this.getSetAccessor(node));
+        const member = this.getSetAccessor(node);
+        member && members.push(member);
       } else if (ts.isIndexSignatureDeclaration(node)) {
         members.push(this.getIndexProp(node));
       } else {
         this.logVerbose(`Getting class members - assuming node of kind "${node?.kind}" is a class member.`);
-        members.push(this.getClassMember(node));
+        const member = this.getClassMember(node);
+        member && members.push(member);
       }
     });
 
@@ -420,7 +445,9 @@ export class DeclVisitor {
     } else if (node.initializer) {
       return this.getExpression(node.initializer);
     } else {
-      this.logVerbose(`Found unidentified node of kind "${node.kind}" in function parameter value. Falling back to "any".`);
+      this.logVerbose(
+        `Found unidentified node of kind "${node.kind}" in function parameter value. Falling back to "any".`,
+      );
       return {
         kind: 'any',
       };
@@ -510,23 +537,41 @@ export class DeclVisitor {
   }
 
   private getSetAccessor(node: ts.SetAccessorDeclaration): TypeModelSetAccessor {
-    return {
-      kind: 'set',
-      name: getPropName(node.name),
-      parameters: this.getFunctionParameters(node.parameters),
-      comment: getComment(this.context.checker, node),
-      modifiers: getModifiers(node.symbol),
-    };
+    const { checker, flags } = this.context;
+    const canDrop = !flags.noIgnore;
+    const comment = getCommentOrDrop(checker, node, canDrop);
+
+    if (typeof comment === 'string') {
+      return {
+        kind: 'set',
+        name: getPropName(node.name),
+        parameters: this.getFunctionParameters(node.parameters),
+        comment,
+        modifiers: getModifiers(node.symbol),
+      };
+    }
+
+    this.logVerbose(`The setter "${getPropName(node.name)}" was skipped due to @ignore.`);
+    return undefined;
   }
 
   private getGetAccessor(node: ts.GetAccessorDeclaration): TypeModelGetAccessor {
-    return {
-      kind: 'get',
-      name: getPropName(node.name),
-      type: this.getReturnType(node),
-      comment: getComment(this.context.checker, node),
-      modifiers: getModifiers(node.symbol),
-    };
+    const { checker, flags } = this.context;
+    const canDrop = !flags.noIgnore;
+    const comment = getCommentOrDrop(checker, node, canDrop);
+
+    if (typeof comment === 'string') {
+      return {
+        kind: 'get',
+        name: getPropName(node.name),
+        type: this.getReturnType(node),
+        comment,
+        modifiers: getModifiers(node.symbol),
+      };
+    }
+
+    this.logVerbose(`The getter "${getPropName(node.name)}" was skipped due to @ignore.`);
+    return undefined;
   }
 
   private getTypeReference(node: ts.TypeReferenceNode): TypeModelRef {

@@ -23,6 +23,7 @@ test('should handle manual composition of react typings', () => {
      *    }
      * }
      * \`\`\`
+     * @see https://reactjs.org/docs/context.html#classcontexttype
      */
     static contextType: Context<any>;
     /**
@@ -36,6 +37,7 @@ test('should handle manual composition of react typings', () => {
      * // For TS 3.7 and above:
      * declare context: React.ContextType<typeof MyContext>
      * \`\`\`
+     * @see https://reactjs.org/docs/context.html
      */
     context: any;
     constructor(props: Readonly<P>);
@@ -47,6 +49,9 @@ test('should handle manual composition of react typings', () => {
       children?: ReactNode;
     }>;
     state: Readonly<S>;
+    /**
+     * @deprecated https://reactjs.org/docs/refs-and-the-dom.html#legacy-api-string-refs
+     */
     refs: {
       [key: string]: ReactInstance;
     };

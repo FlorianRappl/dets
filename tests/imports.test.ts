@@ -238,6 +238,7 @@ test('should include globals from imported globals if bundled in', () => {
      *    }
      * }
      * \`\`\`
+     * @see https://reactjs.org/docs/context.html#classcontexttype
      */
     static contextType: Context<any>;
     /**
@@ -251,6 +252,7 @@ test('should include globals from imported globals if bundled in', () => {
      * // For TS 3.7 and above:
      * declare context: React.ContextType<typeof MyContext>
      * \`\`\`
+     * @see https://reactjs.org/docs/context.html
      */
     context: any;
     constructor(props: Readonly<P>);
@@ -262,6 +264,9 @@ test('should include globals from imported globals if bundled in', () => {
       children?: ReactNode;
     }>;
     state: Readonly<S>;
+    /**
+     * @deprecated https://reactjs.org/docs/refs-and-the-dom.html#legacy-api-string-refs
+     */
     refs: {
       [key: string]: ReactInstance;
     };

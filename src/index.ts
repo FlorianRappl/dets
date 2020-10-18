@@ -3,9 +3,15 @@ import { includeApi, includeTypings, includeExports, DeclVisitor } from './input
 import { stringifyDeclaration } from './output';
 import { findAppRoot, getLibName } from './helpers';
 import { defaultLogger, wrapLogger } from './logger';
-import { DeclVisitorContext, Logger, LogLevel } from './types';
+import { DeclVisitorContext, DeclVisitorFlags, Logger, LogLevel } from './types';
 
-export function setupVisitorContext(name: string, files: Array<string>, imports: Array<string>, log: Logger) {
+export function setupVisitorContext(
+  name: string,
+  files: Array<string>,
+  imports: Array<string>,
+  log: Logger,
+  flags: DeclVisitorFlags,
+) {
   const rootNames = files.filter((m) => !!m);
   const program = ts.createProgram(rootNames, {
     allowJs: true,
@@ -25,6 +31,7 @@ export function setupVisitorContext(name: string, files: Array<string>, imports:
     checker,
     program,
     log,
+    flags,
   };
   addAvailableImports(context, imports);
   addAmbientModules(context, imports);
@@ -103,7 +110,14 @@ export function processVisitorContext(context: DeclVisitorContext) {
 }
 
 export interface DeclOptions {
+  /**
+   * The name of the declaration module.
+   */
   name: string;
+  /**
+   * The root directory to use. If in doubt just use `process.cwd()`.
+   * All other paths (e.g., files) are relative to this directory.
+   */
   root: string;
   files?: Array<string>;
   types?: Array<string>;
@@ -111,13 +125,28 @@ export interface DeclOptions {
     file: string;
     name: string;
   }>;
+  /**
+   * Determines if the `@ignore` rule should not be handled by
+   * removing the found property.
+   */
+  noIgnore?: boolean;
   imports?: Array<string>;
   logger?: Logger;
   logLevel?: LogLevel;
 }
 
 export function generateDeclaration(options: DeclOptions) {
-  const { name, root, imports = [], files = [], types = [], apis = [], logger = defaultLogger, logLevel = 3 } = options;
+  const {
+    name,
+    root,
+    imports = [],
+    files = [],
+    types = [],
+    apis = [],
+    logger = defaultLogger,
+    logLevel = 3,
+    noIgnore = false,
+  } = options;
   const log = wrapLogger(logger, logLevel);
 
   log.verbose(`Aggregating the sources from "${root}".`);
@@ -130,7 +159,9 @@ export function generateDeclaration(options: DeclOptions) {
 
   log.verbose(`Setting up a visitor context for "${name}".`);
 
-  const context = setupVisitorContext(name, sources, imports, log);
+  const context = setupVisitorContext(name, sources, imports, log, {
+    noIgnore,
+  });
 
   log.verbose(`Starting API gathering in "${root}".`);
 

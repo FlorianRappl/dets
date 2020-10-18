@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.9.0
+
+- Added drop of `@ignore` properties (can be disabled)
+
 ## 0.8.1
 
 - Updated log levels to include `disabled`
