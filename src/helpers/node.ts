@@ -60,10 +60,13 @@ export function getJsDocs(checker: TypeChecker, node: Node) {
   };
 }
 
+const newLineTags = ['example'];
+const removedTags = ['removeprop', 'removeclause'];
+
 export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?: Array<JSDocTagInfo> }): string {
-  const tags = doc.tags?.map(
-    (m) => `@${m.name}${newLineTags.includes(m.name) ? '\n' : m.text ? ' ' : ''}${m.text ? m.text : ''}`,
-  );
+  const tags = (doc.tags || [])
+    .filter((m) => !removedTags.includes(m.name))
+    .map((m) => `@${m.name}${newLineTags.includes(m.name) ? '\n' : m.text ? ' ' : ''}${m.text ? m.text : ''}`);
 
   const result: Array<string> = doc.comment ? doc.comment.map((m) => m.text) : [];
 
@@ -73,8 +76,6 @@ export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?
 
   return result.join('\n');
 }
-
-const newLineTags = ['example'];
 
 export function getCommentOrDrop(checker: TypeChecker, node: Node, canDrop = false) {
   const doc = getJsDocs(checker, node);

@@ -3,6 +3,7 @@
 ## 0.9.0
 
 - Added drop of `@ignore` properties (can be disabled)
+- Added support for `@removeprop` and `@removeclause` comments
 
 ## 0.8.1
 

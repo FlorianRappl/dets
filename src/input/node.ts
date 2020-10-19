@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import { createBinding, getPackage, isIncluded, getDefault, getRef } from './utils';
+import { createBinding, getPackage, getDefault, getRef } from './utils';
+import { includeClauses, includeProp } from './includes';
 import {
   isDefaultExport,
   getModifiers,
@@ -18,6 +19,8 @@ import {
   isNodeExported,
   getDeclarationFromSymbol,
   getCommentOrDrop,
+  getJsDocs,
+  stringifyJsDocs,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -826,19 +829,21 @@ export class DeclVisitor {
   }
 
   private getInterface(node: ts.InterfaceDeclaration): TypeModelInterface {
-    const type = this.context.checker.getTypeAtLocation(node);
+    const { checker } = this.context;
+    const type = checker.getTypeAtLocation(node);
     const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
     const clauses: Array<ts.HeritageClause> = [];
     const props: Array<ts.TypeElement> = [];
     const typeParameters: Array<ts.TypeParameterDeclaration> = [];
     const name = this.getName(node, node.name.text);
+    const docs = getJsDocs(checker, node);
 
     decls.forEach((m) => {
       m.heritageClauses?.forEach((c) => {
-        clauses.includes(c) || clauses.push(c);
+        clauses.includes(c) || includeClauses(this.context, clauses, c, docs.tags);
       });
       m.members?.forEach((p) => {
-        props.includes(p) || isIncluded(props, p) || props.push(p);
+        props.includes(p) || includeProp(props, p, docs.tags);
       });
       m.typeParameters?.forEach((t, i) => {
         typeParameters.length === i && typeParameters.push(t);
@@ -851,7 +856,7 @@ export class DeclVisitor {
       extends: this.getExtends(clauses),
       props: this.getProps(props),
       types: this.getTypeParameters(typeParameters),
-      comment: getComment(this.context.checker, node),
+      comment: stringifyJsDocs(docs),
     };
   }
 

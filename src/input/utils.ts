@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { getLibRefName, getPropName, isBaseLib, getModule, getLibName } from '../helpers';
+import { getLibRefName, isBaseLib, getModule, getLibName } from '../helpers';
 import {
   DeclVisitorContext,
   TypeModelRef,
@@ -17,20 +17,6 @@ export function createBinding(context: DeclVisitorContext, lib: string, name: st
   }
 
   return `${getLibRefName(lib)}.${name}`;
-}
-
-export function isIncluded(props: Array<ts.TypeElement>, newProp: ts.TypeElement): boolean {
-  const name = getPropName(newProp.name);
-
-  for (const oldProp of props) {
-    if (oldProp.kind === newProp.kind && getPropName(oldProp.name) === name) {
-      if (!ts.isMethodSignature(newProp)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }
 
 export function getDefault(value: TypeModelRef | TypeModelClass): TypeModelDefault {
