@@ -46,3 +46,16 @@ test('should remove cause in interface merging', () => {
   }
 }`);
 });
+
+test('should not drop ignored properties if @dets_preserve', () => {
+  const result = runTestFor('ignore4.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface MyApi {
+    /**
+     * @ignore
+     */
+    foo: string;
+    bar: boolean;
+  }
+}`);
+});

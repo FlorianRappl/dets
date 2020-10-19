@@ -14,7 +14,7 @@ export function includeClauses(
     const name = getDeclarationFromNode(context.checker, clause.expression).symbol?.name;
 
     // check if we should remove the clause
-    if (!tags.some((m) => m.name === 'removeclause' && m.text === name)) {
+    if (!tags.some((m) => m.name === 'dets_removeclause' && m.text === name)) {
       types.push(clause);
     }
   }
@@ -29,7 +29,7 @@ export function includeProp(props: Array<ts.TypeElement>, newProp: ts.TypeElemen
   const name = getPropName(newProp.name);
 
   // check if we should remove the prop
-  if (tags.some((m) => m.name === 'removeprop' && m.text === name)) {
+  if (tags.some((m) => m.name === 'dets_removeprop' && m.text === name)) {
     return;
   }
 

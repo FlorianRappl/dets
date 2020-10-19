@@ -4,6 +4,6 @@ export interface MyApi {
 }
 
 /**
- * @removeprop bar
+ * @dets_removeprop bar
  */
 export interface MyApi {}

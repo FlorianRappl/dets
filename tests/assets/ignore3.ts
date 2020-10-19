@@ -10,6 +10,6 @@ export interface MyApi extends MyApi1, MyApi2 {}
 
 /**
  * This comment should still exist.
- * @removeclause MyApi1
+ * @dets_removeclause MyApi1
  */
 export interface MyApi {}

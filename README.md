@@ -31,6 +31,109 @@ npm i dets --save-dev
 
 There are two primary ways of using dets: Either via the command line or programmatically.
 
+### Special Treatments
+
+#### Ignoring Properties
+
+By default, members that have a `@ignore` comment will be ignored. Therefore, an interface like
+
+```ts
+interface Foo {
+  bar: boolean;
+  /**
+   * @ignore
+   */
+  foo: string;
+}
+```
+
+will be changed by dets to look like:
+
+```ts
+interface Foo {
+  bar: boolean;
+}
+```
+
+This can be disabled via the CLI or programmatic options (`--no-ignore`). Additionally, a special comment like `@dets_preserve` could be added, too.
+
+```ts
+interface Foo {
+  bar: boolean;
+  /**
+   * @ignore
+   * @dets_preserve
+   */
+  foo: string;
+}
+```
+
+Here, the property is kept, but the `dets_preserve` dets comment will be removed:
+
+```ts
+interface Foo {
+  bar: boolean;
+  /**
+   * @ignore
+   */
+  foo: string;
+}
+```
+
+#### Removing Properties
+
+When doing interface merging certain properties may be desired to be hidden. To do this a special tag comment `@dets_removeprop` is used:
+
+```ts
+// original interface
+interface Foo {
+  foo: string;
+  bar: boolean;
+}
+
+// somewhere later
+/**
+ * @dets_removeprop foo
+ */
+interface Foo {
+  qxz: number;
+}
+```
+
+This results in the merged interface, just without the excluded property:
+
+```ts
+interface Foo {
+  bar: boolean;
+  qxz: number;
+}
+```
+
+#### Removing Inheritance Clauses
+
+When doing interface merging certain extend clauses may be desired to be hidden. To do this a special tag comment `@dets_removeclause` is used:
+
+```ts
+// original interface
+interface Foo extends FooBase1, FooBase2 {
+  foo: string;
+}
+
+// somewhere later
+/**
+ * @dets_removeclause FooBase1
+ */
+interface Foo {}
+```
+
+This results in the merged interface, just without the excluded clauses:
+
+```ts
+interface Foo extends FooBase2 {
+  foo: string;
+}
+```
+
 ### From the CLI
 
 An example call for dets from the command line is:

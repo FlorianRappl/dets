@@ -61,7 +61,7 @@ export function getJsDocs(checker: TypeChecker, node: Node) {
 }
 
 const newLineTags = ['example'];
-const removedTags = ['removeprop', 'removeclause'];
+const removedTags = ['dets_removeprop', 'dets_removeclause', 'dets_preserve'];
 
 export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?: Array<JSDocTagInfo> }): string {
   const tags = (doc.tags || [])
@@ -77,10 +77,28 @@ export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?
   return result.join('\n');
 }
 
+function shouldDrop(tags?: Array<JSDocTagInfo>) {
+  let found = false;
+
+  if (tags) {
+    for (const tag of tags) {
+      switch (tag.name) {
+        case 'ignore':
+          found = true;
+          break;
+        case 'dets_preserve':
+          return false;
+      }
+    }
+  }
+
+  return found;
+}
+
 export function getCommentOrDrop(checker: TypeChecker, node: Node, canDrop = false) {
   const doc = getJsDocs(checker, node);
 
-  if (canDrop && doc.tags?.some((m) => m.name === 'ignore')) {
+  if (canDrop && shouldDrop(doc.tags)) {
     return true;
   }
 
