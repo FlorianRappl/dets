@@ -1,9 +1,15 @@
 # Changelog for dets
 
+## 0.9.1
+
+- Include all declarations to determine the comments
+- Added `@dets_ignore` to explicitly ignore properties
+
 ## 0.9.0
 
 - Added drop of `@ignore` properties (can be disabled)
-- Added support for `@removeprop` and `@removeclause` comments
+- Added support for `@dets_preserve` comment to disable `@ignore` behavior in place
+- Added support for `@dets_removeprop` and `@dets_removeclause` comments
 
 ## 0.8.1
 

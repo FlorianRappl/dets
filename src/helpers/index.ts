@@ -1,3 +1,4 @@
+export * from './comments';
 export * from './identifiers';
 export * from './node';
 export * from './paths';

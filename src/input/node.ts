@@ -19,8 +19,8 @@ import {
   isNodeExported,
   getDeclarationFromSymbol,
   getCommentOrDrop,
-  getJsDocs,
   stringifyJsDocs,
+  getAllJsDocs,
 } from '../helpers';
 import {
   DeclVisitorContext,
@@ -811,9 +811,11 @@ export class DeclVisitor {
   }
 
   private getClass(node: ts.ClassDeclaration): TypeModelClass {
-    const type = this.context.checker.getTypeAtLocation(node);
+    const { checker } = this.context;
+    const type = checker.getTypeAtLocation(node);
     const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
     const name = this.getName(node, node.name?.text);
+    const docs = getAllJsDocs(checker, decls);
 
     decls.forEach((m) => this.enqueue(m));
 
@@ -824,7 +826,7 @@ export class DeclVisitor {
       implements: this.getImplements(node.heritageClauses),
       props: this.getClassMembers(node.members),
       types: this.getTypeParameters(node.typeParameters),
-      comment: getComment(this.context.checker, node),
+      comment: stringifyJsDocs(docs),
     };
   }
 
@@ -836,7 +838,7 @@ export class DeclVisitor {
     const props: Array<ts.TypeElement> = [];
     const typeParameters: Array<ts.TypeParameterDeclaration> = [];
     const name = this.getName(node, node.name.text);
-    const docs = getJsDocs(checker, node);
+    const docs = getAllJsDocs(checker, decls);
 
     decls.forEach((m) => {
       m.heritageClauses?.forEach((c) => {

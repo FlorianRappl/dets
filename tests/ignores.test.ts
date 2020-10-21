@@ -59,3 +59,17 @@ test('should not drop ignored properties if @dets_preserve', () => {
   }
 }`);
 });
+
+test('should still drop (dets) ignored properties if noIgnore set to true', () => {
+  const result = runTestFor('ignore5.ts', {
+    noIgnore: true,
+  });
+  expect(result).toBe(`declare module "test" {
+  export interface MyApi {
+    /**
+     * @ignore
+     */
+    bar: boolean;
+  }
+}`);
+});

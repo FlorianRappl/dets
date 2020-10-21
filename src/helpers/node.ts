@@ -22,11 +22,7 @@ import {
   isModuleDeclaration,
   isSourceFile,
   isStringLiteral,
-  isMethodDeclaration,
-  isMethodSignature,
   isExportDeclaration,
-  JSDocTagInfo,
-  SymbolDisplayPart,
 } from 'typescript';
 
 export function getModule(node: Node): string {
@@ -40,74 +36,6 @@ export function getModule(node: Node): string {
   }
 
   return undefined;
-}
-
-export function getJsDocs(checker: TypeChecker, node: Node) {
-  if (isMethodDeclaration(node) || isMethodSignature(node)) {
-    const sign = checker.getSignatureFromDeclaration(node);
-
-    if (sign) {
-      return {
-        comment: sign.getDocumentationComment(checker),
-        tags: sign.getJsDocTags(),
-      };
-    }
-  }
-
-  return {
-    comment: node.symbol?.getDocumentationComment(checker),
-    tags: node.symbol?.getJsDocTags(),
-  };
-}
-
-const newLineTags = ['example'];
-const removedTags = ['dets_removeprop', 'dets_removeclause', 'dets_preserve'];
-
-export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?: Array<JSDocTagInfo> }): string {
-  const tags = (doc.tags || [])
-    .filter((m) => !removedTags.includes(m.name))
-    .map((m) => `@${m.name}${newLineTags.includes(m.name) ? '\n' : m.text ? ' ' : ''}${m.text ? m.text : ''}`);
-
-  const result: Array<string> = doc.comment ? doc.comment.map((m) => m.text) : [];
-
-  if (tags) {
-    result.push(...tags);
-  }
-
-  return result.join('\n');
-}
-
-function shouldDrop(tags?: Array<JSDocTagInfo>) {
-  let found = false;
-
-  if (tags) {
-    for (const tag of tags) {
-      switch (tag.name) {
-        case 'ignore':
-          found = true;
-          break;
-        case 'dets_preserve':
-          return false;
-      }
-    }
-  }
-
-  return found;
-}
-
-export function getCommentOrDrop(checker: TypeChecker, node: Node, canDrop = false) {
-  const doc = getJsDocs(checker, node);
-
-  if (canDrop && shouldDrop(doc.tags)) {
-    return true;
-  }
-
-  return stringifyJsDocs(doc);
-}
-
-export function getComment(checker: TypeChecker, node: Node) {
-  const doc = getJsDocs(checker, node);
-  return stringifyJsDocs(doc);
 }
 
 export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): Declaration {
