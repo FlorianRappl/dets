@@ -43,7 +43,9 @@ export function stringifyProp(type: TypeModelProp) {
   const modifier = type.modifiers ? `${type.modifiers} ` : '';
   const name = makeIdentifier(type.name);
 
-  if (target.kind === 'function') {
+  if (typeof target === 'undefined') {
+    return `${comment}${modifier}${name}${isOpt}: any`;
+  } else if (target.kind === 'function') {
     return `${comment}${modifier}${name}${isOpt}${stringifySignature(target, StringifyMode.property)}`;
   } else {
     return `${comment}${modifier}${name}${isOpt}: ${stringifyNode(target)}`;

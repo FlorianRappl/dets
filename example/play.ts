@@ -5,9 +5,9 @@ console.log(
   generateDeclaration({
     name: 'piral-sample',
     root: resolve(__dirname, '..', 'tests', 'assets'),
-    files: ['defaults4.ts'],
-    types: ['defaults4.ts'],
+    files: ['import6.ts'],
+    types: ['import6.ts'],
     apis: [],
-    imports: ['react'],
+    imports: [],
   }),
 );

@@ -498,3 +498,34 @@ test('should allow using import equals statement', () => {
   export interface Foo___1<T> {}
 }`);
 });
+
+test('should evaluate type with typeof correctly in flat imports', () => {
+  const result = runTestFor('import6.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Api {
+    foo: {
+      foo(): void;
+      bar: 5;
+      qxz: {
+        foo(): void;
+        bar: number;
+      };
+    };
+  }
+}`);
+});
+test('should evaluate type with typeof correctly in nested imports', () => {
+  const result = runTestFor('import7.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Api {
+    foo: {
+      foo(): void;
+      bar: 5;
+      qxz: {
+        foo(): void;
+        bar: number;
+      };
+    };
+  }
+}`);
+});

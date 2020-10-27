@@ -186,6 +186,7 @@ export class DeclVisitor {
         return 'true';
       case ts.SyntaxKind.FalseKeyword:
         return 'false';
+      case ts.SyntaxKind.NumericLiteral:
       case ts.SyntaxKind.BigIntLiteral:
         return node.literal.text;
       default:
@@ -682,6 +683,37 @@ export class DeclVisitor {
       if (symbol !== undefined) {
         const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
         const typeNode = this.convertToTypeNodeFromType(type);
+
+        if (ts.isImportTypeNode(typeNode)) {
+          const props = type.getProperties()
+            .map((prop) => ({
+              name: prop.name,
+              decl: prop.valueDeclaration,
+            }))
+            .map((m) => ({
+              name: m.name,
+              type: this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
+            }))
+            .map(m => ({
+              name: m.name,
+              node: this.convertToTypeNodeFromType(m.type),
+            }))
+            .map((m): TypeModel => ({
+              name: m.name,
+              modifiers: '',
+              optional: false,
+              kind: 'prop',
+              valueType: this.getTypeNode(m.node),
+            }));
+          return {
+            kind: 'interface',
+            props,
+            types: [],
+            extends: [],
+            name: '',
+          };
+        }
+
         return this.getTypeNode(typeNode);
       }
 

@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.9.2
+
+- Fixed a bug when using `typeof` of an import statement
+
 ## 0.9.1
 
 - Include all declarations to determine the comments
