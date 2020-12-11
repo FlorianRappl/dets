@@ -265,7 +265,7 @@ export class DeclVisitor {
   private getNormalProp(node: ts.TypeElement): TypeModelProp {
     const { checker, flags } = this.context;
     const canDrop = !flags.noIgnore;
-    const comment = getCommentOrDrop(checker, node, canDrop);
+    const comment = getCommentOrDrop(checker, (node as any).emitNode?.commentRange ?? node, canDrop);
 
     if (typeof comment === 'string') {
       return {
@@ -594,6 +594,7 @@ export class DeclVisitor {
     return {
       kind: 'interface',
       name: undefined,
+      comment: getComment(this.context.checker, node),
       extends: [],
       props: this.getProps(node.members),
       types: [],

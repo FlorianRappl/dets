@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.9.3
+
+- Fixed a bug to omit documentation when inferring types (#21)
+- Updated dependencies
+
 ## 0.9.2
 
 - Fixed a bug when using `typeof` of an import statement
