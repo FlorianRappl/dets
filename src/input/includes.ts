@@ -11,10 +11,11 @@ export function includeClauses(
   const types: Array<ts.ExpressionWithTypeArguments> = [];
 
   for (const clause of newClause.types) {
-    const name = getDeclarationFromNode(context.checker, clause.expression).symbol?.name;
+    const decl = getDeclarationFromNode(context.checker, clause.expression);
+    const name = decl?.symbol?.name;
 
     // check if we should remove the clause
-    if (!tags.some((m) => m.name === 'dets_removeclause' && m.text === name)) {
+    if (decl && !tags.some((m) => m.name === 'dets_removeclause' && m.text === name)) {
       types.push(clause);
     }
   }
