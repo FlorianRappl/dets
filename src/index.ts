@@ -7,6 +7,7 @@ import { DeclVisitorContext, DeclVisitorFlags, Logger, LogLevel } from './types'
 
 export function setupVisitorContext(
   name: string,
+  root: string,
   files: Array<string>,
   imports: Array<string>,
   log: Logger,
@@ -25,9 +26,13 @@ export function setupVisitorContext(
     modules: {
       [name]: [],
     },
+    moduleNames: {
+      [name]: new Map(),
+    },
     availableImports: {},
     usedImports: [],
     exports: [],
+    root,
     checker,
     program,
     log,
@@ -95,7 +100,7 @@ export function addAmbientModules(context: DeclVisitorContext, imports: Array<st
 
   for (const module of modules) {
     const file = module.declarations?.[0]?.getSourceFile()?.fileName;
-    const lib = getLibName(file);
+    const lib = getLibName(file, context.root);
 
     if (imports.includes(lib)) {
       includeExports(context, module.name, module);
@@ -118,7 +123,7 @@ export interface DeclOptions {
    * The root directory to use. If in doubt just use `process.cwd()`.
    * All other paths (e.g., files) are relative to this directory.
    */
-  root: string;
+  root?: string;
   files?: Array<string>;
   types?: Array<string>;
   apis?: Array<{
@@ -138,7 +143,7 @@ export interface DeclOptions {
 export function generateDeclaration(options: DeclOptions) {
   const {
     name,
-    root,
+    root = process.cwd(),
     imports = [],
     files = [],
     types = [],
@@ -159,7 +164,7 @@ export function generateDeclaration(options: DeclOptions) {
 
   log.verbose(`Setting up a visitor context for "${name}".`);
 
-  const context = setupVisitorContext(name, sources, imports, log, {
+  const context = setupVisitorContext(name, root, sources, imports, log, {
     noIgnore,
   });
 

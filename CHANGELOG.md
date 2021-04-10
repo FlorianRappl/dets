@@ -1,8 +1,9 @@
 # Changelog for dets
 
-## 0.9.4
+## 0.10.0
 
 - Updated dependencies
+- Support for declaration merging of externals
 
 ## 0.9.3
 

@@ -47,12 +47,23 @@ function getSymbolName(imports: ImportDefs, node: ts.Node): string {
   return undefined;
 }
 
-export function getPackage(node: ts.Node, global: boolean, imports: ImportRefs) {
+export function isImportedFile(node: ts.Node, root: string, imports: ImportRefs) {
+  const fn = node.getSourceFile()?.fileName;
+
+  if (fn) {
+    const libName = getLibName(fn, root);
+    return Object.keys(imports).some((name) => name === libName);
+  }
+
+  return false;
+}
+
+export function getPackage(node: ts.Node, global: boolean, root: string, imports: ImportRefs) {
   const fn = node.getSourceFile()?.fileName;
   const base = isBaseLib(fn) || false;
 
   if (!base) {
-    const libName = getLibName(fn);
+    const libName = getLibName(fn, root);
     const [lib] = Object.keys(imports).filter((name) => {
       if (global) {
         return name === libName;

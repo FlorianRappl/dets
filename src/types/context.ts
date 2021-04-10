@@ -12,8 +12,11 @@ export interface DeclVisitorFlags {
   noIgnore: boolean;
 }
 
+export type NamesMap = Map<Node, string>;
+
 export interface DeclVisitorContext {
   modules: Record<string, TypeRefs>;
+  moduleNames: Record<string, NamesMap>;
   checker: TypeChecker;
   program: Program;
   exports: Array<Node>;
@@ -21,4 +24,5 @@ export interface DeclVisitorContext {
   availableImports: ImportRefs;
   log: Logger;
   flags: DeclVisitorFlags;
+  root: string;
 }

@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { createBinding, getPackage, getDefault, getRef } from './utils';
+import { createBinding, getPackage, getDefault, getRef, isImportedFile } from './utils';
 import { includeClauses, includeProp } from './includes';
 import {
   isDefaultExport,
@@ -53,16 +53,19 @@ import {
   TypeRefs,
 } from '../types';
 
+type NamesMap = Map<ts.Node, string>;
+
 export class DeclVisitor {
   private readonly queue: Array<ts.Node> = [];
   private readonly modules: Array<ts.ModuleDeclaration> = [];
   private readonly processed: Array<ts.Node> = [];
-  private readonly names: Map<ts.Node, string> = new Map();
+  private names: NamesMap;
   private refs: TypeRefs;
 
   constructor(private context: DeclVisitorContext) {
     const [defaultModule] = Object.keys(context.modules ?? {});
     this.refs = context.modules[defaultModule] ?? [];
+    this.names = context.moduleNames[defaultModule] ?? new Map();
 
     for (const node of context.exports) {
       this.enqueue(node);
@@ -156,7 +159,7 @@ export class DeclVisitor {
     const c = this.context;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
     const global = isGlobal(symbol);
-    const { moduleName, lib, symbolName } = getPackage(node, global, c.availableImports);
+    const { moduleName, lib, symbolName } = getPackage(node, global, c.root, c.availableImports);
 
     if (!lib) {
       const name = global ? fullyQualifiedName(symbol, '_') : getSymbolName(symbol);
@@ -686,7 +689,8 @@ export class DeclVisitor {
         const typeNode = this.convertToTypeNodeFromType(type);
 
         if (ts.isImportTypeNode(typeNode)) {
-          const props = type.getProperties()
+          const props = type
+            .getProperties()
             .map((prop) => ({
               name: prop.name,
               decl: prop.valueDeclaration,
@@ -695,17 +699,19 @@ export class DeclVisitor {
               name: m.name,
               type: this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
             }))
-            .map(m => ({
+            .map((m) => ({
               name: m.name,
               node: this.convertToTypeNodeFromType(m.type),
             }))
-            .map((m): TypeModel => ({
-              name: m.name,
-              modifiers: '',
-              optional: false,
-              kind: 'prop',
-              valueType: this.getTypeNode(m.node),
-            }));
+            .map(
+              (m): TypeModel => ({
+                name: m.name,
+                modifiers: '',
+                optional: false,
+                kind: 'prop',
+                valueType: this.getTypeNode(m.node),
+              }),
+            );
           return {
             kind: 'interface',
             props,
@@ -864,9 +870,11 @@ export class DeclVisitor {
   }
 
   private getInterface(node: ts.InterfaceDeclaration): TypeModelInterface {
-    const { checker } = this.context;
+    const { checker, availableImports, root } = this.context;
     const type = checker.getTypeAtLocation(node);
-    const decls = type.symbol.declarations.filter(ts.isInterfaceDeclaration);
+    const decls = type.symbol.declarations
+      .filter(ts.isInterfaceDeclaration)
+      .filter((m) => !isImportedFile(m, root, availableImports));
     const clauses: Array<ts.HeritageClause> = [];
     const props: Array<ts.TypeElement> = [];
     const typeParameters: Array<ts.TypeParameterDeclaration> = [];
@@ -958,10 +966,9 @@ export class DeclVisitor {
 
   private includeInContext(node: ts.Node, createType: () => TypeModelExport) {
     const c = this.context;
-    const imports = c.availableImports;
     const symbol = getSymbol(c.checker, node);
     const global = isGlobal(symbol);
-    const { external, fn } = getPackage(node, global, imports);
+    const { external, fn } = getPackage(node, global, c.root, c.availableImports);
 
     if (!external) {
       this.refs.push(createType());
@@ -1091,11 +1098,12 @@ export class DeclVisitor {
   private processModule(node: ts.ModuleDeclaration) {
     const c = this.context;
     const name = node.name.text;
-    const existing = c.modules[name];
-    c.modules[name] = this.refs = existing || [];
+    const availableImportNames = Object.keys(this.context.availableImports);
+    c.modules[name] = this.refs = c.modules[name] || [];
+    c.moduleNames[name] = this.names = c.moduleNames[name] || new Map();
 
     node.body.forEachChild((subNode) => {
-      if (isNodeExported(subNode)) {
+      if (isNodeExported(subNode) || availableImportNames.includes(name)) {
         this.enqueue(subNode);
       }
     });

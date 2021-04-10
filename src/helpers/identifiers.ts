@@ -17,6 +17,7 @@ import {
   StringLiteral,
   NumericLiteral,
 } from 'typescript';
+import { relative, extname } from 'path';
 import { typesRoot, modulesRoot, anonymousIndicator, globalIndicator } from './constants';
 
 export function isAnonymous(name: string) {
@@ -94,7 +95,14 @@ export function getParameterName(name: BindingName | OmittedExpression): string 
   }
 }
 
-export function getLibName(fileName: string) {
+function makeModule(fileName: string, root: string) {
+  const relFile = relative(root, fileName);
+  const ext = extname(fileName);
+  const file = !relFile.startsWith('.') ? `./${relFile}` : relFile;
+  return file.substr(0, file.length - ext.length);
+}
+
+export function getLibName(fileName: string, root: string) {
   if (fileName) {
     if (fileName.indexOf(typesRoot) !== -1) {
       const start = fileName.lastIndexOf(typesRoot) + typesRoot.length;
@@ -118,6 +126,8 @@ export function getLibName(fileName: string) {
       }
 
       return scope;
+    } else {
+      return makeModule(fileName, root);
     }
   }
 
