@@ -212,6 +212,54 @@ import { fillVisitorContextFromTypes } from "dets";
 fillVisitorContextFromTypes(context, 'src/types/index.ts');
 ```
 
+#### Using Plugins
+
+dets also comes with an integrated plugin system that allows customizing the behavior such as modifying the captured type information.
+
+As an example:
+
+```ts
+import { generateDeclaration, createExcludePlugin } from "dets";
+import { writeFileSync } from "fs";
+
+const content = generateDeclaration({
+  name: "foo",
+  root: process.cwd(),
+  files: ["src/**/*.ts"],
+  types: ["src/index.ts"],
+  plugins: [createExcludePlugin(['foo'])],
+});
+
+writeFileSync("dist/index.d.ts", content, "utf8");
+```
+
+This excludes the `foo` module from the output. Since the `foo` module was the subject to create only the declaration mergings on existing modules survive.
+
+Furthermore, custom plugins can be created, too:
+
+```ts
+import { generateDeclaration } from "dets";
+
+const printFoundModulesInConsole = {
+  // type of the plugin ('before-init' | 'before-process' | 'after-process' | 'before-stringify')
+  type: 'after-process',
+  // name of the plugin
+  name: 'console-printer',
+  // function to run with the created context
+  run(context) {
+    console.log('Found the following modules:', Object.keys(context.modules));
+  },
+};
+
+generateDeclaration({
+  name: "foo",
+  root: process.cwd(),
+  files: ["src/**/*.ts"],
+  types: ["src/index.ts"],
+  plugins: [printFoundModulesInConsole],
+});
+```
+
 ## Development
 
 Right now *dets* is fully in development. So things may change in the (near) future.

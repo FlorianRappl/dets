@@ -4,6 +4,7 @@
 
 - Updated dependencies
 - Support for declaration merging of externals
+- Added support for lifecycle plugins
 
 ## 0.9.3
 

@@ -108,10 +108,54 @@ export function addAmbientModules(context: DeclVisitorContext, imports: Array<st
   }
 }
 
-export function processVisitorContext(context: DeclVisitorContext) {
+function runAll(context: DeclVisitorContext, plugins: Array<DetsPlugin>, type: DetsPlugin['type']) {
+  plugins
+    .filter((p) => p.type === type)
+    .forEach((p) => {
+      try {
+        p.run(context);
+      } catch (ex) {
+        context.log.error(`The plugin "${p.name}" crashed: ${ex}`);
+      }
+    });
+}
+
+export function processVisitorContext(context: DeclVisitorContext, plugins: Array<DetsPlugin>) {
+  runAll(context, plugins, 'before-init');
   const visitor = new DeclVisitor(context);
+  runAll(context, plugins, 'before-process');
   visitor.processQueue();
+  runAll(context, plugins, 'after-process');
+  runAll(context, plugins, 'before-stringify');
   return stringifyDeclaration(context);
+}
+
+export interface DetsPlugin {
+  /**
+   * Type of the plugin.
+   */
+  type: 'before-init' | 'before-process' | 'after-process' | 'before-stringify';
+  /**
+   * The name of the plugin (emitted in case of problems).
+   */
+  name: string;
+  /**
+   * Callback to run when invoking the plugin.
+   * @param context The context to perform the work on.
+   */
+  run(context: DeclVisitorContext): void;
+}
+
+export function createExcludePlugin(moduleNames: Array<string>): DetsPlugin {
+  return {
+    type: 'after-process',
+    name: 'exclude-plugin',
+    run(context) {
+      for (const name of moduleNames) {
+        delete context.modules[name];
+      }
+    },
+  };
 }
 
 export interface DeclOptions {
@@ -126,6 +170,10 @@ export interface DeclOptions {
   root?: string;
   files?: Array<string>;
   types?: Array<string>;
+  /**
+   * An optional list of plugins to run.
+   */
+  plugins?: Array<DetsPlugin>;
   apis?: Array<{
     file: string;
     name: string;
@@ -148,6 +196,7 @@ export function generateDeclaration(options: DeclOptions) {
     files = [],
     types = [],
     apis = [],
+    plugins = [],
     logger = defaultLogger,
     logLevel = 3,
     noIgnore = false,
@@ -184,5 +233,5 @@ export function generateDeclaration(options: DeclOptions) {
 
   log.verbose(`Processing the visitor context.`);
 
-  return processVisitorContext(context);
+  return processVisitorContext(context, plugins);
 }
