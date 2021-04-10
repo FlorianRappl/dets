@@ -4,15 +4,14 @@ test('should handle imports from externals (deox)', () => {
   const result = runTestFor('deox.ts', {
     imports: ['deox'],
   });
-  expect(result).toBe(`declare module "test" {
+  expect(result).toBe(`import * as Deox from 'deox';
+
+declare module "test" {
   export const ACTION: "ACTION";
 
-  export const action1: (<_T>(...args: Array<any>) => {
+  export const action1: ExactActionCreator<"ACTION", () => {
     type: "ACTION";
-  }) & {
-    type: "ACTION";
-    toString(): "ACTION";
-  };
+  }>;
 
   export type Action<TType extends string, TPayload = undefined, TMeta = undefined> = TPayload extends undefined ? TMeta extends undefined ? {
     type: TType;
@@ -47,6 +46,11 @@ test('should handle imports from externals (deox)', () => {
   }) & {
     type: "ACTION";
     toString(): "ACTION";
+  };
+
+  export type ExactActionCreator<TType extends string, TCallable extends <_T>(...args: Array<any>) => Deox.Action<TType>> = TCallable & {
+    type: TType extends Deox.AnyAction ? TType["type"] : TType;
+    toString(): TType extends Deox.AnyAction ? TType["type"] : TType;
   };
 }`);
 });

@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.9.4
+
+- Updated dependencies
+
 ## 0.9.3
 
 - Fixed a bug to omit documentation when inferring types (#21)
