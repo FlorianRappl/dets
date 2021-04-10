@@ -109,24 +109,29 @@ export function addAmbientModules(context: DeclVisitorContext, imports: Array<st
 }
 
 function runAll(context: DeclVisitorContext, plugins: Array<DetsPlugin>, type: DetsPlugin['type']) {
+  const { log } = context;
+  log.verbose(`Running the ${type}" plugins.`);
   plugins
     .filter((p) => p.type === type)
     .forEach((p) => {
       try {
         p.run(context);
       } catch (ex) {
-        context.log.error(`The plugin "${p.name}" crashed: ${ex}`);
+        log.error(`The plugin "${p.name}" crashed: ${ex}`);
       }
     });
 }
 
 export function processVisitorContext(context: DeclVisitorContext, plugins: Array<DetsPlugin>) {
+  const { log } = context;
   runAll(context, plugins, 'before-init');
   const visitor = new DeclVisitor(context);
   runAll(context, plugins, 'before-process');
+  log.verbose('Processing the queue.');
   visitor.processQueue();
   runAll(context, plugins, 'after-process');
   runAll(context, plugins, 'before-stringify');
+  log.verbose('Generating the string representation.');
   return stringifyDeclaration(context);
 }
 
