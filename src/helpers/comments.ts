@@ -39,10 +39,20 @@ export function getJsDocs(checker: TypeChecker, node: Node) {
 const newLineTags = ['example'];
 const removedTags = ['dets_removeprop', 'dets_removeclause', 'dets_preserve', 'dets_ignore'];
 
+function stringifyJsDocTagText(txt: string | Array<{ text: string; kind: string }>) {
+  if (typeof txt === 'string') {
+    return txt;
+  } else if (Array.isArray(txt)) {
+    return txt.map((s) => s.text).join('');
+  }
+
+  return '';
+}
+
 export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?: Array<JSDocTagInfo> }): string {
   const tags = (doc.tags || [])
     .filter((m) => !removedTags.includes(m.name))
-    .map((m) => `@${m.name}${newLineTags.includes(m.name) ? '\n' : m.text ? ' ' : ''}${m.text ? m.text : ''}`);
+    .map((m) => `@${m.name}${newLineTags.includes(m.name) ? '\n' : m.text ? ' ' : ''}${stringifyJsDocTagText(m.text)}`);
 
   const result: Array<string> = doc.comment ? doc.comment.map((m) => m.text) : [];
 

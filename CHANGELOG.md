@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.10.1
+
+- Improved documentation tag stringification
+- Fixed potentially undefined access of symbol
+
 ## 0.10.0
 
 - Updated dependencies

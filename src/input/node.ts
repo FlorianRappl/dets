@@ -697,11 +697,11 @@ export class DeclVisitor {
             }))
             .map((m) => ({
               name: m.name,
-              type: this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
+              type: m.decl && this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
             }))
             .map((m) => ({
               name: m.name,
-              node: this.convertToTypeNodeFromType(m.type),
+              node: m.type && this.convertToTypeNodeFromType(m.type),
             }))
             .map(
               (m): TypeModel => ({
