@@ -1102,7 +1102,7 @@ export class DeclVisitor {
     c.modules[name] = this.refs = c.modules[name] || [];
     c.moduleNames[name] = this.names = c.moduleNames[name] || new Map();
 
-    node.body.forEachChild((subNode) => {
+    node.body?.forEachChild((subNode) => {
       if (isNodeExported(subNode) || availableImportNames.includes(name)) {
         this.enqueue(subNode);
       }

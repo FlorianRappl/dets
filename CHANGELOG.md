@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.10.2
+
+- Updated dependencies
+- Fixed issue with processing body-less modules
+
 ## 0.10.1
 
 - Improved documentation tag stringification
