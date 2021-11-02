@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.11.0
+
+- Updated dependencies
+- Improved the pipeline
+- Renamed `master` to `main`
+
 ## 0.10.1
 
 - Improved documentation tag stringification

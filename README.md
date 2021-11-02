@@ -1,6 +1,6 @@
 # dets
 
-[![Build Status](https://florianrappl.visualstudio.com/dets/_apis/build/status/FlorianRappl.dets?branchName=master)](https://florianrappl.visualstudio.com/dets/_build/latest?definitionId=23&branchName=master)
+[![Build Status](https://florianrappl.visualstudio.com/dets/_apis/build/status/FlorianRappl.dets?branchName=main)](https://florianrappl.visualstudio.com/dets/_build/latest?definitionId=23&branchName=main)
 [![npm](https://img.shields.io/npm/v/dets.svg)](https://www.npmjs.com/package/dets)
 [![GitHub tag](https://img.shields.io/github/tag/FlorianRappl/dets.svg)](https://github.com/FlorianRappl/dets/releases)
 [![GitHub issues](https://img.shields.io/github/issues/FlorianRappl/dets.svg)](https://github.com/FlorianRappl/dets/issues)
