@@ -688,7 +688,7 @@ export class DeclVisitor {
         const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
         const typeNode = this.convertToTypeNodeFromType(type);
 
-        if (ts.isImportTypeNode(typeNode)) {
+        if (typeNode && ts.isImportTypeNode(typeNode)) {
           const props = type
             .getProperties()
             .map((prop) => ({
