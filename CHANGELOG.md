@@ -7,6 +7,8 @@
 - Support for rest type nodes
 - Support for array literals
 - Renamed `master` to `main`
+- Added `retrieveTypings` API
+- Added guards to support older versions of TypeScript
 
 ## 0.10.1
 

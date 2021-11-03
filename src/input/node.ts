@@ -642,108 +642,74 @@ export class DeclVisitor {
     };
   }
 
-  private getTypeNode(node: ts.TypeNode): TypeModel {
-    if (!node) {
-      return {
-        kind: 'any',
-      };
-    } else if (ts.isUnionTypeNode(node)) {
-      return this.getUnion(node);
-    } else if (ts.isLiteralTypeNode(node)) {
-      return this.getLiteral(node);
-    } else if (ts.isExpressionWithTypeArguments(node)) {
-      return this.getExpressionWithTypeArguments(node);
-    } else if (ts.isTypeLiteralNode(node)) {
-      return this.getTypeLiteral(node);
-    } else if (ts.isArrayTypeNode(node)) {
-      return this.getArray(node);
-    } else if (ts.isTypeReferenceNode(node)) {
-      return this.getTypeReference(node);
-    } else if (ts.isIndexedAccessTypeNode(node)) {
-      return this.getIndexAccess(node);
-    } else if (ts.isTypeOperatorNode(node)) {
-      return this.getTypeOperator(node);
-    } else if (ts.isMappedTypeNode(node)) {
-      return this.getMappedType(node);
-    } else if (ts.isConditionalTypeNode(node)) {
-      return this.getConditionalType(node);
-    } else if (ts.isFunctionTypeNode(node)) {
-      return this.getMethodSignature(node);
-    } else if (ts.isInferTypeNode(node)) {
-      return this.getInfer(node);
-    } else if (ts.isIntersectionTypeNode(node)) {
-      return this.getIntersection(node);
-    } else if (ts.isParenthesizedTypeNode(node)) {
-      return this.getParenthesis(node);
-    } else if (ts.isConstructorTypeNode(node)) {
-      return this.getConstructorCall(node);
-    } else if (ts.isTypePredicateNode(node)) {
-      return this.getPredicate(node);
-    } else if (ts.isTupleTypeNode(node)) {
-      return this.getTuple(node);
-    } else if (ts.isTypeQueryNode(node)) {
-      const symbol = this.context.checker.getSymbolAtLocation(node.exprName);
+  private getTypeQueryNode(node: ts.TypeQueryNode): TypeModel {
+    const symbol = this.context.checker.getSymbolAtLocation(node.exprName);
 
-      if (symbol !== undefined) {
-        const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
-        const typeNode = this.convertToTypeNodeFromType(type);
+    if (symbol !== undefined) {
+      const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
+      const typeNode = this.convertToTypeNodeFromType(type);
 
-        if (typeNode && ts.isImportTypeNode(typeNode)) {
-          const props = type
-            .getProperties()
-            .map((prop) => ({
-              name: prop.name,
-              decl: prop.valueDeclaration,
-            }))
-            .map((m) => ({
+      if (typeNode && ts.isImportTypeNode(typeNode)) {
+        const props = type
+          .getProperties()
+          .map((prop) => ({
+            name: prop.name,
+            decl: prop.valueDeclaration,
+          }))
+          .map((m) => ({
+            name: m.name,
+            type: m.decl && this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
+          }))
+          .map((m) => ({
+            name: m.name,
+            node: m.type && this.convertToTypeNodeFromType(m.type),
+          }))
+          .map(
+            (m): TypeModel => ({
               name: m.name,
-              type: m.decl && this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
-            }))
-            .map((m) => ({
-              name: m.name,
-              node: m.type && this.convertToTypeNodeFromType(m.type),
-            }))
-            .map(
-              (m): TypeModel => ({
-                name: m.name,
-                modifiers: '',
-                optional: false,
-                kind: 'prop',
-                valueType: this.getTypeNode(m.node),
-              }),
-            );
-          return {
-            kind: 'interface',
-            props,
-            types: [],
-            extends: [],
-            name: '',
-          };
-        }
-
-        return this.getTypeNode(typeNode);
+              modifiers: '',
+              optional: false,
+              kind: 'prop',
+              valueType: this.getTypeNode(m.node),
+            }),
+          );
+        return {
+          kind: 'interface',
+          props,
+          types: [],
+          extends: [],
+          name: '',
+        };
       }
 
-      return getRef(`typeof ${getTypeRefName(node.exprName)}`);
-    } else if (ts.isRestTypeNode(node)) {
-      return {
-        kind: 'rest',
-        value: this.getTypeNode(node.type),
-      };
-    } else if (ts.isTemplateLiteralTypeNode(node)) {
-      const parts: Array<string | TypeModel> = [node.head.text];
-
-      for (const span of node.templateSpans) {
-        parts.push(this.getTypeNode(span.type));
-        parts.push(span.literal.text);
-      }
-
-      return {
-        kind: 'template',
-        parts,
-      };
+      return this.getTypeNode(typeNode);
     }
 
+    return getRef(`typeof ${getTypeRefName(node.exprName)}`);
+  }
+
+  private getTypeRestNode(node: ts.RestTypeNode): TypeModel {
+    return {
+      kind: 'rest',
+      value: this.getTypeNode(node.type),
+    };
+  }
+
+  private getTemplateLiteralNode(node: ts.TemplateLiteralTypeNode): TypeModel {
+    const parts: Array<string | TypeModel> = [node.head.text];
+
+    for (const span of node.templateSpans) {
+      parts.push(this.getTypeNode(span.type));
+      parts.push(span.literal.text);
+    }
+
+    return {
+      kind: 'template',
+      parts,
+    };
+  }
+
+  private getConstantNode(node: ts.TypeNode): TypeModel {
     switch (node.kind) {
       case ts.SyntaxKind.AnyKeyword:
         return {
@@ -799,6 +765,56 @@ export class DeclVisitor {
     }
 
     this.printWarning('type node', node);
+  }
+
+  private getTypeNode(node: ts.TypeNode): TypeModel {
+    if (!node) {
+      return {
+        kind: 'any',
+      };
+    } else if (ts.isUnionTypeNode(node)) {
+      return this.getUnion(node);
+    } else if (ts.isLiteralTypeNode(node)) {
+      return this.getLiteral(node);
+    } else if (ts.isExpressionWithTypeArguments(node)) {
+      return this.getExpressionWithTypeArguments(node);
+    } else if (ts.isTypeLiteralNode(node)) {
+      return this.getTypeLiteral(node);
+    } else if (ts.isArrayTypeNode(node)) {
+      return this.getArray(node);
+    } else if (ts.isTypeReferenceNode(node)) {
+      return this.getTypeReference(node);
+    } else if (ts.isIndexedAccessTypeNode(node)) {
+      return this.getIndexAccess(node);
+    } else if (ts.isTypeOperatorNode(node)) {
+      return this.getTypeOperator(node);
+    } else if (ts.isMappedTypeNode(node)) {
+      return this.getMappedType(node);
+    } else if ('isConditionalTypeNode' in ts && ts.isConditionalTypeNode(node)) {
+      return this.getConditionalType(node);
+    } else if (ts.isFunctionTypeNode(node)) {
+      return this.getMethodSignature(node);
+    } else if ('isInferTypeNode' in ts && ts.isInferTypeNode(node)) {
+      return this.getInfer(node);
+    } else if (ts.isIntersectionTypeNode(node)) {
+      return this.getIntersection(node);
+    } else if (ts.isParenthesizedTypeNode(node)) {
+      return this.getParenthesis(node);
+    } else if (ts.isConstructorTypeNode(node)) {
+      return this.getConstructorCall(node);
+    } else if ('isTypePredicateNode' in ts && ts.isTypePredicateNode(node)) {
+      return this.getPredicate(node);
+    } else if ('isTupleTypeNode' in ts && ts.isTupleTypeNode(node)) {
+      return this.getTuple(node);
+    } else if ('isTypeQueryNode' in ts && ts.isTypeQueryNode(node)) {
+      return this.getTypeQueryNode(node);
+    } else if ('isRestTypeNode' in ts && ts.isRestTypeNode(node)) {
+      return this.getTypeRestNode(node);
+    } else if ('isTemplateLiteralTypeNode' in ts && ts.isTemplateLiteralTypeNode(node)) {
+      return this.getTemplateLiteralNode(node);
+    } else {
+      return this.getConstantNode(node);
+    }
   }
 
   private getExtends(nodes: ReadonlyArray<ts.HeritageClause>): Array<TypeModel> {

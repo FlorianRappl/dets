@@ -132,7 +132,35 @@ export function processVisitorContext(context: DeclVisitorContext, plugins: Arra
   runAll(context, plugins, 'after-process');
   runAll(context, plugins, 'before-stringify');
   log.verbose('Generating the string representation.');
-  return stringifyDeclaration(context);
+}
+
+export interface DetsOptions {
+  /**
+   * The root directory to use. If in doubt just use `process.cwd()`.
+   * All other paths (e.g., files) are relative to this directory.
+   */
+  root?: string;
+  /**
+   * An optional list of plugins to run.
+   */
+  plugins?: Array<DetsPlugin>;
+  /**
+   * Determines if the `@ignore` rule should not be handled by
+   * removing the found property.
+   */
+  noIgnore?: boolean;
+  /**
+   * Defines imported dependencies which should be excluded from bundling.
+   */
+  imports?: Array<string>;
+  /**
+   * Provides the logger instance for logging.
+   */
+  logger?: Logger;
+  /**
+   * Defines the log level to use with the logger.
+   */
+  logLevel?: LogLevel;
 }
 
 export interface DetsPlugin {
@@ -163,34 +191,32 @@ export function createExcludePlugin(moduleNames: Array<string>): DetsPlugin {
   };
 }
 
-export interface DeclOptions {
+export interface DeclOptions extends DetsOptions {
   /**
    * The name of the declaration module.
    */
   name: string;
   /**
-   * The root directory to use. If in doubt just use `process.cwd()`.
-   * All other paths (e.g., files) are relative to this directory.
+   * The additional files to consider for typing inspection.
    */
-  root?: string;
   files?: Array<string>;
+  /**
+   * The additional type modules to consider for API generation.
+   */
   types?: Array<string>;
   /**
-   * An optional list of plugins to run.
+   * The APIs to build.
    */
-  plugins?: Array<DetsPlugin>;
   apis?: Array<{
+    /**
+     * The root module where the API can be gathered.
+     */
     file: string;
+    /**
+     * The name of the API interface object in the module.
+     */
     name: string;
   }>;
-  /**
-   * Determines if the `@ignore` rule should not be handled by
-   * removing the found property.
-   */
-  noIgnore?: boolean;
-  imports?: Array<string>;
-  logger?: Logger;
-  logLevel?: LogLevel;
 }
 
 export function generateDeclaration(options: DeclOptions) {
@@ -238,5 +264,54 @@ export function generateDeclaration(options: DeclOptions) {
 
   log.verbose(`Processing the visitor context.`);
 
-  return processVisitorContext(context, plugins);
+  processVisitorContext(context, plugins);
+  return stringifyDeclaration(context);
+}
+
+export interface TypingOptions extends DetsOptions {
+  /**
+   * The additional files to consider for typing inspection.
+   */
+  files?: Array<string>;
+  /**
+   * The type modules to inspect for retrieving the typings.
+   */
+  types: Array<string>;
+}
+
+export function retrieveTypings(options: TypingOptions) {
+  const name = 'main';
+  const {
+    root = process.cwd(),
+    imports = [],
+    files = [],
+    types = [],
+    plugins = [],
+    logger = defaultLogger,
+    logLevel = 3,
+    noIgnore = false,
+  } = options;
+  const log = wrapLogger(logger, logLevel);
+
+  log.verbose(`Aggregating the sources from "${root}".`);
+
+  const sources = [...files.map((file) => findAppRoot(root, file)), ...types.map((type) => findAppRoot(root, type))];
+
+  log.verbose(`Setting up a visitor context for "${name}".`);
+
+  const context = setupVisitorContext(name, root, sources, imports, log, {
+    noIgnore,
+  });
+
+  log.verbose(`Starting type aggregation from "${root}".`);
+
+  for (const type of types) {
+    const path = findAppRoot(root, type);
+    fillExportsFromTypes(context, path);
+  }
+
+  log.verbose(`Processing the visitor context.`);
+
+  processVisitorContext(context, plugins);
+  return context.modules.main;
 }
