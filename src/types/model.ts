@@ -43,6 +43,8 @@ import {
   TypeModelGetAccessor,
   TypeModelSetAccessor,
   TypeModelParenthesis,
+  TypeModelRest,
+  TypeModelTemplate,
 } from './models';
 
 export type TypeModelExport =
@@ -92,4 +94,6 @@ export type TypeModel =
   | TypeModelNew
   | TypeModelGetAccessor
   | TypeModelSetAccessor
-  | TypeModelParenthesis;
+  | TypeModelParenthesis
+  | TypeModelRest
+  | TypeModelTemplate;

@@ -63,7 +63,7 @@ function writeFile(path: string, content: string) {
 }
 
 function runScript(script: string, cwd: string) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const cp = exec(script, { cwd });
     cp.on('close', (code, signal) => (code === 0 ? resolve() : reject(new Error(signal))));
   });

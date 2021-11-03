@@ -4,6 +4,8 @@
 
 - Updated dependencies
 - Improved the pipeline
+- Support for rest type nodes
+- Support for array literals
 - Renamed `master` to `main`
 
 ## 0.10.1

@@ -725,6 +725,23 @@ export class DeclVisitor {
       }
 
       return getRef(`typeof ${getTypeRefName(node.exprName)}`);
+    } else if (ts.isRestTypeNode(node)) {
+      return {
+        kind: 'rest',
+        value: this.getTypeNode(node.type),
+      };
+    } else if (ts.isTemplateLiteralTypeNode(node)) {
+      const parts: Array<string | TypeModel> = [node.head.text];
+
+      for (const span of node.templateSpans) {
+        parts.push(this.getTypeNode(span.type));
+        parts.push(span.literal.text);
+      }
+
+      return {
+        kind: 'template',
+        parts,
+      };
     }
 
     switch (node.kind) {

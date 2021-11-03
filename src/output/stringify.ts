@@ -28,7 +28,7 @@ export function stringifyComment(type: WithTypeComments) {
   if (type.comment) {
     const lines = type.comment
       .split('\n')
-      .map(line => ` * ${line}\n`)
+      .map((line) => ` * ${line}\n`)
       .join('');
     return `/**\n${lines} */\n`;
   }
@@ -99,7 +99,7 @@ export function stringifyIndexedAccess(type: TypeModelIndexedAccess) {
 }
 
 export function stringifyInterface(type: TypeModelInterface) {
-  const lines = type.props.map(p => stringifyNode(p, StringifyMode.property));
+  const lines = type.props.map((p) => stringifyNode(p, StringifyMode.property));
 
   if (type.mapped) {
     lines.push(stringifyMapped(type.mapped));
@@ -109,27 +109,27 @@ export function stringifyInterface(type: TypeModelInterface) {
 }
 
 export function stringifyClass(type: TypeModelClass) {
-  const lines = type.props.map(p => stringifyNode(p));
+  const lines = type.props.map((p) => stringifyNode(p));
   return toBlock(lines, ';');
 }
 
 export function stringifyEnum(values: Array<TypeModel>) {
-  const lines: Array<string> = values.map(p => stringifyNode(p));
+  const lines: Array<string> = values.map((p) => stringifyNode(p));
   return toBlock(lines, ',');
 }
 
 export function stringifyExtends(type: WithTypeExtends) {
   const { extends: es } = type;
-  return es.length ? ` extends ${es.map(t => stringifyNode(t)).join(', ')}` : '';
+  return es.length ? ` extends ${es.map((t) => stringifyNode(t)).join(', ')}` : '';
 }
 
 export function stringifyImplements(type: WithTypeImplements) {
   const { implements: is } = type;
-  return is.length ? ` implements ${is.map(t => stringifyNode(t)).join(', ')}` : '';
+  return is.length ? ` implements ${is.map((t) => stringifyNode(t)).join(', ')}` : '';
 }
 
 export function stringifyTypes(types: Array<TypeModel>) {
-  return types.map(t => stringifyNode(t)).join(', ');
+  return types.map((t) => stringifyNode(t)).join(', ');
 }
 
 export function stringifyTypeArgs(type: WithTypeArgs) {
@@ -214,9 +214,9 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
     case 'typeParameter':
       return stringifyTypeParameter(type);
     case 'union':
-      return type.types.map(u => stringifyNode(u, StringifyMode.parenthesis)).join(' | ');
+      return type.types.map((u) => stringifyNode(u, StringifyMode.parenthesis)).join(' | ');
     case 'intersection':
-      return type.types.map(u => stringifyNode(u)).join(' & ');
+      return type.types.map((u) => stringifyNode(u)).join(' & ');
     case 'member':
       return stringifyMember(type);
     case 'conditional':
@@ -260,6 +260,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifyMapped(type);
     case 'substitution':
       return stringifyNode(type.variable);
+    case 'rest':
+      return `...${stringifyNode(type.value)}`;
     case 'new':
     case 'function':
       return stringifySignature(type, mode);
@@ -271,6 +273,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifyGetAccessor(type);
     case 'predicate':
       return stringifyPredicate(type);
+    case 'template':
+      return `\`${type.parts.map((p) => (typeof p === 'string' ? p : `\${${stringifyNode(p)}}`)).join('')}\``;
     case 'parenthesis':
       return `(${stringifyNode(type.value)})`;
   }

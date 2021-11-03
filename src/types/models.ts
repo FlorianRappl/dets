@@ -259,3 +259,13 @@ export interface TypeModelAlias extends WithTypeArgs, WithTypeComments {
   readonly name: string;
   readonly child: TypeModel;
 }
+
+export interface TypeModelRest {
+  readonly kind: 'rest';
+  readonly value: TypeModel;
+}
+
+export interface TypeModelTemplate {
+  readonly kind: 'template';
+  readonly parts: Array<string | TypeModel>;
+}

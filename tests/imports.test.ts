@@ -235,11 +235,11 @@ test('should include globals from imported globals if bundled in', () => {
      * type MyContext = number
      * const Ctx = React.createContext<MyContext>(0)
      * \n     * class Foo extends React.Component {
-     *    static contextType = Ctx
-     *    context!: React.ContextType<typeof Ctx>
-     *    render () {
-     *      return <>My context's value: {this.context}</>;
-     *    }
+     *   static contextType = Ctx
+     *   context!: React.ContextType<typeof Ctx>
+     *   render () {
+     *     return <>My context's value: {this.context}</>;
+     *   }
      * }
      * \`\`\`
      * @see https://reactjs.org/docs/context.html#classcontexttype
