@@ -1,4 +1,4 @@
-import { Node, TypeChecker, isMethodDeclaration, isMethodSignature, JSDocTagInfo, SymbolDisplayPart } from 'typescript';
+import { Node, TypeChecker, isMethodDeclaration, isMethodSignature, JSDocTagInfo, SymbolDisplayPart, resolveTypeReferenceDirective } from 'typescript';
 
 function isUnique<T>(value: T, index: number, self: Array<T>) {
   return self.indexOf(value) === index;
@@ -41,6 +41,11 @@ const removedTags = ['dets_removeprop', 'dets_removeclause', 'dets_preserve', 'd
 
 function stringifyJsDocTagText(txt: string | Array<{ text: string; kind: string }>) {
   if (typeof txt === 'string') {
+    // quick fix for URLs (e.g., in React documentation), just remove first space
+    if (txt.startsWith('http ://') || txt.startsWith('https ://')) {
+      return txt.replace(' ', '');
+    }
+
     return txt;
   } else if (Array.isArray(txt)) {
     return txt.map((s) => s.text).join('');
