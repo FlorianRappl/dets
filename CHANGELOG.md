@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.11.1
+
+- Updated license year
+- Updated dependencies
+
 ## 0.11.0
 
 - Updated dependencies
