@@ -26,11 +26,11 @@ export function isAnonymous(name: string) {
 
 export function getLibRefName(libName: string) {
   if (libName[0] === '@') {
-    libName = libName.substr(1);
+    libName = libName.substring(1);
   }
 
   const parts = libName.split(/[\/\-]/g);
-  return parts.map(p => p[0].toUpperCase() + p.substr(1)).join('');
+  return parts.map(p => p[0].toUpperCase() + p.substring(1)).join('');
 }
 
 export function getTypeRefName(name: EntityName): string {
@@ -99,7 +99,7 @@ function makeModule(fileName: string, root: string) {
   const relFile = relative(root, fileName);
   const ext = extname(fileName);
   const file = !relFile.startsWith('.') ? `./${relFile}` : relFile;
-  return file.substr(0, file.length - ext.length);
+  return file.substring(0, file.length - ext.length);
 }
 
 export function getLibName(fileName: string, root: string) {
@@ -107,7 +107,7 @@ export function getLibName(fileName: string, root: string) {
     if (fileName.indexOf(typesRoot) !== -1) {
       const start = fileName.lastIndexOf(typesRoot) + typesRoot.length;
       const name = fileName
-        .substr(start)
+        .substring(start)
         .split('/')
         .shift();
 
@@ -119,7 +119,7 @@ export function getLibName(fileName: string, root: string) {
       return name;
     } else if (fileName.indexOf(modulesRoot) !== -1) {
       const start = fileName.lastIndexOf(modulesRoot) + modulesRoot.length;
-      const [scope, lib] = fileName.substr(start).split('/');
+      const [scope, lib] = fileName.substring(start).split('/');
 
       if (scope.indexOf('@') === 0) {
         return `${scope}/${lib}`;

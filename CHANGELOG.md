@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.11.1
+
+- Updated dependencies
+- Support for namespace export
+
 ## 0.11.0
 
 - Updated dependencies

@@ -37,6 +37,8 @@ export function includeExports(context: DeclVisitorContext, key: string, symbol:
         // skip - mostly from ambient modules
       } else if (ts.isImportEqualsDeclaration(decl)) {
         //skip - automatically "introduced"
+      } else if (ts.isNamespaceExport(decl)) {
+        defs[decl.name.text] = decl;
       } else {
         context.log.warn(`Skipping import of unknown node (kind: ${decl.kind}).`);
       }
