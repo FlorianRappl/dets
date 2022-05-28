@@ -695,6 +695,25 @@ export class DeclVisitor {
     };
   }
 
+  private getNamedTuple(node: ts.NamedTupleMember): TypeModel {
+    const model: TypeModel = {
+      kind: 'prop',
+      name: getPropName(node.name),
+      valueType: this.getTypeNode(node.type),
+      optional: node.questionToken !== undefined,
+      modifiers: '',
+    };
+
+    if (node.dotDotDotToken) {
+      return {
+        kind: 'rest',
+        value: model,
+      };
+    }
+
+    return model;
+  }
+
   private getTemplateLiteralNode(node: ts.TemplateLiteralTypeNode): TypeModel {
     const parts: Array<string | TypeModel> = [node.head.text];
 
@@ -812,6 +831,8 @@ export class DeclVisitor {
       return this.getTypeRestNode(node);
     } else if ('isTemplateLiteralTypeNode' in ts && ts.isTemplateLiteralTypeNode(node)) {
       return this.getTemplateLiteralNode(node);
+    } else if (ts.isNamedTupleMember(node)) {
+      return this.getNamedTuple(node);
     } else {
       return this.getConstantNode(node);
     }

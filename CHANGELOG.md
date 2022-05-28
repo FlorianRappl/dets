@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.11.2
+
+- Fixed issue with named tuples (#34)
+
 ## 0.11.1
 
 - Updated license year
