@@ -4,6 +4,7 @@
 
 - Updated license year
 - Updated dependencies
+- Support for namespace export
 
 ## 0.11.0
 
