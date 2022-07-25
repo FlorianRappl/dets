@@ -199,7 +199,7 @@ export class DeclVisitor {
     }
   }
 
-  private getInferredType(node: ts.Expression): TypeModel {
+  private getInferredType(node: ts.Node): TypeModel {
     const typeNode = this.convertToTypeNodeFromNode(node);
     return this.getTypeNode(typeNode);
   }
@@ -449,6 +449,12 @@ export class DeclVisitor {
   private getFunctionParameterValue(node: ts.ParameterDeclaration): TypeModel {
     if (node.type) {
       return this.getTypeNode(node.type);
+    }
+
+    const typeNode = this.convertToTypeNodeFromNode(node);
+
+    if (typeNode) {
+      return this.getTypeNode(typeNode);
     } else if (node.initializer) {
       return this.getExpression(node.initializer);
     } else {

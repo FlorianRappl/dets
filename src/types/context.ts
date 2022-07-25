@@ -10,6 +10,7 @@ export type TypeRefs = Array<TypeModelExport>;
 
 export interface DeclVisitorFlags {
   noIgnore: boolean;
+  noModuleDeclaration: boolean;
 }
 
 export type NamesMap = Map<Node, string>;
@@ -23,6 +24,7 @@ export interface DeclVisitorContext {
   usedImports: Array<string>;
   availableImports: ImportRefs;
   log: Logger;
+  name: string;
   flags: DeclVisitorFlags;
   root: string;
 }

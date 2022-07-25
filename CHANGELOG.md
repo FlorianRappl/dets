@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.12.0
+
+- Improved type inference of default values
+- Added `module-declaration` CLI option
+- Added `noModuleDeclaration` context option
+
 ## 0.11.2
 
 - Fixed issue with named tuples (#34)

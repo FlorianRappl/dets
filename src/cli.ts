@@ -13,7 +13,7 @@ const args = yargs
   .describe('files', 'Sets the files referenced by TypeScript.')
   .array('files')
   .default('files', [] as Array<string>)
-  .required('files')
+  .demandOption('files')
   .describe('types', 'Sets the type entry modules to export via their file path.')
   .array('types')
   .default('types', [] as Array<string>)
@@ -26,6 +26,9 @@ const args = yargs
   .describe('ignore', 'Actively uses the ignore comment to drop properties.')
   .boolean('ignore')
   .default('ignore', true)
+  .describe('module-declaration', 'Wraps the declaration in a "declare module" block.')
+  .boolean('module-declaration')
+  .default('module-declaration', true)
   .describe('out', 'Sets the path to the output file.')
   .string('out')
   .default('out', './dist/index.d.ts').argv;

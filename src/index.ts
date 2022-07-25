@@ -33,6 +33,7 @@ export function setupVisitorContext(
     usedImports: [],
     exports: [],
     root,
+    name,
     checker,
     program,
     log,
@@ -161,6 +162,10 @@ export interface DetsOptions {
    * Defines the log level to use with the logger.
    */
   logLevel?: LogLevel;
+  /**
+   * If given does not wrap the declaration in a "declare module" statement.
+   */
+  noModuleDeclaration?: boolean;
 }
 
 export interface DetsPlugin {
@@ -231,6 +236,7 @@ export function generateDeclaration(options: DeclOptions) {
     logger = defaultLogger,
     logLevel = 3,
     noIgnore = false,
+    noModuleDeclaration = false,
   } = options;
   const log = wrapLogger(logger, logLevel);
 
@@ -246,6 +252,7 @@ export function generateDeclaration(options: DeclOptions) {
 
   const context = setupVisitorContext(name, root, sources, imports, log, {
     noIgnore,
+    noModuleDeclaration,
   });
 
   log.verbose(`Starting API gathering in "${root}".`);
@@ -290,6 +297,7 @@ export function retrieveTypings(options: TypingOptions) {
     logger = defaultLogger,
     logLevel = 3,
     noIgnore = false,
+    noModuleDeclaration = false,
   } = options;
   const log = wrapLogger(logger, logLevel);
 
@@ -301,6 +309,7 @@ export function retrieveTypings(options: TypingOptions) {
 
   const context = setupVisitorContext(name, root, sources, imports, log, {
     noIgnore,
+    noModuleDeclaration,
   });
 
   log.verbose(`Starting type aggregation from "${root}".`);
