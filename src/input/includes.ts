@@ -36,7 +36,7 @@ export function includeProp(props: Array<ts.TypeElement>, newProp: ts.TypeElemen
 
   for (const oldProp of props) {
     if (oldProp.kind === newProp.kind && getPropName(oldProp.name) === name) {
-      if (!ts.isMethodSignature(newProp)) {
+      if (!ts.isMethodSignature(newProp) && !ts.isCallSignatureDeclaration(newProp)) {
         return;
       }
     }

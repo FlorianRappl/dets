@@ -63,11 +63,11 @@ export function stringifyParameters(params: Array<TypeModelFunctionParameter>) {
   return params.map(stringifyParameter).join(', ');
 }
 
-export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode: StringifyMode) {
+export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode: StringifyMode, anonymous = false) {
   const ctor = type.kind === 'new' ? 'new ' : '';
   const prop = (mode & StringifyMode.property) !== 0;
   const paren = (mode & StringifyMode.parenthesis) !== 0;
-  const comment = stringifyComment(type);
+  const comment = anonymous ? stringifyComment(type) : '';
   const parameters = stringifyParameters(type.parameters);
   const ta = stringifyTypeArgs(type);
   const rt = stringifyNode(type.returnType);
@@ -266,7 +266,7 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return `...${stringifyNode(type.value)}`;
     case 'new':
     case 'function':
-      return stringifySignature(type, mode);
+      return stringifySignature(type, mode, true);
     case 'tuple':
       return `[${stringifyTypes(type.types)}]`;
     case 'set':

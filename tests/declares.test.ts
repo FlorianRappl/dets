@@ -223,6 +223,9 @@ test('should handle manual composition of react typings', () => {
   }
 
   export interface ExoticComponent<P = {}> {
+    /**
+     * **NOTE**: Exotic components are not callable.
+     */
     (props: P): ReactElement | null;
     readonly $$typeof: symbol;
   }

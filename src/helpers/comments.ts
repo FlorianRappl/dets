@@ -1,4 +1,4 @@
-import { Node, TypeChecker, isMethodDeclaration, isMethodSignature, JSDocTagInfo, SymbolDisplayPart, resolveTypeReferenceDirective } from 'typescript';
+import { Node, TypeChecker, isMethodDeclaration, isMethodSignature, JSDocTagInfo, SymbolDisplayPart, isCallSignatureDeclaration } from 'typescript';
 
 function isUnique<T>(value: T, index: number, self: Array<T>) {
   return self.indexOf(value) === index;
@@ -19,7 +19,7 @@ export function getAllJsDocs(checker: TypeChecker, decls: Array<Node>) {
 }
 
 export function getJsDocs(checker: TypeChecker, node: Node) {
-  if (isMethodDeclaration(node) || isMethodSignature(node)) {
+  if (isMethodDeclaration(node) || isMethodSignature(node) || isCallSignatureDeclaration(node)) {
     const sign = checker.getSignatureFromDeclaration(node);
 
     if (sign) {

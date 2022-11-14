@@ -75,7 +75,12 @@ test('should use array literal for readonly modifiers', () => {
 test('should be prepared to include function overload correctly', () => {
   const result = runTestFor('function10.ts');
   expect(result).toBe(`declare module "test" {
-  export interface NgComponent {}
+  export interface NgComponent {
+    /**
+     * Comment on top.
+     */
+    foo(): void;
+  }
 
   /**
    * Gives you the ability to use a component from a lazy loaded module.
@@ -101,7 +106,9 @@ test('should be prepared to include function overload correctly', () => {
      * @param opts The options to pass when bootstrapping.
      * @returns The module ID to be used to reference components.
      */
-    <T>(getModule: () => Promise<{ default: Type<T> }>): NgComponentLoader;
+    <T>(getModule: () => Promise<{
+      default: Type<T>;
+    }>): NgComponentLoader;
   }
 
   export const foo: NgModuleDefiner;

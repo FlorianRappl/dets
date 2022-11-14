@@ -2,7 +2,12 @@ declare interface Type<T> extends Function {
   new (...args: any[]): T;
 }
 
-export interface NgComponent {}
+export interface NgComponent {
+  /**
+   * Comment on top.
+   */
+  foo(): void;
+}
 
 /**
  * Gives you the ability to use a component from a lazy loaded module.

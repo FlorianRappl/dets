@@ -430,6 +430,9 @@ test('should include globals from imported globals if bundled in', () => {
   }
 
   export interface ExoticComponent<P = {}> {
+    /**
+     * **NOTE**: Exotic components are not callable.
+     */
     (props: P): (ReactElement | null);
     readonly $$typeof: symbol;
   }

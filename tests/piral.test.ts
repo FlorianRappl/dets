@@ -321,6 +321,11 @@ declare module "test" {
    * The callback to fetch a JS content from an URL.
    */
   export interface PiletDependencyFetcher {
+    /**
+     * Defines how other dependencies are fetched.
+     * @param url The URL to the dependency that should be fetched.
+     * @returns The promise yielding the dependency's content.
+     */
     (url: string): Promise<string>;
   }
 
@@ -328,6 +333,13 @@ declare module "test" {
    * The callback to get the shared dependencies for a specific pilet.
    */
   export interface PiletDependencyGetter {
+    /**
+     * Gets the locally available dependencies for the specified
+     * pilet. If this function is missing or returns false or undefined
+     * the globally available dependencies will be used.
+     * @returns The dependencies that should be used for evaluating the
+     * pilet.
+     */
     (target: PiletMetadata): AvailableDependencies | undefined | false;
   }
 
@@ -335,6 +347,9 @@ declare module "test" {
    * The interface describing a function capable of fetching pilets.
    */
   export interface PiletRequester {
+    /**
+     * Gets the raw pilets (e.g., from a server) asynchronously.
+     */
     (): Promise<Array<PiletMetadata>>;
   }
 
@@ -527,10 +542,21 @@ declare module "test" {
   export type LayoutTypes = [LayoutType, LayoutType, LayoutType];
 
   export interface ApiExtender<T> {
+    /**
+     * Extends the base API of a module with new functionality.
+     * @param api The API created by the base layer.
+     * @param target The target the API is created for.
+     * @returns The extended API.
+     */
     (api: PiletApi, target: PiletMetadata): T;
   }
 
   export interface Extend<T = Partial<PiletApi>> {
+    /**
+     * Extends the base API with a custom set of functionality to be used by modules.
+     * @param context The global state context to be used.
+     * @returns The extended API or a function to create the extended API for a specific target.
+     */
     (context: GlobalStateContext): T | ApiExtender<T>;
   }
 
@@ -834,6 +860,9 @@ declare module "test" {
   }
 
   export interface Disposable {
+    /**
+     * Disposes the created resource.
+     */
     (): void;
   }
 
@@ -871,6 +900,9 @@ declare module "test" {
    * Listener for Piral app shell events.
    */
   export interface Listener<T> {
+    /**
+     * Receives an event of type T.
+     */
     (arg: T): void;
   }
 
@@ -1028,6 +1060,11 @@ declare module "test" {
    * The creator function for the pilet API.
    */
   export interface PiletApiCreator {
+    /**
+     * Creates an API for the given raw pilet.
+     * @param target The raw (meta) content of the pilet.
+     * @returns The API object to be used with the pilet.
+     */
     (target: PiletMetadata): PiletApi;
   }
 }`);
@@ -1354,6 +1391,11 @@ export interface PiletLoadingStrategy {
  * The callback to fetch a JS content from an URL.
  */
 export interface PiletDependencyFetcher {
+  /**
+   * Defines how other dependencies are fetched.
+   * @param url The URL to the dependency that should be fetched.
+   * @returns The promise yielding the dependency's content.
+   */
   (url: string): Promise<string>;
 }
 
@@ -1361,6 +1403,13 @@ export interface PiletDependencyFetcher {
  * The callback to get the shared dependencies for a specific pilet.
  */
 export interface PiletDependencyGetter {
+  /**
+   * Gets the locally available dependencies for the specified
+   * pilet. If this function is missing or returns false or undefined
+   * the globally available dependencies will be used.
+   * @returns The dependencies that should be used for evaluating the
+   * pilet.
+   */
   (target: PiletMetadata): AvailableDependencies | undefined | false;
 }
 
@@ -1368,6 +1417,9 @@ export interface PiletDependencyGetter {
  * The interface describing a function capable of fetching pilets.
  */
 export interface PiletRequester {
+  /**
+   * Gets the raw pilets (e.g., from a server) asynchronously.
+   */
   (): Promise<Array<PiletMetadata>>;
 }
 
@@ -1560,10 +1612,21 @@ export type LayoutType = "mobile" | "tablet" | "desktop";
 export type LayoutTypes = [LayoutType, LayoutType, LayoutType];
 
 export interface ApiExtender<T> {
+  /**
+   * Extends the base API of a module with new functionality.
+   * @param api The API created by the base layer.
+   * @param target The target the API is created for.
+   * @returns The extended API.
+   */
   (api: PiletApi, target: PiletMetadata): T;
 }
 
 export interface Extend<T = Partial<PiletApi>> {
+  /**
+   * Extends the base API with a custom set of functionality to be used by modules.
+   * @param context The global state context to be used.
+   * @returns The extended API or a function to create the extended API for a specific target.
+   */
   (context: GlobalStateContext): T | ApiExtender<T>;
 }
 
@@ -1867,6 +1930,9 @@ export interface PiralStorage {
 }
 
 export interface Disposable {
+  /**
+   * Disposes the created resource.
+   */
   (): void;
 }
 
@@ -1904,6 +1970,9 @@ export interface PiralUnloadPiletEvent {
  * Listener for Piral app shell events.
  */
 export interface Listener<T> {
+  /**
+   * Receives an event of type T.
+   */
   (arg: T): void;
 }
 
@@ -2061,6 +2130,11 @@ export type Pilet = PiletApp & PiletMetadata;
  * The creator function for the pilet API.
  */
 export interface PiletApiCreator {
+  /**
+   * Creates an API for the given raw pilet.
+   * @param target The raw (meta) content of the pilet.
+   * @returns The API object to be used with the pilet.
+   */
   (target: PiletMetadata): PiletApi;
 }`);
 });
