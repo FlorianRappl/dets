@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.12.1
+
+- Updated dependencies
+- Fixed issue with function overload
+- Fixed missing comments for interface-defined functions
+
 ## 0.12.0
 
 - Improved type inference of default values

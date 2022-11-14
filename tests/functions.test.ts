@@ -71,3 +71,43 @@ test('should use array literal for readonly modifiers', () => {
   export function foo(): readonly string[];
 }`);
 });
+
+test('should be prepared to include function overload correctly', () => {
+  const result = runTestFor('function10.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface NgComponent {}
+
+  /**
+   * Gives you the ability to use a component from a lazy loaded module.
+   */
+  export interface NgComponentLoader {
+    /**
+     * Uses a component from a lazy loaded module.
+     * @param selector The selector defined for the component to load.
+     */
+    (selector: string): NgComponent;
+  }
+
+  export interface NgModuleDefiner {
+    /**
+     * Defines the module to use when bootstrapping the Angular pilet.
+     * @param ngModule The module to use for running Angular.
+     * @param opts The options to pass when bootstrapping.
+     */
+    <T>(module: Type<T>): void;
+    /**
+     * Defines the module to lazy load for bootstrapping the Angular pilet.
+     * @param getModule The module lazy loader to use for running Angular.
+     * @param opts The options to pass when bootstrapping.
+     * @returns The module ID to be used to reference components.
+     */
+    <T>(getModule: () => Promise<{ default: Type<T> }>): NgComponentLoader;
+  }
+
+  export const foo: NgModuleDefiner;
+
+  export interface Type<T> extends Function {
+    new (...args: Array<any>): T;
+  }
+}`);
+});

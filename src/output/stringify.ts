@@ -67,12 +67,14 @@ export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode:
   const ctor = type.kind === 'new' ? 'new ' : '';
   const prop = (mode & StringifyMode.property) !== 0;
   const paren = (mode & StringifyMode.parenthesis) !== 0;
+  const comment = stringifyComment(type);
   const parameters = stringifyParameters(type.parameters);
   const ta = stringifyTypeArgs(type);
   const rt = stringifyNode(type.returnType);
   const del = prop ? ': ' : ' => ';
   const result = `${ctor}${ta}(${parameters})${del}${rt}`;
-  return paren ? `(${result})` : result;
+  const fn = paren ? `(${result})` : result;
+  return `${comment}${fn}`;
 }
 
 export function stringifyConstructor(type: TypeModelConstructor) {
