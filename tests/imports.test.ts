@@ -144,7 +144,7 @@ test('should infere the default export correctly', () => {
   expect(result).toBe(`import * as ReactRedux from 'react-redux';
 
 declare module "test" {
-  export const _default: ReactRedux.ConnectedComponent<(props: SomeVeryLongComponentNameProps) => JSX.Element, Pick<SomeVeryLongComponentNameProps, "property_a" | "property_b" | "property_c" | "property_d" | "property_e" | "property_f">>;
+  export const _default: ReactRedux.ConnectedComponent<(props: SomeVeryLongComponentNameProps) => JSX.Element, ReactRedux.Omit<SomeVeryLongComponentNameProps, never>>;
 
   export default _default;
 
