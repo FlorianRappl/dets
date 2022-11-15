@@ -1,4 +1,12 @@
-import { Node, TypeChecker, isMethodDeclaration, isMethodSignature, JSDocTagInfo, SymbolDisplayPart, isCallSignatureDeclaration } from 'typescript';
+import {
+  Node,
+  TypeChecker,
+  isMethodDeclaration,
+  isMethodSignature,
+  JSDocTagInfo,
+  SymbolDisplayPart,
+  isCallSignatureDeclaration,
+} from 'typescript';
 
 function isUnique<T>(value: T, index: number, self: Array<T>) {
   return self.indexOf(value) === index;
@@ -59,13 +67,15 @@ export function stringifyJsDocs(doc: { comment?: Array<SymbolDisplayPart>; tags?
     .filter((m) => !removedTags.includes(m.name))
     .map((m) => `@${m.name}${newLineTags.includes(m.name) ? '\n' : m.text ? ' ' : ''}${stringifyJsDocTagText(m.text)}`);
 
-  const result: Array<string> = doc.comment ? doc.comment.map((m) => m.text) : [];
+  const result: Array<string> = doc.comment?.map((m) => m.text) ?? [];
 
-  if (tags) {
-    result.push(...tags);
+  if (tags && result.length) {
+    return [result.join(''), ...tags].join('\n');
+  } else if (tags) {
+    return tags.join('\n');
+  } else {
+    return result.join('');
   }
-
-  return result.join('\n');
 }
 
 function shouldDrop(canDrop: boolean, tags?: Array<JSDocTagInfo>) {

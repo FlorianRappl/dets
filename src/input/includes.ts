@@ -2,6 +2,16 @@ import * as ts from 'typescript';
 import { getPropName, getDeclarationFromNode } from '../helpers';
 import { DeclVisitorContext } from '../types';
 
+function isText(actual: string | Array<ts.SymbolDisplayPart>, expected: string) {
+  if (typeof actual === 'string') {
+    return actual === expected;
+  } else if (Array.isArray(actual)) {
+    return actual.some(m => m.text === expected);
+  }
+
+  return false;
+}
+
 export function includeClauses(
   context: DeclVisitorContext,
   clauses: Array<ts.HeritageClause>,
@@ -15,14 +25,14 @@ export function includeClauses(
     const name = decl?.symbol?.name;
 
     // check if we should remove the clause
-    if (decl && !tags.some((m) => m.name === 'dets_removeclause' && m.text === name)) {
+    if (decl && !tags.some((m) => m.name === 'dets_removeclause' && isText(m.text, name))) {
       types.push(clause);
     }
   }
 
   clauses.push({
     ...newClause,
-    types: ts.createNodeArray(types),
+    types: ts.factory.createNodeArray(types),
   });
 }
 
@@ -30,7 +40,7 @@ export function includeProp(props: Array<ts.TypeElement>, newProp: ts.TypeElemen
   const name = getPropName(newProp.name);
 
   // check if we should remove the prop
-  if (tags.some((m) => m.name === 'dets_removeprop' && m.text === name)) {
+  if (tags.some((m) => m.name === 'dets_removeprop' && isText(m.text, name))) {
     return;
   }
 
