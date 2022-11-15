@@ -192,6 +192,8 @@ export class DeclVisitor {
       case ts.SyntaxKind.NumericLiteral:
       case ts.SyntaxKind.BigIntLiteral:
         return node.literal.text;
+      case ts.SyntaxKind.NullKeyword:
+        return 'null';
       default:
         this.logVerbose(`No match for literal node kind "${node.literal.kind}". Trying to get from type node...`);
         const type = this.context.checker.getTypeFromTypeNode(node) as any;

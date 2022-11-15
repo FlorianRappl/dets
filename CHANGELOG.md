@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.12.2
+
+- Improved comment serialization
+- Updated to use `createNodeArray` from `factory`
+- Added support for the `satisfies` operator
+
 ## 0.12.1
 
 - Updated dependencies
