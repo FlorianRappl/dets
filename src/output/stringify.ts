@@ -3,6 +3,7 @@ import {
   TypeModel,
   TypeModelInterface,
   TypeModelProp,
+  TypeModelTupleProp,
   TypeModelFunction,
   TypeModelIndex,
   TypeModelFunctionParameter,
@@ -34,6 +35,21 @@ export function stringifyComment(type: WithTypeComments) {
   }
 
   return '';
+}
+
+export function stringifyTupleProp(type: TypeModelTupleProp) {
+  const target = type.valueType;
+  const comment = stringifyComment(type);
+  const isOpt = type.optional ? '?' : '';
+  const name = makeIdentifier(type.name);
+
+  if (typeof target === 'undefined') {
+    return `${comment}${name}${isOpt}: any`;
+  } else if (target.kind === 'function') {
+    return `${comment}${name}${isOpt}: ${stringifySignature(target, StringifyMode.default)}`;
+  } else {
+    return `${comment}${name}${isOpt}: ${stringifyNode(target)}`;
+  }
 }
 
 export function stringifyProp(type: TypeModelProp) {
@@ -211,6 +227,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return stringifyInterface(type);
     case 'prop':
       return stringifyProp(type);
+    case 'tuple-prop':
+      return stringifyTupleProp(type);
     case 'ref':
       return `${type.refName}${stringifyTypeArgs(type)}`;
     case 'typeParameter':

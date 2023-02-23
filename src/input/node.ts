@@ -705,11 +705,10 @@ export class DeclVisitor {
 
   private getNamedTuple(node: ts.NamedTupleMember): TypeModel {
     const model: TypeModel = {
-      kind: 'prop',
+      kind: 'tuple-prop',
       name: getPropName(node.name),
       valueType: this.getTypeNode(node.type),
       optional: node.questionToken !== undefined,
-      modifiers: '',
     };
 
     if (node.dotDotDotToken) {

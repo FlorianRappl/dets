@@ -25,6 +25,13 @@ export interface TypeModelProp extends WithTypeComments {
   readonly valueType: TypeModel;
 }
 
+export interface TypeModelTupleProp extends WithTypeComments {
+  readonly name: string;
+  readonly optional: boolean;
+  readonly kind: 'tuple-prop';
+  readonly valueType: TypeModel;
+}
+
 export interface TypeModelPredicate {
   readonly kind: 'predicate';
   readonly name: string;

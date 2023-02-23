@@ -20,6 +20,7 @@ import {
   TypeModelPrefix,
   TypeModelString,
   TypeModelProp,
+  TypeModelTupleProp,
   TypeModelNumber,
   TypeModelVariable,
   TypeModelInterface,
@@ -84,6 +85,7 @@ export type TypeModel =
   | TypeModelConditional
   | TypeModelSubstitution
   | TypeModelNonPrimitive
+  | TypeModelTupleProp
   | TypeModelTuple
   | TypeModelConstructor
   | TypeModelRef

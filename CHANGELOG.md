@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.12.3
+
+- Fixed an issue with named tuples declaring functions
+
 ## 0.12.2
 
 - Improved comment serialization
