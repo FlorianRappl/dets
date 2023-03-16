@@ -37,11 +37,15 @@ export function stringifyComment(type: WithTypeComments) {
   return '';
 }
 
+export function stringifyPropName(name: string | TypeModel) {
+  return typeof name === 'string' ? makeIdentifier(name) : `[${stringifyNode(name)}]`;
+}
+
 export function stringifyTupleProp(type: TypeModelTupleProp) {
   const target = type.valueType;
   const comment = stringifyComment(type);
   const isOpt = type.optional ? '?' : '';
-  const name = makeIdentifier(type.name);
+  const name = stringifyPropName(type.name);
 
   if (typeof target === 'undefined') {
     return `${comment}${name}${isOpt}: any`;
@@ -57,7 +61,7 @@ export function stringifyProp(type: TypeModelProp) {
   const comment = stringifyComment(type);
   const isOpt = type.optional ? '?' : '';
   const modifier = type.modifiers ? `${type.modifiers} ` : '';
-  const name = makeIdentifier(type.name);
+  const name = stringifyPropName(type.name);
 
   if (typeof target === 'undefined') {
     return `${comment}${modifier}${name}${isOpt}: any`;

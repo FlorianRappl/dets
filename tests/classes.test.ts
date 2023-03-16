@@ -321,10 +321,12 @@ test('should be able to handle react classes bundled in', () => {
     (props: {
       [key: string]: any;
     }, propName: string, componentName: string, location: string, propFullName: string): Error | null;
-    "[nominalTypeHack]"?: {
+    [nominalTypeHack]?: {
       type: T;
     };
   }
+
+  export const nominalTypeHack: unique symbol;
 }`);
 });
 

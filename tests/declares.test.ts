@@ -245,10 +245,12 @@ test('should handle manual composition of react typings', () => {
     (props: {
       [key: string]: any;
     }, propName: string, componentName: string, location: string, propFullName: string): Error | null;
-    "[nominalTypeHack]"?: {
+    [nominalTypeHack]?: {
       type: T;
     };
   }
+
+  export const nominalTypeHack: unique symbol;
 }`);
 });
 

@@ -6,7 +6,6 @@ import {
   getModifiers,
   isGlobal,
   fullyQualifiedName,
-  getPropName,
   getParameterName,
   getDeclarationFromNode,
   getTypeRefName,
@@ -275,7 +274,7 @@ export class DeclVisitor {
     if (typeof comment === 'string') {
       return {
         kind: 'prop',
-        name: getPropName(node.name),
+        name: this.getPropName(node.name),
         modifiers: getModifiers(node.symbol),
         optional: node.questionToken !== undefined,
         comment,
@@ -283,7 +282,7 @@ export class DeclVisitor {
       };
     }
 
-    this.logVerbose(`The prop "${getPropName(node.name)}" was skipped due to @ignore.`);
+    this.logVerbose(`The prop "${this.getPropName(node.name)}" was skipped due to @ignore.`);
     return undefined;
   }
 
@@ -340,6 +339,9 @@ export class DeclVisitor {
       } else if (ts.isSetAccessor(node)) {
         const prop = this.getSetAccessor(node);
         prop && props.push(prop);
+      } else if (ts.isPropertySignature(node)) {
+        const prop = this.getNormalProp(node);
+        prop && props.push(prop);
       } else {
         this.logVerbose(`Getting props - assuming node of kind "${node?.kind}" is a normal prop.`);
         const prop = this.getNormalProp(node);
@@ -383,7 +385,7 @@ export class DeclVisitor {
 
     return {
       kind: 'member',
-      name: getPropName(node.name),
+      name: this.getPropName(node.name),
       value: value && this.getExpression(value),
       comment: getComment(this.context.checker, node),
     };
@@ -559,14 +561,14 @@ export class DeclVisitor {
     if (typeof comment === 'string') {
       return {
         kind: 'set',
-        name: getPropName(node.name),
+        name: this.getPropName(node.name),
         parameters: this.getFunctionParameters(node.parameters),
         comment,
         modifiers: getModifiers(node.symbol),
       };
     }
 
-    this.logVerbose(`The setter "${getPropName(node.name)}" was skipped due to @ignore.`);
+    this.logVerbose(`The setter "${this.getPropName(node.name)}" was skipped due to @ignore.`);
     return undefined;
   }
 
@@ -578,14 +580,14 @@ export class DeclVisitor {
     if (typeof comment === 'string') {
       return {
         kind: 'get',
-        name: getPropName(node.name),
+        name: this.getPropName(node.name),
         type: this.getReturnType(node),
         comment,
         modifiers: getModifiers(node.symbol),
       };
     }
 
-    this.logVerbose(`The getter "${getPropName(node.name)}" was skipped due to @ignore.`);
+    this.logVerbose(`The getter "${this.getPropName(node.name)}" was skipped due to @ignore.`);
     return undefined;
   }
 
@@ -693,6 +695,8 @@ export class DeclVisitor {
       return this.getTypeNode(typeNode);
     }
 
+    const decl = getDeclarationFromNode(this.context.checker, node.exprName);
+    this.enqueue(decl);
     return getRef(`typeof ${getTypeRefName(node.exprName)}`);
   }
 
@@ -706,7 +710,7 @@ export class DeclVisitor {
   private getNamedTuple(node: ts.NamedTupleMember): TypeModel {
     const model: TypeModel = {
       kind: 'tuple-prop',
-      name: getPropName(node.name),
+      name: this.getPropName(node.name),
       valueType: this.getTypeNode(node.type),
       optional: node.questionToken !== undefined,
     };
@@ -930,6 +934,22 @@ export class DeclVisitor {
     };
   }
 
+  private getPropName(name: ts.PropertyName): string | TypeModel {
+    if (!name) {
+      return undefined;
+    } else if (ts.isIdentifier(name)) {
+      return name.text;
+    } else if (ts.isStringLiteral(name)) {
+      return name.text;
+    } else if (ts.isNumericLiteral(name)) {
+      return name.text;
+    } else if (ts.isComputedPropertyName(name)) {
+      return this.getExpression(name.expression);
+    } else {
+      return name.getText();
+    }
+  }
+
   private getInterface(node: ts.InterfaceDeclaration): TypeModelInterface {
     const { checker, availableImports, root } = this.context;
     const type = checker.getTypeAtLocation(node);
@@ -947,7 +967,7 @@ export class DeclVisitor {
         clauses.includes(c) || includeClauses(this.context, clauses, c, docs.tags);
       });
       m.members?.forEach((p) => {
-        props.includes(p) || includeProp(props, p, docs.tags);
+        props.includes(p) || includeProp(props, p, prop => this.getPropName(prop), docs.tags);
       });
       m.typeParameters?.forEach((t, i) => {
         typeParameters.length === i && typeParameters.push(t);

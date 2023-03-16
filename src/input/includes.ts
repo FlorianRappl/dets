@@ -1,12 +1,12 @@
 import * as ts from 'typescript';
-import { getPropName, getDeclarationFromNode } from '../helpers';
-import { DeclVisitorContext } from '../types';
+import { getDeclarationFromNode } from '../helpers';
+import { DeclVisitorContext, TypeModel } from '../types';
 
-function isText(actual: string | Array<ts.SymbolDisplayPart>, expected: string) {
+function isText(actual: string | Array<ts.SymbolDisplayPart>, expected: string | TypeModel) {
   if (typeof actual === 'string') {
     return actual === expected;
   } else if (Array.isArray(actual)) {
-    return actual.some(m => m.text === expected);
+    return actual.some((m) => m.text === expected);
   }
 
   return false;
@@ -36,7 +36,12 @@ export function includeClauses(
   });
 }
 
-export function includeProp(props: Array<ts.TypeElement>, newProp: ts.TypeElement, tags: Array<ts.JSDocTagInfo> = []) {
+export function includeProp(
+  props: Array<ts.TypeElement>,
+  newProp: ts.TypeElement,
+  getPropName: (prop: ts.PropertyName) => string | TypeModel,
+  tags: Array<ts.JSDocTagInfo> = [],
+) {
   const name = getPropName(newProp.name);
 
   // check if we should remove the prop

@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.12.4
+
+- Fixed issue with exports of non-exported `typeof` objects
+- Fixed issue with computed indexers
+
 ## 0.12.3
 
 - Fixed an issue with named tuples declaring functions

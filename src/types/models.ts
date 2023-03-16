@@ -18,7 +18,7 @@ export interface TypeModelClass
 }
 
 export interface TypeModelProp extends WithTypeComments {
-  readonly name: string;
+  readonly name: string | TypeModel;
   readonly modifiers: string;
   readonly optional: boolean;
   readonly kind: 'prop';
@@ -26,7 +26,7 @@ export interface TypeModelProp extends WithTypeComments {
 }
 
 export interface TypeModelTupleProp extends WithTypeComments {
-  readonly name: string;
+  readonly name: string | TypeModel;
   readonly optional: boolean;
   readonly kind: 'tuple-prop';
   readonly valueType: TypeModel;
@@ -134,7 +134,7 @@ export interface TypeModelEnumLiteral extends WithTypeComments {
 
 export interface TypeMemberModel extends WithTypeComments {
   readonly kind: 'member';
-  readonly name: string;
+  readonly name: string | TypeModel;
   readonly value: TypeModel;
 }
 
@@ -174,14 +174,14 @@ export interface TypeModelInfer {
 
 export interface TypeModelGetAccessor extends WithTypeComments {
   readonly kind: 'get';
-  readonly name: string;
+  readonly name: string | TypeModel;
   readonly type: TypeModel;
   readonly modifiers: string;
 }
 
 export interface TypeModelSetAccessor extends WithTypeComments {
   readonly kind: 'set';
-  readonly name: string;
+  readonly name: string | TypeModel;
   readonly parameters: Array<TypeModelFunctionParameter>;
   readonly modifiers: string;
 }

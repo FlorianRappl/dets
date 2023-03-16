@@ -455,10 +455,12 @@ test('should include globals from imported globals if bundled in', () => {
     (props: {
       [key: string]: any;
     }, propName: string, componentName: string, location: string, propFullName: string): Error | null;
-    "[nominalTypeHack]"?: {
+    [nominalTypeHack]?: {
       type: T;
     };
   }
+
+  export const nominalTypeHack: unique symbol;
 }`);
 });
 

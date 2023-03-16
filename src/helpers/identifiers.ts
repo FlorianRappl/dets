@@ -2,10 +2,8 @@ import {
   Identifier,
   IndexInfo,
   Symbol,
-  PropertyName,
   isIdentifier,
   isStringLiteral,
-  isNumericLiteral,
   EntityName,
   ThisTypeNode,
   BindingName,
@@ -60,20 +58,6 @@ export function getExportName(name: Identifier | StringLiteral | NumericLiteral)
     return name.text;
   } /* is NumericLiteral */ else {
     return name.text;
-  }
-}
-
-export function getPropName(name: PropertyName): string {
-  if (!name) {
-    return undefined;
-  } else if (isIdentifier(name)) {
-    return name.text;
-  } else if (isStringLiteral(name)) {
-    return name.text;
-  } else if (isNumericLiteral(name)) {
-    return name.text;
-  } /* isComputedPropertyName(name) */ else {
-    return name.getText();
   }
 }
 
