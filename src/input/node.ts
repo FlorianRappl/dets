@@ -238,6 +238,7 @@ export class DeclVisitor {
         kind: 'prop',
         modifiers: getModifiers(node.symbol),
         name: node.symbol.name,
+        //@ts-ignore
         optional: node.questionToken !== undefined,
         valueType: this.getExpression(node.initializer),
       };
@@ -967,7 +968,7 @@ export class DeclVisitor {
         clauses.includes(c) || includeClauses(this.context, clauses, c, docs.tags);
       });
       m.members?.forEach((p) => {
-        props.includes(p) || includeProp(props, p, prop => this.getPropName(prop), docs.tags);
+        props.includes(p) || includeProp(props, p, (prop) => this.getPropName(prop), docs.tags);
       });
       m.typeParameters?.forEach((t, i) => {
         typeParameters.length === i && typeParameters.push(t);
@@ -1152,7 +1153,8 @@ export class DeclVisitor {
       // * exports from a module
       const moduleName = node.moduleSpecifier.text;
       const modules = node.getSourceFile().resolvedModules;
-      const fileName = modules?.get(moduleName)?.resolvedFileName;
+      const result = modules?.get(moduleName);
+      const fileName = result?.resolvedModule?.resolvedFileName ?? result?.resolvedFileName;
 
       if (fileName) {
         const newFile = this.context.program.getSourceFile(fileName);

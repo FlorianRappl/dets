@@ -80,7 +80,7 @@ export function addAvailableImports(context: DeclVisitorContext, imports: Array<
 
     sourceFile.resolvedModules?.forEach((value, key) => {
       const index = remaining.indexOf(key);
-      const fileName = value?.resolvedFileName;
+      const fileName = value?.resolvedModule?.resolvedFileName ?? value?.resolvedFileName;
 
       if (!fileName) {
         context.log.verbose(`Skipping module without filename: ${value}.`);

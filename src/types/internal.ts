@@ -14,6 +14,25 @@ declare module 'typescript' {
   }
 
   interface SourceFile {
-    resolvedModules: ts.Map<ts.ResolvedModuleFull>;
+    resolvedModules: Map<
+      string,
+      {
+        // For ts 4.x
+        resolvedFileName?: string;
+        // For ts 5.x
+        resolvedModule: {
+          resolvedFileName: string | undefined;
+          originalPath: string | undefined;
+          extension: string;
+          isExternalLibraryImport: boolean;
+          packageId: string | undefined;
+          resolvedUsingTsExtension: boolean;
+        };
+        failedLookupLocations: string | undefined;
+        affectingLocations: string | undefined;
+        resolutionDiagnostics: string | undefined;
+        node10Result: string | undefined;
+      }
+    >;
   }
 }

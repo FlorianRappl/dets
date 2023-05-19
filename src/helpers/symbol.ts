@@ -39,6 +39,7 @@ export function getModifiers(symbol: Symbol) {
   const decorators: Array<string> = [];
 
   if (symbol) {
+    // @ts-ignore
     const modifiers = symbol.declarations?.[0]?.modifiers ?? [];
     modifiers.some(isPrivate) && decorators.push('private');
     modifiers.some(isProtected) && decorators.push('protected');
