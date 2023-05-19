@@ -1,15 +1,17 @@
 {
   "name": "dets",
-  "version": "0.12.4",
+  "version": "0.13.0",
   "description": "A TypeScript declaration file bundler.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
     "start": "ts-node example/play.ts",
-    "build": "npm run bundle && npm run transpile && cp lib/cli.js dist/ && npm run declare",
-    "bundle": "ncc build src/index.ts --external typescript --out dist",
+    "build": "npm run bundle && npm run check && npm run declare",
+    "bundle:lib": "esbuild src/index.ts --bundle --external:typescript --outfile=dist/index.js --format=cjs --platform=node --target=es2020",
+    "bundle:cli": "esbuild src/cli.ts --bundle --external:typescript --outfile=dist/cli.js --format=cjs --platform=node --target=es2020",
+    "bundle": "npm run bundle:lib && npm run bundle:cli",
     "declare": "node dist/cli.js --files src/index.ts --imports typescript --types src/index.ts --out dist/index.d.ts",
-    "transpile": "tsc",
+    "check": "tsc --noEmit",
     "test": "jest"
   },
   "keywords": [
@@ -21,10 +23,16 @@
     "generate",
     "types"
   ],
+  "files": [
+    "example",
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
   "author": "Florian Rappl <mail@florian-rappl.de>",
   "license": "MIT",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=14.18.0"
   },
   "repository": {
     "type": "git",
@@ -34,13 +42,11 @@
     "url": "https://github.com/FlorianRappl/dets/issues"
   },
   "bin": {
-    "dets": "./lib/cli.js"
+    "dets": "./dist/cli.js"
   },
-  "dependencies": {
-    "yargs": "^15.4.1"
-  },
+  "dependencies": {},
   "peerDependencies": {
-    "typescript": "3.x || 4.x"
+    "typescript": "4.x || 5.x"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
@@ -51,17 +57,18 @@
     "@types/react-router": "5.1.8",
     "@types/react-router-dom": "5.1.5",
     "@types/styled-components": "5.1.3",
-    "@types/yargs": "^15.0.14",
-    "@zeit/ncc": "^0.22.3",
+    "@types/yargs": "^15.0.15",
     "deox": "^4.0.0",
+    "esbuild": "^0.17.19",
     "glob": "^7.2.3",
     "jest": "^27.5.1",
     "piral-core": "^0.11.8",
-    "redux-saga": "^1.2.1",
+    "redux-saga": "^1.2.3",
     "sample-piral": "^0.13.9",
     "ts-jest": "^27.1.5",
     "ts-node": "^9.1.1",
     "typescript": "4.8.4",
-    "vue": "^2.7.14"
+    "vue": "^2.7.14",
+    "yargs": "^15.4.1"
   }
 }

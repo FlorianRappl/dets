@@ -102,5 +102,5 @@ try {
   runCli();
 } catch {
   console.warn(`TypeScript is missing. Trying to install ...`);
-  runScript('npm install typescript@3.x', resolve(__dirname, '..')).then(runCli);
+  runScript('npm install typescript@^5', resolve(__dirname, '..')).then(runCli);
 }

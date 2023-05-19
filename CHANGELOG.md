@@ -1,5 +1,13 @@
 # Changelog for dets
 
+## 0.13.0
+
+- Changed minimum supported version of Node.js to 14.18
+- Changed build system from ncc to esbuild
+- Removed compatibility with TypeScript 3
+- Added compatibility with TypeScript 5
+- Updated dependencies
+
 ## 0.12.4
 
 - Fixed issue with exports of non-exported `typeof` objects
