@@ -617,8 +617,17 @@ export class DeclVisitor {
 
   private getExpressionWithTypeArguments(node: ts.ExpressionWithTypeArguments): TypeModelRef {
     const decl = getDeclarationFromNode(this.context.checker, node.expression);
-    this.enqueue(decl);
-    return getRef(this.normalizeName(decl), this.getTypeArguments(node.typeArguments));
+
+    if (decl) {
+      this.enqueue(decl);
+      return getRef(this.normalizeName(decl), this.getTypeArguments(node.typeArguments));
+    }
+
+    return {
+      kind: 'ref',
+      refName: 'any',
+      types: [],
+    };
   }
 
   private getArray(node: ts.ArrayTypeNode): TypeModelRef {

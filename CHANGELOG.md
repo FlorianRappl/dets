@@ -2,6 +2,10 @@
 
 ## 0.13.0
 
+- Fixed issue with undefined behavior in case of unknown symbols
+
+## 0.13.0
+
 - Changed minimum supported version of Node.js to 14.18
 - Changed build system from ncc to esbuild
 - Removed compatibility with TypeScript 3
