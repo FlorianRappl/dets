@@ -196,6 +196,16 @@ export function createExcludePlugin(moduleNames: Array<string>): DetsPlugin {
   };
 }
 
+export function createDiffPlugin(originalFile: string): DetsPlugin {
+  return {
+    type: 'after-process',
+    name: 'diff-plugin',
+    run(context) {
+      //TODO
+    },
+  };
+}
+
 export interface DeclOptions extends DetsOptions {
   /**
    * The name of the declaration module.

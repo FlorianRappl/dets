@@ -1070,7 +1070,7 @@ declare module "test" {
 }`);
 });
 
-test('should handle simple declaration merging (piral-core)', () => {
+test('should handle simple declaration merging w/o module wrapper (piral-core)', () => {
   const result = runTestFor('deox.ts', {
     imports: ['react', 'react-router', '@libre/atom'],
     types: [getPiralCoreTypes()],
