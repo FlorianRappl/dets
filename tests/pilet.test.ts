@@ -15,5 +15,14 @@ test('should handle simple declaration diffing (pilet from app shell)', async ()
     noModuleDeclaration: true,
     plugins: [createDiffPlugin(shell)],
   });
-  expect(result).toBe(``);
+  expect(result).toBe(`import * as React from 'react';
+
+/**
+ * Custom extension slots outside of piral-core.
+ */
+export interface PiralCustomExtensionSlotMap {
+  foo: {
+    num: number;
+  };
+}`);
 });

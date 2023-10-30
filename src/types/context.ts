@@ -21,6 +21,7 @@ export interface DeclVisitorContext {
   checker: TypeChecker;
   program: Program;
   exports: Array<Node>;
+  imports: Array<string>;
   usedImports: Array<string>;
   availableImports: ImportRefs;
   log: Logger;
