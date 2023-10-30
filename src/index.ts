@@ -109,29 +109,35 @@ export function addAmbientModules(context: DeclVisitorContext, imports: Array<st
   }
 }
 
-function runAll(context: DeclVisitorContext, plugins: Array<DetsPlugin>, type: DetsPlugin['type']) {
+async function runAll(context: DeclVisitorContext, plugins: Array<DetsPlugin>, type: DetsClassicPlugin['type']) {
   const { log } = context;
   log.verbose(`Running the ${type}" plugins.`);
-  plugins
-    .filter((p) => p.type === type)
-    .forEach((p) => {
-      try {
-        p.run(context);
-      } catch (ex) {
-        log.error(`The plugin "${p.name}" crashed: ${ex}`);
+
+  for (const plugin of plugins) {
+    try {
+      if ('type' in plugin) {
+        if (plugin.type === type) {
+          await plugin.run(context);
+        }
+      } else if (typeof plugin[type] === 'function') {
+        const runner = plugin[type];
+        await runner.call(plugin, context);
       }
-    });
+    } catch (ex) {
+      log.error(`The plugin "${plugin.name}" crashed: ${ex}`);
+    }
+  }
 }
 
-export function processVisitorContext(context: DeclVisitorContext, plugins: Array<DetsPlugin>) {
+export async function processVisitorContext(context: DeclVisitorContext, plugins: Array<DetsPlugin>) {
   const { log } = context;
-  runAll(context, plugins, 'before-init');
+  await runAll(context, plugins, 'before-init');
   const visitor = new DeclVisitor(context);
-  runAll(context, plugins, 'before-process');
+  await runAll(context, plugins, 'before-process');
   log.verbose('Processing the queue.');
   visitor.processQueue();
-  runAll(context, plugins, 'after-process');
-  runAll(context, plugins, 'before-stringify');
+  await runAll(context, plugins, 'after-process');
+  await runAll(context, plugins, 'before-stringify');
   log.verbose('Generating the string representation.');
 }
 
@@ -168,7 +174,7 @@ export interface DetsOptions {
   noModuleDeclaration?: boolean;
 }
 
-export interface DetsPlugin {
+export interface DetsClassicPlugin {
   /**
    * Type of the plugin.
    */
@@ -181,14 +187,42 @@ export interface DetsPlugin {
    * Callback to run when invoking the plugin.
    * @param context The context to perform the work on.
    */
-  run(context: DeclVisitorContext): void;
+  run(context: DeclVisitorContext): void | Promise<void>;
 }
+
+export interface DetsModernPlugin {
+  /**
+   * The name of the plugin (emitted in case of problems).
+   */
+  name: string;
+  /**
+   * Callback to run when invoking the plugin.
+   * @param context The context to perform the work on.
+   */
+  'before-init'?(context: DeclVisitorContext): void | Promise<void>;
+  /**
+   * Callback to run when invoking the plugin.
+   * @param context The context to perform the work on.
+   */
+  'before-process'?(context: DeclVisitorContext): void | Promise<void>;
+  /**
+   * Callback to run when invoking the plugin.
+   * @param context The context to perform the work on.
+   */
+  'before-stringify'?(context: DeclVisitorContext): void | Promise<void>;
+  /**
+   * Callback to run when invoking the plugin.
+   * @param context The context to perform the work on.
+   */
+  'after-process'?(context: DeclVisitorContext): void | Promise<void>;
+}
+
+export type DetsPlugin = DetsClassicPlugin | DetsModernPlugin;
 
 export function createExcludePlugin(moduleNames: Array<string>): DetsPlugin {
   return {
-    type: 'after-process',
     name: 'exclude-plugin',
-    run(context) {
+    'after-process'(context) {
       for (const name of moduleNames) {
         delete context.modules[name];
       }
@@ -198,10 +232,10 @@ export function createExcludePlugin(moduleNames: Array<string>): DetsPlugin {
 
 export function createDiffPlugin(originalFile: string): DetsPlugin {
   return {
-    type: 'after-process',
     name: 'diff-plugin',
-    run(context) {
+    'before-init'(context) {
       //TODO
+      context
     },
   };
 }
@@ -234,7 +268,12 @@ export interface DeclOptions extends DetsOptions {
   }>;
 }
 
-export function generateDeclaration(options: DeclOptions) {
+/**
+ * Generates a new declaration using the provided options.
+ * @param options The options for declaration generation.
+ * @returns The content of the declaration.
+ */
+export async function generateDeclaration(options: DeclOptions) {
   const {
     name,
     root = process.cwd(),
@@ -281,7 +320,7 @@ export function generateDeclaration(options: DeclOptions) {
 
   log.verbose(`Processing the visitor context.`);
 
-  processVisitorContext(context, plugins);
+  await processVisitorContext(context, plugins);
   return stringifyDeclaration(context);
 }
 
@@ -296,7 +335,12 @@ export interface TypingOptions extends DetsOptions {
   types: Array<string>;
 }
 
-export function retrieveTypings(options: TypingOptions) {
+/**
+ * Retrieves the typings using the given typing options.
+ * @param options The options for the typing generation.
+ * @returns The retrieved typings module.
+ */
+export async function retrieveTypings(options: TypingOptions) {
   const name = 'main';
   const {
     root = process.cwd(),
@@ -331,6 +375,6 @@ export function retrieveTypings(options: TypingOptions) {
 
   log.verbose(`Processing the visitor context.`);
 
-  processVisitorContext(context, plugins);
+  await processVisitorContext(context, plugins);
   return context.modules.main;
 }

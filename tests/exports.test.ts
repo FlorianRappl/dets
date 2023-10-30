@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should handle nested selected exports', () => {
-  const result = runTestFor('exports1.ts');
+test('should handle nested selected exports', async () => {
+  const result = await runTestFor('exports1.ts');
   expect(result).toBe(`declare module "test" {
   export const Fail3: "";
 
@@ -9,8 +9,8 @@ test('should handle nested selected exports', () => {
 }`);
 });
 
-test('should handle nested star exports', () => {
-  const result = runTestFor('exports2.ts');
+test('should handle nested star exports', async () => {
+  const result = await runTestFor('exports2.ts');
   expect(result).toBe(`declare module "test" {
   export function foo(): string;
 
@@ -26,15 +26,15 @@ test('should handle nested star exports', () => {
 }`);
 });
 
-test('should handle deeply nested selected export', () => {
-  const result = runTestFor('exports3.ts');
+test('should handle deeply nested selected export', async () => {
+  const result = await runTestFor('exports3.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {}
 }`);
 });
 
-test('should handle nested selected export with rename', () => {
-  const result = runTestFor('exports4.ts');
+test('should handle nested selected export with rename', async () => {
+  const result = await runTestFor('exports4.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {}
 

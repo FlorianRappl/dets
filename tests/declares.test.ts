@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should handle manual composition of react typings', () => {
-  const result = runTestFor('react3.ts');
+test('should handle manual composition of react typings', async () => {
+  const result = await runTestFor('react3.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass extends Component<{}> {
     constructor(props: {});
@@ -254,15 +254,15 @@ test('should handle manual composition of react typings', () => {
 }`);
 });
 
-test('does include null in an union', () => {
-  const result = runTestFor('null1.ts');
+test('does include null in an union', async () => {
+  const result = await runTestFor('null1.ts');
   expect(result).toBe(`declare module "test" {
   export type Foo = "foo" | null;
 }`);
 });
 
-test('does include an union prop in an interface', () => {
-  const result = runTestFor('null2.ts');
+test('does include an union prop in an interface', async () => {
+  const result = await runTestFor('null2.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {
     bar: "foo" | null;

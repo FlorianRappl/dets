@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should handle renaming of default exports', () => {
-  const result = runTestFor('defaults1.ts');
+test('should handle renaming of default exports', async () => {
+  const result = await runTestFor('defaults1.ts');
   expect(result).toBe(`declare module "test" {
   export function one(): string;
 
@@ -9,15 +9,15 @@ test('should handle renaming of default exports', () => {
 }`);
 });
 
-test('should handle renaming of function default exports', () => {
-  const result = runTestFor('defaults2.ts');
+test('should handle renaming of function default exports', async () => {
+  const result = await runTestFor('defaults2.ts');
   expect(result).toBe(`declare module "test" {
   export function three(): string;
 }`);
 });
 
-test('should handle a plain default exports', () => {
-  const result = runTestFor('defaults3.ts');
+test('should handle a plain default exports', async () => {
+  const result = await runTestFor('defaults3.ts');
   expect(result).toBe(`declare module "test" {
   export default foo;
 
@@ -25,8 +25,8 @@ test('should handle a plain default exports', () => {
 }`);
 });
 
-test('should handle a default class', () => {
-  const result = runTestFor('defaults4.ts');
+test('should handle a default class', async () => {
+  const result = await runTestFor('defaults4.ts');
   expect(result).toBe(`declare module "test" {
   export default class {
     togglePopover(): void;

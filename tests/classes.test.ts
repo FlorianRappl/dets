@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should be able to handle exported classes with constructor', () => {
-  const result = runTestFor('class1.ts');
+test('should be able to handle exported classes with constructor', async () => {
+  const result = await runTestFor('class1.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
     constructor(private value: string);
@@ -10,8 +10,8 @@ test('should be able to handle exported classes with constructor', () => {
 }`);
 });
 
-test('should be able to handle exported classes with differnet modifiers', () => {
-  const result = runTestFor('class2.ts');
+test('should be able to handle exported classes with differnet modifiers', async () => {
+  const result = await runTestFor('class2.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
     constructor(protected bar: boolean, private value: string);
@@ -22,8 +22,8 @@ test('should be able to handle exported classes with differnet modifiers', () =>
 }`);
 });
 
-test('should be able to handle exported generic classes with explicit parameters', () => {
-  const result = runTestFor('class3.ts');
+test('should be able to handle exported generic classes with explicit parameters', async () => {
+  const result = await runTestFor('class3.ts');
   expect(result).toBe(`declare module "test" {
   export class OtherClass<P, S> {}
 
@@ -33,8 +33,8 @@ test('should be able to handle exported generic classes with explicit parameters
 }`);
 });
 
-test('should be able to handle exported generic classes with implicit parameters', () => {
-  const result = runTestFor('class4.ts');
+test('should be able to handle exported generic classes with implicit parameters', async () => {
+  const result = await runTestFor('class4.ts');
   expect(result).toBe(`declare module "test" {
   export class OtherClass<P, S = {}> {}
 
@@ -44,8 +44,8 @@ test('should be able to handle exported generic classes with implicit parameters
 }`);
 });
 
-test('should be able to handle class with implemented interface', () => {
-  const result = runTestFor('class5.ts');
+test('should be able to handle class with implemented interface', async () => {
+  const result = await runTestFor('class5.ts');
   expect(result).toBe(`declare module "test" {
   export class OtherClass<P, S = {}> {}
 
@@ -57,8 +57,8 @@ test('should be able to handle class with implemented interface', () => {
 }`);
 });
 
-test('should be able to handle react classes from externals', () => {
-  const result = runTestFor('class6.tsx', {
+test('should be able to handle react classes from externals', async () => {
+  const result = await runTestFor('class6.tsx', {
     imports: ['react'],
   });
   expect(result).toBe(`import * as React from 'react';
@@ -71,8 +71,8 @@ declare module "test" {
 }`);
 });
 
-test('should be able to handle react classes bundled in', () => {
-  const result = runTestFor('class6.tsx', {
+test('should be able to handle react classes bundled in', async () => {
+  const result = await runTestFor('class6.tsx', {
     imports: [],
   });
   expect(result).toBe(`declare module "test" {
@@ -330,8 +330,8 @@ test('should be able to handle react classes bundled in', () => {
 }`);
 });
 
-test('should be able to handle static members', () => {
-  const result = runTestFor('class7.ts');
+test('should be able to handle static members', async () => {
+  const result = await runTestFor('class7.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
     static foo: number;
@@ -339,8 +339,8 @@ test('should be able to handle static members', () => {
 }`);
 });
 
-test('should be able to handle static members with modifiers', () => {
-  const result = runTestFor('class8.ts');
+test('should be able to handle static members with modifiers', async () => {
+  const result = await runTestFor('class8.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
     static foo: number;
@@ -350,8 +350,8 @@ test('should be able to handle static members with modifiers', () => {
 }`);
 });
 
-test('should remove inherited props', () => {
-  const result = runTestFor('class9.ts');
+test('should remove inherited props', async () => {
+  const result = await runTestFor('class9.ts');
   expect(result).toBe(`declare module "test" {
   export class Bar {
     foo: number;
@@ -362,8 +362,8 @@ test('should remove inherited props', () => {
 }`);
 });
 
-test('should be able to get and set accessors', () => {
-  const result = runTestFor('class10.ts');
+test('should be able to get and set accessors', async () => {
+  const result = await runTestFor('class10.ts');
   expect(result).toBe(`declare module "test" {
   export class Foo {
     get foo(): number;
@@ -372,8 +372,8 @@ test('should be able to get and set accessors', () => {
 }`);
 });
 
-test('should be able to handle readonly modifier', () => {
-  const result = runTestFor('class11.ts');
+test('should be able to handle readonly modifier', async () => {
+  const result = await runTestFor('class11.ts');
   expect(result).toBe(`declare module "test" {
   export class C {
     static readonly StaticSymbol: unique symbol;
@@ -381,8 +381,8 @@ test('should be able to handle readonly modifier', () => {
 }`);
 });
 
-test('should be able to merge a class with an interface', () => {
-  const result = runTestFor('class12.ts');
+test('should be able to merge a class with an interface', async () => {
+  const result = await runTestFor('class12.ts');
   expect(result).toBe(`declare module "test" {
   export interface Bar {
     bar: string;

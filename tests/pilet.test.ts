@@ -2,9 +2,9 @@ import { resolve } from 'path';
 import { createDiffPlugin } from '../src';
 import { runTestFor } from './helper';
 
-test('should handle simple declaration diffing (pilet from app shell)', () => {
+test('should handle simple declaration diffing (pilet from app shell)', async () => {
   const shell = resolve(__dirname, 'assets', 'pilet-shell.ts');
-  const result = runTestFor('pilet-entry.ts', {
+  const result = await runTestFor('pilet-entry.ts', {
     name: 'pilet',
     imports: ['react'],
     types: [],

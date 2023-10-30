@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should handle inheritance of interfaces without dropping', () => {
-  const result = runTestFor('interface1.ts');
+test('should handle inheritance of interfaces without dropping', async () => {
+  const result = await runTestFor('interface1.ts');
   expect(result).toBe(`declare module "test" {
   export interface CustomMerged {
     C: string;
@@ -15,8 +15,8 @@ test('should handle inheritance of interfaces without dropping', () => {
 }`);
 });
 
-test('should work with inheritance and types from consts', () => {
-  const result = runTestFor('interface2.ts');
+test('should work with inheritance and types from consts', async () => {
+  const result = await runTestFor('interface2.ts');
   expect(result).toBe(`declare module "test" {
   export type Test1 = {
     foo: string;
@@ -32,8 +32,8 @@ test('should work with inheritance and types from consts', () => {
 }`);
 });
 
-test('should work with type alias of constants', () => {
-  const result = runTestFor('interface3.ts');
+test('should work with type alias of constants', async () => {
+  const result = await runTestFor('interface3.ts');
   expect(result).toBe(`declare module "test" {
   export type MenuType = "user" | "footer";
 
@@ -43,8 +43,8 @@ test('should work with type alias of constants', () => {
 }`);
 });
 
-test('should work with boolean return narrowing', () => {
-  const result = runTestFor('interface4.ts');
+test('should work with boolean return narrowing', async () => {
+  const result = await runTestFor('interface4.ts');
   expect(result).toBe(`declare module "test" {
   export interface Type {
     isUnion(): this is UnionType;
@@ -54,8 +54,8 @@ test('should work with boolean return narrowing', () => {
 }`);
 });
 
-test('should work with merging', () => {
-  const result = runTestFor('interface5.ts');
+test('should work with merging', async () => {
+  const result = await runTestFor('interface5.ts');
   expect(result).toBe(`declare module "test" {
   export interface Merged {
     kind: "hello";
@@ -66,8 +66,8 @@ test('should work with merging', () => {
 }`);
 });
 
-test('should handle overloads as-is', () => {
-  const result = runTestFor('interface6.ts');
+test('should handle overloads as-is', async () => {
+  const result = await runTestFor('interface6.ts');
   expect(result).toBe(`declare module "test" {
   export interface Overloads {
     /**
@@ -86,8 +86,8 @@ test('should handle overloads as-is', () => {
 }`);
 });
 
-test('should take over JSDoc comments and tags', () => {
-  const result = runTestFor('interface7.ts');
+test('should take over JSDoc comments and tags', async () => {
+  const result = await runTestFor('interface7.ts');
   expect(result).toBe(`declare module "test" {
   export interface MethodsWithJSDoc {
     /**

@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should be able to handle default enums', () => {
-  const result = runTestFor('enum1.ts');
+test('should be able to handle default enums', async () => {
+  const result = await runTestFor('enum1.ts');
   expect(result).toBe(`declare module "test" {
   export enum Foo {
     first,
@@ -10,8 +10,8 @@ test('should be able to handle default enums', () => {
 }`);
 });
 
-test('should be able to handle enums with custom values', () => {
-  const result = runTestFor('enum2.ts');
+test('should be able to handle enums with custom values', async () => {
+  const result = await runTestFor('enum2.ts');
   expect(result).toBe(`declare module "test" {
   export enum Foo {
     first = 2,
@@ -20,8 +20,8 @@ test('should be able to handle enums with custom values', () => {
 }`);
 });
 
-test('should be able to handle const enums with values', () => {
-  const result = runTestFor('enum3.ts');
+test('should be able to handle const enums with values', async () => {
+  const result = await runTestFor('enum3.ts');
   expect(result).toBe(`declare module "test" {
   export const enum Foo {
     first = "first",
@@ -30,8 +30,8 @@ test('should be able to handle const enums with values', () => {
 }`);
 });
 
-test('should be able to handle exported members', () => {
-  const result = runTestFor('enum4.ts');
+test('should be able to handle exported members', async () => {
+  const result = await runTestFor('enum4.ts');
   expect(result).toBe(`declare module "test" {
   export type Bar = Foo.first;
 

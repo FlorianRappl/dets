@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should be able to get docs of inferred type', () => {
-  const result = runTestFor('doc1.ts');
+test('should be able to get docs of inferred type', async () => {
+  const result = await runTestFor('doc1.ts');
   expect(result).toBe(`declare module "test" {
   /**
    * Object description

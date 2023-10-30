@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should be able to handle a simple mapped type', () => {
-  const result = runTestFor('type1.ts');
+test('should be able to handle a simple mapped type', async () => {
+  const result = await runTestFor('type1.ts');
   expect(result).toBe(`declare module "test" {
   export type Foo = {
     [f: string]: string;
@@ -9,8 +9,8 @@ test('should be able to handle a simple mapped type', () => {
 }`);
 });
 
-test('should handle mapping of keyof with selection', () => {
-  const result = runTestFor('type2.ts');
+test('should handle mapping of keyof with selection', async () => {
+  const result = await runTestFor('type2.ts');
   expect(result).toBe(`declare module "test" {
   export type FunctionPropertyNames<T> = {
     [K in keyof T]: T[K] extends Function ? K : never;
@@ -18,29 +18,29 @@ test('should handle mapping of keyof with selection', () => {
 }`);
 });
 
-test('should handle inference of arguments in conditionals', () => {
-  const result = runTestFor('type3.ts');
+test('should handle inference of arguments in conditionals', async () => {
+  const result = await runTestFor('type3.ts');
   expect(result).toBe(`declare module "test" {
   export type RemainingArgs<T> = T extends (_: any, ...args: infer U) => any ? U : never;
 }`);
 });
 
-test('should correctly display conditionals of generics', () => {
-  const result = runTestFor('type4.ts');
+test('should correctly display conditionals of generics', async () => {
+  const result = await runTestFor('type4.ts');
   expect(result).toBe(`declare module "test" {
   export type Diff<T, U> = T extends U ? never : T;
 }`);
 });
 
-test('should replicate the type name type alias', () => {
-  const result = runTestFor('type5.ts');
+test('should replicate the type name type alias', async () => {
+  const result = await runTestFor('type5.ts');
   expect(result).toBe(`declare module "test" {
   export type TypeName<T> = T extends string ? "string" : T extends number ? "number" : T extends boolean ? "boolean" : T extends undefined ? "undefined" : T extends Function ? "function" : "object";
 }`);
 });
 
-test('should not expand a keyof operator usage', () => {
-  const result = runTestFor('type6.ts');
+test('should not expand a keyof operator usage', async () => {
+  const result = await runTestFor('type6.ts');
   expect(result).toBe(`declare module "test" {
   export interface CustomMerged {
     C: string;
@@ -58,8 +58,8 @@ test('should not expand a keyof operator usage', () => {
 }`);
 });
 
-test('should export literal types', () => {
-  const result = runTestFor('type7.ts');
+test('should export literal types', async () => {
+  const result = await runTestFor('type7.ts');
   expect(result).toBe(`declare module "test" {
   export type Fail1 = string;
 
@@ -67,8 +67,8 @@ test('should export literal types', () => {
 }`);
 });
 
-test('should export computed types with dotted arguments', () => {
-  const result = runTestFor('type8.ts');
+test('should export computed types with dotted arguments', async () => {
+  const result = await runTestFor('type8.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {
     createDataProvider<TItem extends {}, TReducers extends DataProviderReducers<TItem>>(options: DataProviderOptions<TItem, TReducers>): DataConnector<TItem, TReducers>;
@@ -105,8 +105,8 @@ test('should export computed types with dotted arguments', () => {
 }`);
 });
 
-test('should be able to infer correctly', () => {
-  const result = runTestFor('type9.ts');
+test('should be able to infer correctly', async () => {
+  const result = await runTestFor('type9.ts');
   expect(result).toBe(`declare module "test" {
   export type KeyValue = {
     COMPONENT_ERROR__LNK_LABEL: string;

@@ -1,9 +1,9 @@
 import { resolve } from 'path';
 import { retrieveTypings } from '../src';
 
-test('should be able to get exported types of enum', () => {
+test('should be able to get exported types of enum', async () => {
   const file = resolve(__dirname, 'assets', 'enum1.ts');
-  const result = retrieveTypings({
+  const result = await retrieveTypings({
     types: [file],
   });
   expect(result).toEqual([
@@ -30,9 +30,9 @@ test('should be able to get exported types of enum', () => {
   ]);
 });
 
-test('should be able to get exports from sub-modules', () => {
+test('should be able to get exports from sub-modules', async () => {
   const file = resolve(__dirname, 'assets', 'defaults1.ts');
-  const result = retrieveTypings({
+  const result = await retrieveTypings({
     types: [file],
   });
   expect(result).toEqual([

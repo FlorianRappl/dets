@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should be able to handle type fest delimiters', () => {
-  const result = runTestFor('type-fest1.ts');
+test('should be able to handle type fest delimiters', async () => {
+  const result = await runTestFor('type-fest1.ts');
   expect(result).toBe(`declare module "test" {
   export type UpperCaseCharacters = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z";
 

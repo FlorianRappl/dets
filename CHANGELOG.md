@@ -1,9 +1,12 @@
 # Changelog for dets
 
-## 0.13.1
+## 0.14.0
 
 - Updated dependencies
 - Fixed issue with undefined behavior in case of unknown symbols
+- Updated `retrieveTypings` to be async in nature returning a `Promise`
+- Updated `generateDeclaration` to be async in nature returning a `Promise`
+- Added new modern plugin API with multi lifecycle capabilities
 
 ## 0.13.0
 

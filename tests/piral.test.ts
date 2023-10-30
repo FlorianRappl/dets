@@ -1,7 +1,7 @@
 import { runTestFor, getPiralBaseApi, getPiralCoreTypes } from './helper';
 
-test('should handle simple declaration merging (piral-core)', () => {
-  const result = runTestFor('deox.ts', {
+test('should handle simple declaration merging (piral-core)', async () => {
+  const result = await runTestFor('deox.ts', {
     imports: ['react', 'react-router', '@libre/atom'],
     types: [getPiralCoreTypes()],
     apis: [getPiralBaseApi()],
@@ -1070,8 +1070,8 @@ declare module "test" {
 }`);
 });
 
-test('should handle simple declaration merging w/o module wrapper (piral-core)', () => {
-  const result = runTestFor('deox.ts', {
+test('should handle simple declaration merging w/o module wrapper (piral-core)', async () => {
+  const result = await runTestFor('deox.ts', {
     imports: ['react', 'react-router', '@libre/atom'],
     types: [getPiralCoreTypes()],
     apis: [getPiralBaseApi()],

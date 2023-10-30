@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('should handle imports from externals (deox)', () => {
-  const result = runTestFor('deox.ts', {
+test('should handle imports from externals (deox)', async () => {
+  const result = await runTestFor('deox.ts', {
     imports: ['deox'],
   });
   expect(result).toBe(`import * as Deox from 'deox';
@@ -55,8 +55,8 @@ declare module "test" {
 }`);
 });
 
-test('should handle complex types from externals (styled-components)', () => {
-  const result = runTestFor('styled-components.ts', {
+test('should handle complex types from externals (styled-components)', async () => {
+  const result = await runTestFor('styled-components.ts', {
     imports: ['styled-components'],
   });
   expect(result).toBe(`import * as StyledComponents from 'styled-components';
@@ -66,8 +66,8 @@ declare module "test" {
 }`);
 });
 
-test('should handle jsx from externals (react)', () => {
-  const result = runTestFor('react1.tsx', {
+test('should handle jsx from externals (react)', async () => {
+  const result = await runTestFor('react1.tsx', {
     imports: ['react'],
   });
   expect(result).toBe(`import * as React from 'react';
@@ -77,8 +77,8 @@ declare module "test" {
 }`);
 });
 
-test('should handle keyof operator correctly (react)', () => {
-  const result = runTestFor('react2.ts', {
+test('should handle keyof operator correctly (react)', async () => {
+  const result = await runTestFor('react2.ts', {
     imports: ['react'],
   });
   expect(result).toBe(`import * as React from 'react';
@@ -100,8 +100,8 @@ declare module "test" {
 }`);
 });
 
-test('should handle alias of imports correctly (react)', () => {
-  const result = runTestFor('react4.ts', {
+test('should handle alias of imports correctly (react)', async () => {
+  const result = await runTestFor('react4.ts', {
     imports: ['react'],
   });
   expect(result).toBe(`import * as React from 'react';
@@ -115,8 +115,8 @@ declare module "test" {
 }`);
 });
 
-test('should handle partial imports in arrays', () => {
-  const result = runTestFor('react5.ts');
+test('should handle partial imports in arrays', async () => {
+  const result = await runTestFor('react5.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {
     elements: Array<ReactText>;
@@ -126,8 +126,8 @@ test('should handle partial imports in arrays', () => {
 }`);
 });
 
-test('should handle imports from the right modules', () => {
-  const result = runTestFor('import1.ts', {
+test('should handle imports from the right modules', async () => {
+  const result = await runTestFor('import1.ts', {
     imports: ['node'],
   });
   expect(result).toBe(`import * as Events from 'events';
@@ -137,8 +137,8 @@ declare module "test" {
 }`);
 });
 
-test('should infer the default export correctly', () => {
-  const result = runTestFor('react6.tsx', {
+test('should infer the default export correctly', async () => {
+  const result = await runTestFor('react6.tsx', {
     imports: ['react', 'react-redux'],
   });
   expect(result).toBe(`import * as ReactRedux from 'react-redux';
@@ -159,8 +159,8 @@ declare module "test" {
 }`);
 });
 
-test('should respect the global.d.ts in the Node typings', () => {
-  const result = runTestFor('import2.ts', {
+test('should respect the global.d.ts in the Node typings', async () => {
+  const result = await runTestFor('import2.ts', {
     imports: ['node'],
   });
   expect(result).toBe(`declare module "test" {
@@ -172,8 +172,8 @@ test('should respect the global.d.ts in the Node typings', () => {
 }`);
 });
 
-test('should import from the right module - even if submodule', () => {
-  const result = runTestFor('saga1.ts', {
+test('should import from the right module - even if submodule', async () => {
+  const result = await runTestFor('saga1.ts', {
     imports: ['redux-saga/effects'],
   });
   expect(result).toBe(`import * as ReduxSagaEffects from 'redux-saga/effects';
@@ -185,8 +185,8 @@ declare module "test" {
 }`);
 });
 
-test('should avoid name clashes when importing', () => {
-  const result = runTestFor('import3.ts');
+test('should avoid name clashes when importing', async () => {
+  const result = await runTestFor('import3.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {
     b: string;
@@ -201,8 +201,8 @@ test('should avoid name clashes when importing', () => {
 }`);
 });
 
-test('should avoid name clashes when aliasing', () => {
-  const result = runTestFor('import4.ts');
+test('should avoid name clashes when aliasing', async () => {
+  const result = await runTestFor('import4.ts');
   expect(result).toBe(`declare module "test" {
   export type Foo<T> = Foo___1<T>;
 
@@ -210,8 +210,8 @@ test('should avoid name clashes when aliasing', () => {
 }`);
 });
 
-test('should include globals from imported globals if bundled in', () => {
-  const result = runTestFor('react7.ts');
+test('should include globals from imported globals if bundled in', async () => {
+  const result = await runTestFor('react7.ts');
   expect(result).toBe(`declare module "test" {
   export const foo: JSX_Element;
 
@@ -464,8 +464,8 @@ test('should include globals from imported globals if bundled in', () => {
 }`);
 });
 
-test('should not include globals from imported globals if specified', () => {
-  const result = runTestFor('react7.ts', {
+test('should not include globals from imported globals if specified', async () => {
+  const result = await runTestFor('react7.ts', {
     imports: ['react']
   });
   expect(result).toBe(`declare module "test" {
@@ -473,8 +473,8 @@ test('should not include globals from imported globals if specified', () => {
 }`);
 });
 
-test('should not include types from imported libs when indirectly referenced', () => {
-  const result = runTestFor('vue1.ts', {
+test('should not include types from imported libs when indirectly referenced', async () => {
+  const result = await runTestFor('vue1.ts', {
     imports: ['vue']
   });
   expect(result).toBe(`import * as Vue from 'vue';
@@ -486,8 +486,8 @@ declare module "test" {
 }`);
 });
 
-test('should not include default export in case of import', () => {
-  const result = runTestFor('vue2.ts', {
+test('should not include default export in case of import', async () => {
+  const result = await runTestFor('vue2.ts', {
     imports: ['vue']
   });
   expect(result).toBe(`import * as Vue from 'vue';
@@ -499,8 +499,8 @@ declare module "test" {
 }`);
 });
 
-test('should allow using import equals statement', () => {
-  const result = runTestFor('import5.ts');
+test('should allow using import equals statement', async () => {
+  const result = await runTestFor('import5.ts');
   expect(result).toBe(`declare module "test" {
   export type Foo<T> = Foo___1<T>;
 
@@ -508,8 +508,8 @@ test('should allow using import equals statement', () => {
 }`);
 });
 
-test('should evaluate type with typeof correctly in flat imports', () => {
-  const result = runTestFor('import6.ts');
+test('should evaluate type with typeof correctly in flat imports', async () => {
+  const result = await runTestFor('import6.ts');
   expect(result).toBe(`declare module "test" {
   export interface Api {
     foo: {
@@ -523,8 +523,8 @@ test('should evaluate type with typeof correctly in flat imports', () => {
   }
 }`);
 });
-test('should evaluate type with typeof correctly in nested imports', () => {
-  const result = runTestFor('import7.ts');
+test('should evaluate type with typeof correctly in nested imports', async () => {
+  const result = await runTestFor('import7.ts');
   expect(result).toBe(`declare module "test" {
   export interface Api {
     foo: {

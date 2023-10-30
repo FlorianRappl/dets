@@ -1,7 +1,7 @@
 import { runTestFor } from './helper';
 
-test('Should get the right property name of a const member expression', () => {
-  const result = runTestFor('prop1.ts');
+test('Should get the right property name of a const member expression', async () => {
+  const result = await runTestFor('prop1.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {
     ["hello"]: Bar;
@@ -11,8 +11,8 @@ test('Should get the right property name of a const member expression', () => {
 }`);
 });
 
-test('Should get the right property name of a const identifier', () => {
-  const result = runTestFor('prop2.ts');
+test('Should get the right property name of a const identifier', async () => {
+  const result = await runTestFor('prop2.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {
     [c]: Bar;
