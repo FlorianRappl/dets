@@ -137,7 +137,7 @@ declare module "test" {
 }`);
 });
 
-test('should infere the default export correctly', () => {
+test('should infer the default export correctly', () => {
   const result = runTestFor('react6.tsx', {
     imports: ['react', 'react-redux'],
   });
@@ -457,7 +457,7 @@ test('should include globals from imported globals if bundled in', () => {
     }, propName: string, componentName: string, location: string, propFullName: string): Error | null;
     [nominalTypeHack]?: {
       type: T;
-    };
+    } | undefined;
   }
 
   export const nominalTypeHack: unique symbol;

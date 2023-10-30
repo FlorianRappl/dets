@@ -1,16 +1,17 @@
 # Changelog for dets
 
-## 0.13.0
+## 0.13.1
 
+- Updated dependencies
 - Fixed issue with undefined behavior in case of unknown symbols
 
 ## 0.13.0
 
+- Updated dependencies
 - Changed minimum supported version of Node.js to 14.18
 - Changed build system from ncc to esbuild
 - Removed compatibility with TypeScript 3
 - Added compatibility with TypeScript 5
-- Updated dependencies
 
 ## 0.12.4
 
