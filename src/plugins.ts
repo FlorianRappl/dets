@@ -1,7 +1,8 @@
 import { dirname } from 'path';
 import { retrieveTypings } from './commands';
-import { DeclVisitorContext } from './types';
 import { stringifyNode } from './output/stringify';
+import { findRefs, updateImports } from './refs';
+import { DeclVisitorContext } from './types';
 
 export interface DetsClassicPlugin {
   /**
@@ -59,6 +60,7 @@ export function createExcludePlugin(moduleNames: Array<string>): DetsPlugin {
   };
 }
 
+
 export function createDiffPlugin(originalFile: string): DetsPlugin {
   const state: Record<string, any> = {};
   return {
@@ -72,7 +74,7 @@ export function createDiffPlugin(originalFile: string): DetsPlugin {
         imports: context.imports,
         log: context.log,
       });
-      state.refs = refs.map(ref => stringifyNode(ref));
+      state.refs = refs.map((ref) => stringifyNode(ref));
     },
     async 'after-process'(context) {
       const mod = context.modules[context.name];
@@ -84,6 +86,9 @@ export function createDiffPlugin(originalFile: string): DetsPlugin {
           mod.splice(i, 1);
         }
       }
+
+      const refs = findRefs(mod);
+      updateImports(context.usedImports, refs);
     },
   };
 }
