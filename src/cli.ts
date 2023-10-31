@@ -72,19 +72,18 @@ function runScript(script: string, cwd: string) {
   });
 }
 
-function runCli() {
-  writeFile(
-    args.out,
-    require('./index').generateDeclaration({
-      root,
-      name: args.name,
-      apis: args.apis.map(getApiDecl),
-      files: args.files,
-      imports: args.imports,
-      types: args.types,
-      noIgnore: !args.ignore,
-    }),
-  );
+async function runCli() {
+  const { generateDeclaration } = require('./index');
+  const content = await generateDeclaration({
+    root,
+    name: args.name,
+    apis: args.apis.map(getApiDecl),
+    files: args.files,
+    imports: args.imports,
+    types: args.types,
+    noIgnore: !args.ignore,
+  });
+  writeFile(args.out, content);
 }
 
 if (!args.name) {
@@ -97,10 +96,19 @@ if (args.files.length === 0) {
   process.exit(1);
 }
 
-try {
-  require('typescript');
-  runCli();
-} catch {
-  console.warn(`TypeScript is missing. Trying to install ...`);
-  runScript('npm install typescript@^5', resolve(__dirname, '..')).then(runCli);
-}
+(async () => {
+  try {
+    require('typescript');
+  } catch {
+    console.warn(`TypeScript is missing. Trying to install ...`);
+    await runScript('npm install typescript@^5', resolve(__dirname, '..'));
+  }
+
+  try {
+    await runCli();
+  } catch {
+    process.exit(1);
+  }
+
+  process.exit(0);
+})();
