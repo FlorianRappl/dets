@@ -74,16 +74,36 @@ export function createDiffPlugin(originalFile: string): DetsPlugin {
         imports: context.imports,
         log: context.log,
       });
-      state.refs = refs.map((ref) => stringifyNode(ref));
+      state.types = refs;
+      state.cache = refs.map((ref) => stringifyNode(ref));
     },
     async 'after-process'(context) {
       const mod = context.modules[context.name];
 
       for (let i = mod.length; i--; ) {
-        const current = stringifyNode(mod[i]);
+        const node = mod[i];
+        const current = stringifyNode(node);
 
-        if (state.refs.indexOf(current) !== -1) {
+        if (state.cache.indexOf(current) !== -1) {
+          // is a copy of an existing node -> drop it
           mod.splice(i, 1);
+        } else if (node.kind === 'interface') {
+          // identify the merged base interface
+          const mergedInterface = state.types.find(m => m.kind === 'interface' && m.name === node.name);
+
+          // if this one exists look at it
+          if (mergedInterface) {
+            const originals = mergedInterface.props.map(p => stringifyNode(p));
+
+            // compare which props are still the originals - remove them
+            for (let j = node.props.length; j--; ) {
+              const prop = stringifyNode(node.props[j]);
+
+              if (originals.includes(prop)) {
+                node.props.splice(j, 1);
+              }
+            }
+          }
         }
       }
 
