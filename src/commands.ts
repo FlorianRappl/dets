@@ -1,9 +1,9 @@
 import * as ts from 'typescript';
-import { includeApi, includeTypings, includeExports, DeclVisitor } from './input';
 import { stringifyDeclaration } from './output';
 import { findAppRoot, getLibName } from './helpers';
 import { defaultLogger, wrapLogger } from './logger';
 import { DetsClassicPlugin, DetsPlugin } from './plugins';
+import { includeApi, includeTypings, includeExports, DeclVisitor } from './input';
 import { DeclVisitorContext, DeclVisitorFlags, Logger, LogLevel } from './types';
 
 export function setupVisitorContext(

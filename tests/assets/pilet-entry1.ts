@@ -1,9 +1,9 @@
-import { PiletApi } from './pilet-shell';
+import { PiletApi } from './pilet-shell1';
 import { lazy } from 'react';
 
 const FooComponent = lazy(() => import('./pilet-component'));
 
-declare module './pilet-shell' {
+declare module './pilet-shell1' {
   interface PiralCustomExtensionSlotMap {
     foo: {
       num: number;
