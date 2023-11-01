@@ -172,7 +172,7 @@ An example code for using dets in a Node.js application is:
 import { generateDeclaration } from "dets";
 import { writeFileSync } from "fs";
 
-const content = generateDeclaration({
+const content = await generateDeclaration({
   name: "foo",
   root: process.cwd(),
   files: ["src/**/*.ts"],
@@ -222,7 +222,7 @@ As an example:
 import { generateDeclaration, createExcludePlugin } from "dets";
 import { writeFileSync } from "fs";
 
-const content = generateDeclaration({
+const content = await generateDeclaration({
   name: "foo",
   root: process.cwd(),
   files: ["src/**/*.ts"],
@@ -251,7 +251,7 @@ const printFoundModulesInConsole = {
   },
 };
 
-generateDeclaration({
+await generateDeclaration({
   name: "foo",
   root: process.cwd(),
   files: ["src/**/*.ts"],
@@ -259,6 +259,34 @@ generateDeclaration({
   plugins: [printFoundModulesInConsole],
 });
 ```
+
+The provided syntax is considered "classic" - you can also create "modern" plugins using the full lifecycle:
+
+```ts
+import { generateDeclaration } from "dets";
+
+const printFoundModulesInConsole = {
+  // name of the plugin
+  name: 'console-printer',
+  // function to run with the created context
+  'before-init'(context) {
+    context.log.info('Starting the console-printer plugin');
+  },
+  'after-process'(context) {
+    console.log('Found the following modules:', Object.keys(context.modules));
+  },
+};
+
+await generateDeclaration({
+  name: "foo",
+  root: process.cwd(),
+  files: ["src/**/*.ts"],
+  types: ["src/index.ts"],
+  plugins: [printFoundModulesInConsole],
+});
+```
+
+The advantage of the modern plugin approach is that you can easily modify / integrate into multiple phases of dets with just a single plugin.
 
 ## Development
 
