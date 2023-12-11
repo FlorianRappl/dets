@@ -4,7 +4,7 @@ import { findAppRoot, getLibName } from './helpers';
 import { defaultLogger, wrapLogger } from './logger';
 import { DetsClassicPlugin, DetsPlugin } from './plugins';
 import { includeApi, includeTypings, includeExports, DeclVisitor } from './input';
-import { DeclVisitorContext, DeclVisitorFlags, Logger, LogLevel, ResolvedModuleCallback } from './types';
+import { DeclVisitorContext, DeclVisitorFlags, Logger, LogLevel } from './types';
 
 export function setupVisitorContext(
   name: string,
@@ -40,6 +40,13 @@ export function setupVisitorContext(
     program,
     log,
     flags,
+    forEachResolvedModule(cb, file) {
+      if ('forEachResolvedModule' in program) {
+        context.program.forEachResolvedModule(cb, file);
+      } else {
+        file.resolvedModules?.forEach(cb);
+      }
+    },
   };
   addAvailableImports(context, imports);
   addAmbientModules(context, imports);
@@ -80,7 +87,7 @@ export function addAvailableImports(context: DeclVisitorContext, imports: Array<
       break;
     }
 
-    const cb: ResolvedModuleCallback = (value, key) => {
+    context.forEachResolvedModule((value, key) => {
       const index = remaining.indexOf(key);
       const fileName = value?.resolvedModule?.resolvedFileName ?? value?.resolvedFileName;
 
@@ -93,13 +100,7 @@ export function addAvailableImports(context: DeclVisitorContext, imports: Array<
         includeExports(context, key, file?.symbol);
         remaining.splice(index, 1);
       }
-    };
-
-    if ('forEachResolvedModule' in context.program) {
-      context.program.forEachResolvedModule(cb, sourceFile);
-    } else {
-      sourceFile.resolvedModules?.forEach(cb);
-    }
+    }, sourceFile);
   }
 }
 

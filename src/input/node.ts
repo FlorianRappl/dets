@@ -1161,19 +1161,20 @@ export class DeclVisitor {
     if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       // * exports from a module
       const moduleName = node.moduleSpecifier.text;
-      const modules = node.getSourceFile().resolvedModules;
-      const result = modules?.get(moduleName);
-      const fileName = result?.resolvedModule?.resolvedFileName ?? result?.resolvedFileName;
+      const sourceFile = node.getSourceFile();
 
-      if (fileName) {
-        const newFile = this.context.program.getSourceFile(fileName);
+      this.context.forEachResolvedModule((value, originalName) => {
+        if (originalName === moduleName) {
+          const fileName = value.resolvedModule.resolvedFileName;
+          const newFile = this.context.program.getSourceFile(fileName);
 
-        ts.forEachChild(newFile, (node) => {
-          if (shouldInclude(node)) {
-            this.enqueue(node);
-          }
-        });
-      }
+          ts.forEachChild(newFile, (node) => {
+            if (shouldInclude(node)) {
+              this.enqueue(node);
+            }
+          });
+        }
+      }, sourceFile);
     }
   }
 

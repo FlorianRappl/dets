@@ -1,6 +1,7 @@
-import { TypeChecker, Program, Node } from 'typescript';
+import { TypeChecker, Program, Node, SourceFile } from 'typescript';
 import { Logger } from './log';
 import { TypeModelExport } from './model';
+import { ResolvedModuleCallback } from './internal';
 
 export type ImportDefs = Record<string, Node>;
 
@@ -28,4 +29,5 @@ export interface DeclVisitorContext {
   name: string;
   flags: DeclVisitorFlags;
   root: string;
+  forEachResolvedModule(cb: ResolvedModuleCallback, file: SourceFile): void;
 }
