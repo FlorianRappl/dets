@@ -1165,14 +1165,17 @@ export class DeclVisitor {
 
       this.context.forEachResolvedModule((value, originalName) => {
         if (originalName === moduleName) {
-          const fileName = value.resolvedModule.resolvedFileName;
-          const newFile = this.context.program.getSourceFile(fileName);
+          const fileName = value?.resolvedModule?.resolvedFileName ?? value?.resolvedFileName;
 
-          ts.forEachChild(newFile, (node) => {
-            if (shouldInclude(node)) {
-              this.enqueue(node);
-            }
-          });
+          if (fileName) {
+            const newFile = this.context.program.getSourceFile(fileName);
+  
+            ts.forEachChild(newFile, (node) => {
+              if (shouldInclude(node)) {
+                this.enqueue(node);
+              }
+            });
+          }
         }
       }, sourceFile);
     }
