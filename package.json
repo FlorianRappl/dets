@@ -1,6 +1,6 @@
 {
   "name": "dets",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "A TypeScript declaration file bundler.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -67,7 +67,7 @@
     "sample-piral": "^0.13.9",
     "ts-jest": "^28",
     "ts-node": "^9.1.1",
-    "typescript": "5.0.4",
+    "typescript": "5.3.3",
     "vue": "^2.7.14",
     "yargs": "^15.4.1"
   }
