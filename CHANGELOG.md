@@ -3,6 +3,7 @@
 ## 0.14.1
 
 - Fixed issue with TypeScript 5.3 not considering externals
+- Added full support for triple-slash directives (#14)
 
 ## 0.14.0
 

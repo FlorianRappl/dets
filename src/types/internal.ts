@@ -20,8 +20,19 @@ export interface ResolvedModuleArg {
 
 export type ResolvedModuleCallback = (value: ResolvedModuleArg, key: string) => void;
 
+export interface ValueTextRange extends ts.TextRange {
+  value: string;
+}
+
+export interface PragmaInfo {
+  arguments: {
+    path: ValueTextRange;
+  };
+  range: ts.CommentRange;
+}
+
 /**
- * Expose the internal TypeScript APIs that are used by TypeDoc
+ * Expose the internal TypeScript APIs that are used bwy TypeDoc
  */
 declare module 'typescript' {
   interface Symbol {
@@ -40,5 +51,6 @@ declare module 'typescript' {
   interface SourceFile {
     // For ts pre-5.3
     resolvedModules?: Map<string, ResolvedModuleArg>;
+    pragmas?: Map<string, PragmaInfo | Array<PragmaInfo>>;
   }
 }

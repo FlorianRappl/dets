@@ -1,4 +1,5 @@
 import * as ts from 'typescript';
+import { resolve } from 'path';
 import { stringifyDeclaration } from './output';
 import { findAppRoot, getLibName } from './helpers';
 import { defaultLogger, wrapLogger } from './logger';
@@ -65,10 +66,31 @@ export function fillExportsFromApi(context: DeclVisitorContext, apiPath: string,
   }
 }
 
+export function fillExportsFromReferences(context: DeclVisitorContext, typingsPath: string) {
+  const tp = context.program.getSourceFile(typingsPath);
+
+  if (tp) {
+    // find and use triple-slash directives
+    const ps = tp.pragmas?.get('reference');
+
+    if (ps) {
+      const values = Array.isArray(ps) ? ps.map((m) => m.arguments?.path?.value) : [ps.arguments?.path?.value];
+
+      values.forEach((value) => {
+        if (typeof value === 'string') {
+          const path = resolve(typingsPath, '..', value);
+          fillExportsFromTypes(context, path);
+        }
+      });
+    }
+  }
+}
+
 export function fillExportsFromTypes(context: DeclVisitorContext, typingsPath: string) {
   const tp = context.program.getSourceFile(typingsPath);
 
   if (tp) {
+    fillExportsFromReferences(context, typingsPath);
     ts.forEachChild(tp, (node) => includeTypings(context, node));
   } else {
     context.log.warn(
