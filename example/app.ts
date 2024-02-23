@@ -55,30 +55,18 @@ function findDeclaredTypings(root: string) {
 //const root = resolve(__dirname, "../../../Piral-Playground/piral-010-alpha");
 //const root = resolve(__dirname, "../../../Smapiot/piral/src/samples/sample-cross-fx");
 //const root = resolve(__dirname, '../../../Piral-Playground/shell-mwe');
-const root = resolve(__dirname, "../../../Temp/shell-mwe");
+const root = resolve(__dirname, '../../../Temp/shell-mwe');
 
-console.log(
-  generateDeclaration({
-    name: 'piral-sample',
-    root,
-    files: ['src/index.tsx'],
-    types: findDeclaredTypings(root),
-    apis: [
-      {
-        file: findPiralCoreApi(root),
-        name: 'PiletApi',
-      },
-    ],
-    imports: [
-      'vue',
-      'react',
-      'angular',
-      'inferno',
-      'preact',
-      'react-router',
-      '@libre/atom',
-      'riot',
-      'styled-components',
-    ],
-  }),
-);
+generateDeclaration({
+  name: 'piral-sample',
+  root,
+  files: ['src/index.tsx'],
+  types: findDeclaredTypings(root),
+  apis: [
+    {
+      file: findPiralCoreApi(root)!,
+      name: 'PiletApi',
+    },
+  ],
+  imports: ['vue', 'react', 'angular', 'inferno', 'preact', 'react-router', '@libre/atom', 'riot', 'styled-components'],
+}).then((res) => console.log(res));

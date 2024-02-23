@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.14.2
+
+- Added support for missing TypeScript property declarations
+
 ## 0.14.1
 
 - Fixed issue with TypeScript 5.3 not considering externals

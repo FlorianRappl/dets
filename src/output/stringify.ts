@@ -23,6 +23,7 @@ import {
   TypeModelGetAccessor,
   TypeModelPredicate,
   TypeModelPrefixReadonly,
+  TypeModelAccess,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -114,10 +115,16 @@ export function stringifyMapped(type: TypeModelMapped) {
   return `[${index}]${isOpt}: ${stringifyNode(type.value)}`;
 }
 
+export function stringifyAccess(type: TypeModelAccess) {
+  const right = stringifyNode(type.name);
+  const left = stringifyNode(type.object);
+  return `${left}.${right}`;
+}
+
 export function stringifyIndexedAccess(type: TypeModelIndexedAccess) {
-  const front = stringifyNode(type.index);
-  const back = stringifyNode(type.object);
-  return `${back}[${front}]`;
+  const right = stringifyNode(type.index);
+  const left = stringifyNode(type.object);
+  return `${left}[${right}]`;
 }
 
 export function stringifyInterface(type: TypeModelInterface) {
@@ -180,7 +187,8 @@ export function stringifyTernary(condition: TypeModelConditional) {
 }
 
 export function stringifyMember(member: TypeMemberModel) {
-  const name = `${stringifyComment(member)}${member.name}`;
+  const key = stringifyPropName(member.name);
+  const name = `${stringifyComment(member)}${key}`;
 
   if (member.value) {
     return `${name} = ${stringifyNode(member.value)}`;
@@ -272,6 +280,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return 'any';
     case 'literal':
       return `${type.value}`;
+    case 'access':
+      return stringifyAccess(type);
     case 'indexedAccess':
       return stringifyIndexedAccess(type);
     case 'index':

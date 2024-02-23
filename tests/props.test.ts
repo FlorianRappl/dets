@@ -4,8 +4,12 @@ test('Should get the right property name of a const member expression', async ()
   const result = await runTestFor('prop1.ts');
   expect(result).toBe(`declare module "test" {
   export interface Foo {
-    ["hello"]: Bar;
+    [c.d]: Bar;
   }
+
+  export const c: {
+    d: "hello";
+  };
 
   export interface Bar {}
 }`);

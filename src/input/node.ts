@@ -1015,6 +1015,12 @@ export class DeclVisitor {
       const decl = getDeclarationFromNode(this.context.checker, node);
       this.enqueue(decl);
       return getRef(node.text);
+    } else if (ts.isPropertyAccessExpression(node)) {
+      return {
+        kind: 'access',
+        object: this.getExpression(node.expression),
+        name: this.getExpression(node.name),
+      };
     } else {
       return this.getInferredType(node);
     }
@@ -1231,7 +1237,7 @@ export class DeclVisitor {
       this.includeExportsDeclaration(node);
     } else if (ts.isModuleDeclaration(node)) {
       this.modules.push(node);
-    } else if (ts.isImportTypeNode(node)) {
+    } else if (ts.isImportTypeNode(node) || ts.isPropertySignature(node) || ts.isPropertyAssignment(node)) {
       // empty on purpose
       this.logVerbose(`Skipping import type node: ${node}`);
     } else {

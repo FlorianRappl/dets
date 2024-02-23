@@ -14,6 +14,7 @@ import {
   TypeModelFunction,
   TypeModelFunctionParameter,
   TypeModelIndex,
+  TypeModelAccess,
   TypeModelIndexedAccess,
   TypeModelInfer,
   TypeModelIntersection,
@@ -81,6 +82,7 @@ export type TypeModel =
   | TypeModelUnion
   | TypeModelIntersection
   | TypeModelIndex
+  | TypeModelAccess
   | TypeModelIndexedAccess
   | TypeModelConditional
   | TypeModelSubstitution

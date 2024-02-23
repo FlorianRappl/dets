@@ -210,6 +210,12 @@ export interface TypeModelIndex {
   readonly optional: boolean;
 }
 
+export interface TypeModelAccess {
+  readonly kind: 'access';
+  readonly name: TypeModel;
+  readonly object: TypeModel;
+}
+
 export interface TypeModelIndexedAccess {
   readonly kind: 'indexedAccess';
   readonly index: TypeModel;
