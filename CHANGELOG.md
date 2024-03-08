@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.15.0
+
+- Removed Node 14 compatibility
+
 ## 0.14.2
 
 - Added support for missing TypeScript property declarations
