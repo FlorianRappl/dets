@@ -4,8 +4,8 @@ test('should handle manual composition of react typings', async () => {
   const result = await runTestFor('react3.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass extends Component<{}> {
-    constructor(props: {});
-    render(): ReactChild;
+    public constructor(props: {});
+    public render(): ReactChild;
   }
 
   export class Component<P, S> {

@@ -300,6 +300,7 @@ export class DeclVisitor {
     return {
       kind: 'constructor',
       parameters: this.getFunctionParameters(node.parameters),
+      modifiers: getModifiers(node.symbol),
       comment: getComment(this.context.checker, node),
     };
   }

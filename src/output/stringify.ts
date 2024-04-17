@@ -100,7 +100,8 @@ export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode:
 
 export function stringifyConstructor(type: TypeModelConstructor) {
   const parameters = stringifyParameters(type.parameters);
-  return `constructor(${parameters})`;
+  const modifiers = type.modifiers ? `${type.modifiers} ` : '';
+  return `${modifiers}constructor(${parameters})`;
 }
 
 export function stringifyIndex(type: TypeModelIndex) {

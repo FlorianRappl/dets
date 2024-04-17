@@ -4,7 +4,7 @@ test('should be able to handle exported classes with constructor', async () => {
   const result = await runTestFor('class1.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
-    constructor(private value: string);
+    public constructor(private value: string);
     foo(): string;
   }
 }`);
@@ -15,7 +15,7 @@ test('should be able to handle exported classes with differnet modifiers', async
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
     constructor(protected bar: boolean, private value: string);
-    foo(): string;
+    public foo(): string;
     private qxz(): boolean;
     protected name: string;
   }
@@ -28,7 +28,7 @@ test('should be able to handle exported generic classes with explicit parameters
   export class OtherClass<P, S> {}
 
   export class SomeClass extends OtherClass<{}, {}> {
-    constructor();
+    public constructor();
   }
 }`);
 });
@@ -39,7 +39,7 @@ test('should be able to handle exported generic classes with implicit parameters
   export class OtherClass<P, S = {}> {}
 
   export class SomeClass extends OtherClass<{}> {
-    constructor();
+    public constructor();
   }
 }`);
 });
@@ -52,7 +52,7 @@ test('should be able to handle class with implemented interface', async () => {
   export interface OtherInterface<P> {}
 
   export class SomeClass extends OtherClass<{}> implements OtherInterface<{}> {
-    constructor();
+    public constructor();
   }
 }`);
 });
@@ -65,8 +65,8 @@ test('should be able to handle react classes from externals', async () => {
 
 declare module "test" {
   export class SomeClass extends React.Component<{}> {
-    constructor(props: {});
-    render(): JSX.Element;
+    public constructor(props: {});
+    public render(): JSX.Element;
   }
 }`);
 });
@@ -77,8 +77,8 @@ test('should be able to handle react classes bundled in', async () => {
   });
   expect(result).toBe(`declare module "test" {
   export class SomeClass extends Component<{}> {
-    constructor(props: {});
-    render(): JSX_Element;
+    public constructor(props: {});
+    public render(): JSX_Element;
   }
 
   export class Component<P, S> {

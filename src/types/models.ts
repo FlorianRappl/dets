@@ -89,6 +89,7 @@ export interface TypeModelBoolean {
 export interface TypeModelConstructor {
   readonly kind: 'constructor';
   readonly comment?: string;
+  readonly modifiers: string;
   readonly parameters: Array<TypeModelFunctionParameter>;
 }
 

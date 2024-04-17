@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.15.1
+
+- Added `public` modifier
+- Added optional modifiers to constructor declarations
+
 ## 0.15.0
 
 - Removed Node 14 compatibility
