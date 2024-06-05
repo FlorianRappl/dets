@@ -139,7 +139,7 @@ interface Foo extends FooBase2 {
 An example call for dets from the command line is:
 
 ```sh
-dets --name foo --files src/**/*.ts --types src/index.ts --out dist/index.d.ts
+dets src/index.ts --name foo --files src/**/*.ts --out dist/index.d.ts
 ```
 
 Here we use a glob pattern for the input files and an explicit path for the output.
@@ -147,22 +147,32 @@ Here we use a glob pattern for the input files and an explicit path for the outp
 The available command line arguments are:
 
 ```plain
+Positionals:
+  entry  The entry level modules to be consumed.          [string] [default: []]
+
 Options:
-  --help     Show help                                                 [boolean]
-  --version  Show version number                                       [boolean]
-  --name     Sets the name of the module                                [string]
-  --files    Sets the files referenced by TypeScript       [array] [default: []]
-  --types    Sets the type entry modules to export via their file path
-                                                           [array] [default: []]
-  --apis     Sets the interfaces to include using "InterfaceName:FilePath"
-             syntax                                        [array] [default: []]
-  --imports  Sets the imports to avoid bundling in via their package names
-                                                           [array] [default: []]
-  --out      Sets the path to the output file
+  --help                Show help                                      [boolean]
+  --version             Show version number                            [boolean]
+  --name                Sets the name of the module.   [string] [default: "foo"]
+  --files               Sets the files referenced by TypeScript.
+                                                [array] [required] [default: []]
+  --types               Sets the type entry modules to export via their file
+                        path.                              [array] [default: []]
+  --apis                Sets the interfaces to include using
+                        "InterfaceName:FilePath" syntax.   [array] [default: []]
+  --imports             Sets the imports to avoid bundling in via their package
+                        names.                             [array] [default: []]
+  --ignore              Actively uses the ignore comment to drop properties.
+                                                       [boolean] [default: true]
+  --module-declaration  Wraps the declaration in a "declare module" block.
+                                                       [boolean] [default: true]
+  --out                 Sets the path to the output file.
                                          [string] [default: "./dist/index.d.ts"]
 ```
 
 If `name` is omitted then the `name` from the closest `package.json` is taken.
+
+The `files` and `types` allow more fine-grained control what files are seen by TypeScript and what types should be exported. Usually, you'd want to use the positional entry level modules instead.
 
 ### From Node Applications
 

@@ -3,6 +3,7 @@
 ## 0.16.0
 
 - Fixed passing on `--module-declaration` CLI flag (#42)
+- Improved support for JS files (#41)
 
 ## 0.15.1
 
