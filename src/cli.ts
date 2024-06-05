@@ -79,6 +79,7 @@ async function runCli() {
     name: args.name,
     apis: args.apis.map(getApiDecl),
     files: args.files,
+    noModuleDeclaration: !args['module-declaration'],
     imports: args.imports,
     types: args.types,
     noIgnore: !args.ignore,

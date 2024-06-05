@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.0
+
+- Fixed passing on `--module-declaration` CLI flag (#42)
+
 ## 0.15.1
 
 - Added `public` modifier
