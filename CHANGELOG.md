@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.1
+
+- Fixed issue with empty properties of classes (#44)
+
 ## 0.16.0
 
 - Fixed passing on `--module-declaration` CLI flag (#42)

@@ -310,18 +310,21 @@ export class DeclVisitor {
     const canDrop = !flags.noIgnore;
     const comment = getCommentOrDrop(checker, node, canDrop);
 
-    if (typeof comment === 'string') {
-      return {
-        kind: 'prop',
-        name: node.name.getText(),
-        modifiers: getModifiers(node.symbol),
-        optional: false,
-        comment,
-        valueType: this.getPropValue(node),
-      };
+    if (node.name) {
+      if (typeof comment === 'string') {
+        return {
+          kind: 'prop',
+          name: node.name.getText(),
+          modifiers: getModifiers(node.symbol),
+          optional: false,
+          comment,
+          valueType: this.getPropValue(node),
+        };
+      }
+
+      this.logVerbose(`The member "${node.name.getText()}" was skipped due to @ignore.`);
     }
 
-    this.logVerbose(`The member "${node.name.getText()}" was skipped due to @ignore.`);
     return undefined;
   }
 
@@ -1176,7 +1179,7 @@ export class DeclVisitor {
 
           if (fileName) {
             const newFile = this.context.program.getSourceFile(fileName);
-  
+
             ts.forEachChild(newFile, (node) => {
               if (shouldInclude(node)) {
                 this.enqueue(node);
