@@ -4,8 +4,8 @@ import { generateDeclaration } from '../src';
 generateDeclaration({
   name: 'piral-sample',
   root: resolve(__dirname, '..', 'tests', 'assets'),
-  files: ['prop1.ts'],
-  types: ['prop1.ts'],
+  files: ['type10.ts'],
+  types: ['type10.ts'],
   apis: [],
-  imports: [],
+  imports: ['react'],
 }).then((res) => console.log(res));
