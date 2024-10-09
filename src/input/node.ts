@@ -806,9 +806,31 @@ export class DeclVisitor {
       case ts.SyntaxKind.ThisKeyword:
       case ts.SyntaxKind.ThisType:
         return getRef('this');
+      case ts.SyntaxKind.ImportType:
+        return this.resolveImport(node);
     }
 
     this.printWarning('type node', node);
+  }
+
+  private resolveImport(node: ts.TypeNode): TypeModel {
+    if (!ts.isImportTypeNode(node)) {
+      return {
+        kind: 'any',
+      };
+    } else if ('type' in node.parent) {
+      const type = this.convertToTypeNodeFromNode(node.parent);
+      return this.getTypeNode(type);
+    } else if (node.qualifier) {
+      const decl = getDeclarationFromNode(this.context.checker, node.qualifier);
+      const type = this.convertToTypeNodeFromNode(decl);
+      return this.getTypeNode(type);
+    } else {
+      return {
+        kind: 'import',
+        value: this.getTypeNode(node.argument),
+      };
+    }
   }
 
   private getTypeNode(node: ts.TypeNode): TypeModel {

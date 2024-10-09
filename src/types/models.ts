@@ -64,6 +64,12 @@ export interface TypeModelPrefixKeyof {
   readonly value: TypeModel;
 }
 
+export interface TypeModelImport {
+  readonly kind: 'import';
+  readonly value: TypeModel;
+  readonly qualifier?: string;
+}
+
 export type TypeModelPrefix = TypeModelPrefixKeyof | TypeModelPrefixReadonly | TypeModelPrefixUnique;
 
 export interface TypeModelAny {
