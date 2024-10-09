@@ -806,9 +806,26 @@ export class DeclVisitor {
       case ts.SyntaxKind.ThisKeyword:
       case ts.SyntaxKind.ThisType:
         return getRef('this');
+      case ts.SyntaxKind.ImportType:
+        return this.resolveImport(node);
     }
 
     this.printWarning('type node', node);
+  }
+
+  private resolveImport(node: ts.TypeNode): TypeModel {
+    if (ts.isImportTypeNode(node)) {
+      return {
+        kind: 'import',
+        value: this.getTypeNode(node.argument),
+        // @ts-ignore
+        qualifier: node.qualifier?.escapedText,
+      };
+    }
+
+    return {
+      kind: 'any',
+    };
   }
 
   private getTypeNode(node: ts.TypeNode): TypeModel {

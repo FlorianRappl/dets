@@ -19,6 +19,7 @@ import {
   TypeModelInfer,
   TypeModelIntersection,
   TypeModelPrefix,
+  TypeModelImport,
   TypeModelString,
   TypeModelProp,
   TypeModelTupleProp,
@@ -92,6 +93,7 @@ export type TypeModel =
   | TypeModelConstructor
   | TypeModelRef
   | TypeModelPrefix
+  | TypeModelImport
   | TypeModelPredicate
   | TypeModelMapped
   | TypeModelInfer

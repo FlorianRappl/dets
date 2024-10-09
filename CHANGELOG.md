@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.2
+
+- Fixed resolution of import nodes (#46)
+
 ## 0.16.1
 
 - Fixed issue with empty properties of classes (#44)

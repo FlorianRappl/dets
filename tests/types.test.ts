@@ -121,3 +121,10 @@ test('should be able to infer correctly', async () => {
   };
 }`);
 });
+
+test('should be able to resolve import type #46', async () => {
+  const result = await runTestFor('type10.ts');
+  expect(result).toBe(`declare module "test" {
+  export const Alert: import("react").FC;
+}`);
+});

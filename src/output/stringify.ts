@@ -24,6 +24,7 @@ import {
   TypeModelPredicate,
   TypeModelPrefixReadonly,
   TypeModelAccess,
+  TypeModelImport,
 } from '../types';
 
 export function stringifyComment(type: WithTypeComments) {
@@ -217,6 +218,16 @@ export function stringifyPredicate(predicate: TypeModelPredicate) {
   return `${predicate.name} is ${type}`;
 }
 
+export function stringifyImport(type: TypeModelImport) {
+  const head = `import(${stringifyNode(type.value)})`;
+
+  if (type.qualifier) {
+    return `${head}.${type.qualifier}`;
+  }
+
+  return head;
+}
+
 export function stringifyReadonly(type: TypeModelPrefixReadonly) {
   const value = type.value;
 
@@ -260,6 +271,8 @@ export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
       return `unique ${stringifyNode(type.value)}`;
     case 'keyof':
       return `keyof ${stringifyNode(type.value)}`;
+    case 'import':
+      return stringifyImport(type);
     case 'infer':
       return `infer ${stringifyNode(type.parameter)}`;
     case 'any':
