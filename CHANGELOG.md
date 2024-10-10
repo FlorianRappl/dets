@@ -3,6 +3,7 @@
 ## 0.16.4
 
 - Fixed unnecessary duplications
+- Updated to keep internal `typeof` references
 
 ## 0.16.3
 

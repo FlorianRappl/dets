@@ -670,43 +670,47 @@ export class DeclVisitor {
     const symbol = this.context.checker.getSymbolAtLocation(node.exprName);
 
     if (symbol !== undefined) {
-      const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
-      const typeNode = this.convertToTypeNodeFromType(type);
+      const exports = this.context.checker.getExportsOfModule(node.getSourceFile().symbol);
 
-      if (typeNode && ts.isImportTypeNode(typeNode)) {
-        const props = type
-          .getProperties()
-          .map((prop) => ({
-            name: prop.name,
-            decl: prop.valueDeclaration,
-          }))
-          .map((m) => ({
-            name: m.name,
-            type: m.decl && this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
-          }))
-          .map((m) => ({
-            name: m.name,
-            node: m.type && this.convertToTypeNodeFromType(m.type),
-          }))
-          .map(
-            (m): TypeModel => ({
+      if (!exports.find((m) => m.name === symbol.name)) {
+        const type = this.context.checker.getTypeOfSymbolAtLocation(symbol, node);
+        const typeNode = this.convertToTypeNodeFromType(type);
+
+        if (typeNode && ts.isImportTypeNode(typeNode)) {
+          const props = type
+            .getProperties()
+            .map((prop) => ({
+              name: prop.name,
+              decl: prop.valueDeclaration,
+            }))
+            .map((m) => ({
               name: m.name,
-              modifiers: '',
-              optional: false,
-              kind: 'prop',
-              valueType: this.getTypeNode(m.node),
-            }),
-          );
-        return {
-          kind: 'interface',
-          props,
-          types: [],
-          extends: [],
-          name: '',
-        };
-      }
+              type: m.decl && this.context.checker.getTypeOfSymbolAtLocation(m.decl.symbol, m.decl),
+            }))
+            .map((m) => ({
+              name: m.name,
+              node: m.type && this.convertToTypeNodeFromType(m.type),
+            }))
+            .map(
+              (m): TypeModel => ({
+                name: m.name,
+                modifiers: '',
+                optional: false,
+                kind: 'prop',
+                valueType: this.getTypeNode(m.node),
+              }),
+            );
+          return {
+            kind: 'interface',
+            props,
+            types: [],
+            extends: [],
+            name: '',
+          };
+        }
 
-      return this.getTypeNode(typeNode);
+        return this.getTypeNode(typeNode);
+      }
     }
 
     const decl = getDeclarationFromNode(this.context.checker, node.exprName);
