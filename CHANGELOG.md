@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.4
+
+- Fixed unnecessary duplications
+
 ## 0.16.3
 
 - Fixed handling of spread operator (#48)

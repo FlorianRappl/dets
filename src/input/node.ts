@@ -1238,6 +1238,8 @@ export class DeclVisitor {
   }
 
   private processNode(node: ts.Node) {
+    this.processed.push(node);
+
     if (ts.isTypeAliasDeclaration(node)) {
       this.includeExportedTypeAlias(node);
     } else if (isDefaultExport(node)) {
@@ -1285,7 +1287,6 @@ export class DeclVisitor {
     while (this.queue.length || this.modules.length) {
       while (this.queue.length > 0) {
         const item = this.queue.shift();
-        this.processed.push(item);
         this.processNode(item);
       }
 

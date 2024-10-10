@@ -1052,11 +1052,6 @@ declare module "test" {
   }
 
   /**
-   * An evaluated pilet, i.e., a full pilet: functionality and metadata.
-   */
-  export type Pilet = PiletApp & PiletMetadata;
-
-  /**
    * The creator function for the pilet API.
    */
   export interface PiletApiCreator {
@@ -2120,11 +2115,6 @@ export interface PiletsLoaded {
 export interface PiletLoader {
   (meta: PiletMetadata): Promise<Pilet>;
 }
-
-/**
- * An evaluated pilet, i.e., a full pilet: functionality and metadata.
- */
-export type Pilet = PiletApp & PiletMetadata;
 
 /**
  * The creator function for the pilet API.
