@@ -62,7 +62,9 @@ export function getExportName(name: Identifier | StringLiteral | NumericLiteral)
 }
 
 export function getParameterElement(element: ArrayBindingElement): string {
-  return isBindingElement(element) ? getParameterName(element.name) : getParameterName(element);
+  const spread = 'dotDotDotToken' in element && element.dotDotDotToken ? '...' : '';
+  const name = isBindingElement(element) ? getParameterName(element.name) : getParameterName(element);
+  return `${spread}${name}`;
 }
 
 export function getParameterName(name: BindingName | OmittedExpression): string {
