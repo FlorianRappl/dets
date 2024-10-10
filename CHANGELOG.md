@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.3
+
+- Fixed handling of spread operator (#48)
+
 ## 0.16.2
 
 - Fixed resolution of import nodes (#46)
