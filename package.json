@@ -1,6 +1,6 @@
 {
   "name": "dets",
-  "version": "0.16.3",
+  "version": "0.16.4",
   "description": "A TypeScript declaration file bundler.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

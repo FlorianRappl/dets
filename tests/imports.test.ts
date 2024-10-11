@@ -523,6 +523,7 @@ test('should evaluate type with typeof correctly in flat imports', async () => {
   }
 }`);
 });
+
 test('should evaluate type with typeof correctly in nested imports', async () => {
   const result = await runTestFor('import7.ts');
   expect(result).toBe(`declare module "test" {
@@ -536,5 +537,19 @@ test('should evaluate type with typeof correctly in nested imports', async () =>
       };
     };
   }
+}`);
+});
+
+test('should not duplicate entries', async () => {
+  const result = await runTestFor('import8.ts');
+  expect(result).toBe(`declare module "test" {
+  export type ToastProps = {
+    a: string;
+    b: number;
+  };
+
+  export type ToasterToast = ToastProps & {
+    id: string;
+  };
 }`);
 });
