@@ -1026,7 +1026,15 @@ export class DeclVisitor {
 
   private getExpression(node: ts.Expression): TypeModel {
     if (ts.isArrowFunction(node)) {
-      return this.getMethodSignature(node);
+      const typeNode = this.convertToTypeNodeFromNode(node);
+
+      if (ts.isFunctionTypeNode(typeNode)) {
+        // we usually want the original, but in case the function was extended
+        // (i.e., converted to an interface) we take the retrieved one
+        return this.getMethodSignature(node);
+      }
+
+      return this.getTypeNode(typeNode);
     } else if (ts.isNumericLiteral(node)) {
       return {
         kind: 'literal',

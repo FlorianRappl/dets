@@ -11,7 +11,7 @@ test('Should keep the typeof in referenced cases', async () => {
   };
 
   export const PaginationPrevious: {
-    ({ className, ...props }: React.ComponentProps<typeof PaginationLink>): JSX.Element;
+    ({ className, ...props }: PaginationLinkProps): JSX.Element;
     displayName: string;
   };
 

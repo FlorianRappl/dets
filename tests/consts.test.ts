@@ -69,7 +69,10 @@ test('should be able to use const object literal', async () => {
 test('should be able to reflect usage of spread operator', async () => {
   const result = await runTestFor('const8.ts');
   expect(result).toBe(`declare module "test" {
-  export const BreadcrumbSeparator: ({ children, className, ...props }: Props) => string;
+  export const BreadcrumbSeparator: {
+    ({ children, className, ...props }: Props): string;
+    displayName: string;
+  };
 
   export interface Props {
     children: any;
