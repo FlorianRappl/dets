@@ -1,4 +1,5 @@
 import { runTestFor } from './helper';
+import { writeFileSync, unlinkSync } from 'fs';
 
 test('should handle imports from externals (deox)', async () => {
   const result = await runTestFor('deox.ts', {
@@ -552,4 +553,39 @@ test('should not duplicate entries', async () => {
     id: string;
   };
 }`);
+});
+
+test('should handle scoped imports', async () => {
+  const result = await runTestFor('scopedWithPeriod.ts', {
+    imports: ['@jdeurt/math.ts'],
+  });
+
+  const path = require('path');
+
+  // Path to the TypeScript file to check
+  const fileName = path.resolve('./src/scopedResult.d.ts');
+  writeFileSync(fileName, result);
+
+  
+  const ts = require('typescript');
+  // Create a program and compile
+  const program = ts.createProgram([fileName], {
+    noEmit: true, // Don't emit JavaScript files
+    strict: true, // Enable strict type-checking
+    types: [], // No need to include the default types
+  });
+
+  const emitResult = program.emit();
+  const diagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
+
+  unlinkSync(fileName);
+
+  if (diagnostics.length > 0) {
+    diagnostics.forEach(diagnostic => {
+      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+      const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+      console.error(`Error in ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+    });
+    fail('TypeScript errors found.');
+  }
 });

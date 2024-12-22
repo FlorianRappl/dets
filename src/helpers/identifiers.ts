@@ -27,7 +27,7 @@ export function getLibRefName(libName: string) {
     libName = libName.substring(1);
   }
 
-  const parts = libName.split(/[\/\-]/g);
+  const parts = libName.split(/[\/\-\.]/g);
   return parts.map(p => p[0].toUpperCase() + p.substring(1)).join('');
 }
 
