@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.6
+
+- Fixed issue with handling exported namespace modules
+
 ## 0.16.5
 
 - Fixed issue with dot in names for generated declaration file (#51) by @longlostbro

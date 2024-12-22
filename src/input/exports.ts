@@ -33,8 +33,10 @@ export function includeExports(context: DeclVisitorContext, key: string, symbol:
         if (name) {
           defs[name] = decl;
         }
-      } else if (ts.isMethodDeclaration(decl) || ts.isPropertyDeclaration(decl) || ts.isModuleDeclaration(decl)) {
+      } else if (ts.isMethodDeclaration(decl) || ts.isPropertyDeclaration(decl)) {
         // skip - mostly from ambient modules
+      } else if (ts.isModuleDeclaration(decl)) {
+        defs[decl.name.text] = decl;
       } else if (ts.isImportEqualsDeclaration(decl)) {
         //skip - automatically "introduced"
       } else if (ts.isNamespaceExport(decl)) {

@@ -16,11 +16,13 @@ export function setupVisitorContext(
   flags: DeclVisitorFlags,
 ) {
   const rootNames = files.filter((m) => !!m);
+  const [major, minor] = ts.versionMajorMinor.split('.').map((x) => Number(x));
+  const supportsBundler = (major === 5 && minor >= 3) || major > 5;
   const program = ts.createProgram(rootNames, {
     allowJs: true,
     esModuleInterop: true,
     module: ts.ModuleKind.ESNext,
-    moduleResolution: ts.ModuleResolutionKind.NodeJs,
+    moduleResolution: supportsBundler ? ts.ModuleResolutionKind.Bundler : ts.ModuleResolutionKind.Node10,
     jsx: ts.JsxEmit.React,
   });
   const checker = program.getTypeChecker();

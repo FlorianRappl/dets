@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { getLibRefName, isBaseLib, getModule, getLibName } from '../helpers';
+import { isBaseLib, isGlobal, getLibRefName, getModule, getLibName } from '../helpers';
 import {
   DeclVisitorContext,
   TypeModelRef,
@@ -58,18 +58,28 @@ export function isImportedFile(node: ts.Node, root: string, imports: ImportRefs)
   return false;
 }
 
-export function getPackage(node: ts.Node, global: boolean, root: string, imports: ImportRefs) {
+export function getPackage(node: ts.Node, symbol: ts.Symbol, root: string, imports: ImportRefs) {
   const fn = node.getSourceFile()?.fileName;
   const base = isBaseLib(fn) || false;
+  const global = isGlobal(symbol);
 
   if (!base) {
     const libName = getLibName(fn, root);
     const [lib] = Object.keys(imports).filter((name) => {
       if (global) {
         return name === libName;
-      } else {
-        return Object.values(imports[name]).includes(node);
       }
+
+      const exports = Object.values(imports[name]);
+
+      if (exports.includes(node)) {
+        return true;
+      } else if (symbol?.parent?.flags === ts.SymbolFlags.NamespaceModule) {
+        const parentNode = symbol.parent?.declarations[0];
+        return exports.includes(parentNode);
+      }
+
+      return false;
     });
     const symbolName = getSymbolName(imports[lib], node);
 
@@ -77,6 +87,7 @@ export function getPackage(node: ts.Node, global: boolean, root: string, imports
       external: !!lib,
       moduleName: (lib && getModule(node)) || lib,
       symbolName,
+      global,
       base,
       lib,
       fn,
@@ -87,6 +98,7 @@ export function getPackage(node: ts.Node, global: boolean, root: string, imports
     external: true,
     moduleName: undefined,
     symbolName: undefined,
+    global,
     base,
     lib: undefined,
     fn,

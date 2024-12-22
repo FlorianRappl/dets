@@ -3,7 +3,7 @@ import { globalIndicator } from './constants';
 import { isPrivate, isPublic, isProtected, isStatic, isReadonly } from './node';
 
 export function fullyQualifiedName(symbol: Symbol, delimiter: string) {
-  const parts = [];
+  const parts: Array<string> = [];
 
   do {
     parts.push(symbol.name);
@@ -30,6 +30,8 @@ export function isGlobal(symbol: Symbol) {
 export function getSymbolName(symbol: Symbol): string {
   if (symbol.flags === SymbolFlags.EnumMember) {
     return `${symbol.parent.name}.${symbol.name}`;
+  } else if (symbol.parent?.flags === SymbolFlags.NamespaceModule) {
+    return fullyQualifiedName(symbol, '.');
   }
 
   return symbol.name;

@@ -4,7 +4,6 @@ import { includeClauses, includeProp } from './includes';
 import {
   isDefaultExport,
   getModifiers,
-  isGlobal,
   fullyQualifiedName,
   getParameterName,
   getDeclarationFromNode,
@@ -157,8 +156,7 @@ export class DeclVisitor {
   private normalizeName(node: ts.Node) {
     const c = this.context;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
-    const global = isGlobal(symbol);
-    const { moduleName, lib, symbolName } = getPackage(node, global, c.root, c.availableImports);
+    const { moduleName, lib, symbolName, global } = getPackage(node, symbol, c.root, c.availableImports);
 
     if (!lib) {
       const name = global ? fullyQualifiedName(symbol, '_') : getSymbolName(symbol);
@@ -1102,8 +1100,7 @@ export class DeclVisitor {
   private includeInContext(node: ts.Node, createType: () => TypeModelExport) {
     const c = this.context;
     const symbol = getSymbol(c.checker, node);
-    const global = isGlobal(symbol);
-    const { external, fn } = getPackage(node, global, c.root, c.availableImports);
+    const { external, fn } = getPackage(node, symbol, c.root, c.availableImports);
 
     if (!external) {
       this.refs.push(createType());
