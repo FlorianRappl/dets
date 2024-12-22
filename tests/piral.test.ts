@@ -1,3 +1,4 @@
+import { test, expect } from 'vitest';
 import { runTestFor, getPiralBaseApi, getPiralCoreTypes } from './helper';
 
 test('should handle simple declaration merging (piral-core)', async () => {

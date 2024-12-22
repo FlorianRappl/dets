@@ -1,3 +1,4 @@
+import { test, expect } from 'vitest';
 import { runTestFor } from './helper';
 
 test('should be able to handle default enums', async () => {

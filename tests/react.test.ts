@@ -1,3 +1,4 @@
+import { test, expect } from 'vitest';
 import { runTestFor } from './helper';
 
 test('Should keep the typeof in referenced cases', async () => {

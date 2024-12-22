@@ -1,3 +1,4 @@
+import { test, expect } from 'vitest';
 import { runTestFor } from './helper';
 
 test('should handle triple-slash import', async () => {

@@ -1,3 +1,4 @@
+import { test, expect } from 'vitest';
 import { runTestFor } from './helper';
 
 test('Should export the typeof reference, too', async () => {

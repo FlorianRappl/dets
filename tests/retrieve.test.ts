@@ -1,3 +1,4 @@
+import { test, expect } from 'vitest';
 import { resolve } from 'path';
 import { retrieveTypings } from '../src';
 

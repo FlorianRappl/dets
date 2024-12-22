@@ -1,3 +1,4 @@
+import { test, expect } from 'vitest';
 import { resolve } from 'path';
 import { createDiffPlugin } from '../src';
 import { runTestFor } from './helper';

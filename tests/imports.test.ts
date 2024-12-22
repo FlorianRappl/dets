@@ -1,5 +1,7 @@
-import { runTestFor } from './helper';
+import { test, expect } from 'vitest';
 import { writeFileSync, unlinkSync } from 'fs';
+import { fail } from 'assert';
+import { runTestFor } from './helper';
 
 test('should handle imports from externals (deox)', async () => {
   const result = await runTestFor('deox.ts', {

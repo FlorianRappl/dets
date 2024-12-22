@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.16.5
+
+- Fixed issue with dot in names for generated declaration file (#51) by @longlostbro
+- Updated dependencies
+- Updated to use `vitest` instead of `jest`
+
 ## 0.16.4
 
 - Fixed unnecessary duplications
