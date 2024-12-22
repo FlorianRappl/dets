@@ -33,3 +33,17 @@ test('Should return the type as JSX.Element', async () => {
   export const Foo: () => JSX.Element;
 }`);
 });
+
+test('Should identify a React component correctly', async () => {
+  const result = await runTestFor('react10.tsx', {
+    imports: ['react'],
+  });
+  expect(result).toBe(`import * as React from 'react';
+
+declare module "test" {
+  export const SheetHeader: {
+    ({ ...props }: React.HTMLAttributes<HTMLDivElement>): JSX.Element;
+    displayName: string;
+  };
+}`);
+});
