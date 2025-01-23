@@ -2,6 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "declaration": false,
     "target": "es6",

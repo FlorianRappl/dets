@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.7
+
+- Fixed bundling issue leading to CLI crash at startup (#52)
+
 ## 0.16.6
 
 - Fixed issue with handling exported namespace modules

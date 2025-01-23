@@ -1,14 +1,14 @@
 {
   "name": "dets",
-  "version": "0.16.6",
+  "version": "0.16.7",
   "description": "A TypeScript declaration file bundler.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
     "start": "ts-node example/play.ts",
     "build": "npm run bundle && npm run check && npm run declare",
-    "bundle:lib": "esbuild src/index.ts --bundle --external:typescript --outfile=dist/index.js --format=cjs --platform=node --target=es2020",
-    "bundle:cli": "esbuild src/cli.ts --bundle --external:typescript --outfile=dist/cli.js --format=cjs --platform=node --target=es2020",
+    "bundle:lib": "esbuild src/index.ts --bundle --external:typescript --outfile=dist/index.js --format=cjs --platform=node --target=es2023",
+    "bundle:cli": "esbuild src/cli.ts --bundle --external:typescript --outfile=dist/cli.js --format=cjs --platform=node --target=es2023",
     "bundle": "npm run bundle:lib && npm run bundle:cli",
     "declare": "node dist/cli.js --files src/index.ts --imports typescript --types src/index.ts --out dist/index.d.ts",
     "check": "tsc --noEmit",
