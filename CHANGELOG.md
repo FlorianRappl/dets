@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 0.16.8
+
+- Fixed diffing of interfaces with changed inheritance
+
 ## 0.16.7
 
 - Fixed bundling issue leading to CLI crash at startup (#52)

@@ -74,3 +74,30 @@ export interface PiralCustomExtensionSlotMap {
   };
 }`);
 });
+
+test('should handle simple declaration diffing on inheritance with used imports (pilet from app shell)', async () => {
+  const shell = resolve(__dirname, 'assets', 'pilet-shell2.ts');
+  const result = await runTestFor('pilet-entry3.ts', {
+    name: 'pilet',
+    imports: ['react'],
+    types: [],
+    apis: [{
+      file: shell,
+      name: 'PiletApi',
+    }],
+    noModuleDeclaration: true,
+    plugins: [createDiffPlugin(shell)],
+  });
+  expect(result).toBe(`import * as React from 'react';
+
+/**
+ * Custom extension slots outside of piral-core.
+ */
+export interface PiralCustomExtensionSlotMap extends MyExtensions {}
+
+export interface MyExtensions {
+  foo: {
+    num: React.FC<any>;
+  };
+}`);
+});

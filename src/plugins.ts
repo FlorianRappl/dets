@@ -1,8 +1,17 @@
 import { dirname } from 'path';
 import { retrieveTypings } from './commands';
 import { stringifyNode } from './output/stringify';
+import { stringifyExport } from './output/exports';
 import { findRefs, updateImports } from './refs';
-import { DeclVisitorContext } from './types';
+import type { DeclVisitorContext, TypeModel } from './types';
+
+function stringifyNodeInternal(node: TypeModel) {
+  if (node.kind === 'interface' || node.kind === 'class') {
+    return stringifyExport(node);
+  }
+
+  return stringifyNode(node);
+}
 
 export interface DetsClassicPlugin {
   /**
@@ -60,7 +69,6 @@ export function createExcludePlugin(moduleNames: Array<string>): DetsPlugin {
   };
 }
 
-
 export function createDiffPlugin(originalFile: string): DetsPlugin {
   const state: Record<string, any> = {};
   return {
@@ -75,25 +83,25 @@ export function createDiffPlugin(originalFile: string): DetsPlugin {
         log: context.log,
       });
       state.types = refs;
-      state.cache = refs.map((ref) => stringifyNode(ref));
+      state.cache = refs.map((ref) => stringifyNodeInternal(ref));
     },
     async 'after-process'(context) {
       const mod = context.modules[context.name];
 
       for (let i = mod.length; i--; ) {
         const node = mod[i];
-        const current = stringifyNode(node);
+        const current = stringifyNodeInternal(node);
 
         if (state.cache.indexOf(current) !== -1) {
           // is a copy of an existing node -> drop it
           mod.splice(i, 1);
         } else if (node.kind === 'interface') {
           // identify the merged base interface
-          const mergedInterface = state.types.find(m => m.kind === 'interface' && m.name === node.name);
+          const mergedInterface = state.types.find((m) => m.kind === 'interface' && m.name === node.name);
 
           // if this one exists look at it
           if (mergedInterface) {
-            const originals = mergedInterface.props.map(p => stringifyNode(p));
+            const originals = mergedInterface.props.map((p) => stringifyNode(p));
 
             // compare which props are still the originals - remove them
             for (let j = node.props.length; j--; ) {
