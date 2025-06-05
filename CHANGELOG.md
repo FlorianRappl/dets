@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 0.17.0
+
+- Removed Node 16 compatibility
+- Updated required engine to be Node.js `18.17` or later
+- Fixed handling of `readonly` attribute in constructors (#55)
+
 ## 0.16.8
 
 - Fixed diffing of interfaces with changed inheritance

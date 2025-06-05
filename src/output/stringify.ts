@@ -74,15 +74,15 @@ export function stringifyProp(type: TypeModelProp) {
   }
 }
 
-export function stringifyParameter(param: TypeModelFunctionParameter) {
+export function stringifyParameter(param: TypeModelFunctionParameter, allowModifiers = true) {
   const isOpt = param.optional ? '?' : '';
   const spread = param.spread ? '...' : '';
-  const modifiers = param.modifiers ? `${param.modifiers} ` : '';
+  const modifiers = allowModifiers && param.modifiers ? `${param.modifiers} ` : '';
   return `${modifiers}${spread}${param.param}${isOpt}: ${stringifyNode(param.value)}`;
 }
 
-export function stringifyParameters(params: Array<TypeModelFunctionParameter>) {
-  return params.map(stringifyParameter).join(', ');
+export function stringifyParameters(params: Array<TypeModelFunctionParameter>, allowModifiers = true) {
+  return params.map((p) => stringifyParameter(p, allowModifiers)).join(', ');
 }
 
 export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode: StringifyMode, anonymous = false) {
@@ -100,9 +100,18 @@ export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode:
 }
 
 export function stringifyConstructor(type: TypeModelConstructor) {
-  const parameters = stringifyParameters(type.parameters);
+  const modifiedParameters = type.parameters.filter((m) => m.modifiers);
+  const parameters = stringifyParameters(type.parameters, false);
   const modifiers = type.modifiers ? `${type.modifiers} ` : '';
-  return `${modifiers}constructor(${parameters})`;
+  const body = modifiedParameters
+    .map((p) => {
+      const isOpt = p.optional ? '?' : '';
+      const type = stringifyNode(p.value);
+      return `${p.modifiers} ${p.param}${isOpt}: ${type};`;
+    })
+    .join('\n');
+  const head = `${modifiers}constructor(${parameters})`;
+  return [body, head].filter(Boolean).join('\n');
 }
 
 export function stringifyIndex(type: TypeModelIndex) {

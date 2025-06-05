@@ -5,7 +5,8 @@ test('should be able to handle exported classes with constructor', async () => {
   const result = await runTestFor('class1.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
-    public constructor(private value: string);
+    private value: string;
+    public constructor(value: string);
     foo(): string;
   }
 }`);
@@ -15,7 +16,9 @@ test('should be able to handle exported classes with differnet modifiers', async
   const result = await runTestFor('class2.ts');
   expect(result).toBe(`declare module "test" {
   export class SomeClass {
-    constructor(protected bar: boolean, private value: string);
+    protected bar: boolean;
+    private value: string;
+    constructor(bar: boolean, value: string);
     public foo(): string;
     private qxz(): boolean;
     protected name: string;
@@ -395,6 +398,16 @@ test('should be able to merge a class with an interface', async () => {
 
   export class Foo {
     constructor(a: string, b: number);
+  }
+}`);
+});
+
+test('should treat readonly fields correctly (issue 55)', async () => {
+  const result = await runTestFor('class13.ts');
+  expect(result).toBe(`declare module "test" {
+  export class ReceivedEMail {
+    readonly id: string;
+    constructor(id: string);
   }
 }`);
 });
