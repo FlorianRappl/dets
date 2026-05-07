@@ -39,11 +39,11 @@ export function stringifyComment(type: WithTypeComments) {
   return '';
 }
 
-export function stringifyPropName(name: string | TypeModel) {
+export function stringifyPropName(name: string | TypeModel): string {
   return typeof name === 'string' ? makeIdentifier(name) : `[${stringifyNode(name)}]`;
 }
 
-export function stringifyTupleProp(type: TypeModelTupleProp) {
+export function stringifyTupleProp(type: TypeModelTupleProp): string {
   const target = type.valueType;
   const comment = stringifyComment(type);
   const isOpt = type.optional ? '?' : '';
@@ -58,7 +58,7 @@ export function stringifyTupleProp(type: TypeModelTupleProp) {
   }
 }
 
-export function stringifyProp(type: TypeModelProp) {
+export function stringifyProp(type: TypeModelProp): string {
   const target = type.valueType;
   const comment = stringifyComment(type);
   const isOpt = type.optional ? '?' : '';
@@ -74,18 +74,18 @@ export function stringifyProp(type: TypeModelProp) {
   }
 }
 
-export function stringifyParameter(param: TypeModelFunctionParameter, allowModifiers = true) {
+export function stringifyParameter(param: TypeModelFunctionParameter, allowModifiers = true): string {
   const isOpt = param.optional ? '?' : '';
   const spread = param.spread ? '...' : '';
   const modifiers = allowModifiers && param.modifiers ? `${param.modifiers} ` : '';
   return `${modifiers}${spread}${param.param}${isOpt}: ${stringifyNode(param.value)}`;
 }
 
-export function stringifyParameters(params: Array<TypeModelFunctionParameter>, allowModifiers = true) {
+export function stringifyParameters(params: Array<TypeModelFunctionParameter>, allowModifiers = true): string {
   return params.map((p) => stringifyParameter(p, allowModifiers)).join(', ');
 }
 
-export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode: StringifyMode, anonymous = false) {
+export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode: StringifyMode, anonymous = false): string {
   const ctor = type.kind === 'new' ? 'new ' : '';
   const prop = (mode & StringifyMode.property) !== 0;
   const paren = (mode & StringifyMode.parenthesis) !== 0;
@@ -99,7 +99,7 @@ export function stringifySignature(type: TypeModelFunction | TypeModelNew, mode:
   return `${comment}${fn}`;
 }
 
-export function stringifyConstructor(type: TypeModelConstructor) {
+export function stringifyConstructor(type: TypeModelConstructor): string {
   const modifiedParameters = type.parameters.filter((m) => m.modifiers);
   const parameters = stringifyParameters(type.parameters, false);
   const modifiers = type.modifiers ? `${type.modifiers} ` : '';
@@ -114,31 +114,31 @@ export function stringifyConstructor(type: TypeModelConstructor) {
   return [body, head].filter(Boolean).join('\n');
 }
 
-export function stringifyIndex(type: TypeModelIndex) {
+export function stringifyIndex(type: TypeModelIndex): string {
   const isOpt = type.optional ? '?' : '';
   const index = stringifyParameters(type.parameters);
   return `[${index}]${isOpt}: ${stringifyNode(type.valueType)}`;
 }
 
-export function stringifyMapped(type: TypeModelMapped) {
+export function stringifyMapped(type: TypeModelMapped): string {
   const isOpt = type.optional ? '?' : '';
   const index = `${type.name} in ${stringifyNode(type.constraint)}`;
   return `[${index}]${isOpt}: ${stringifyNode(type.value)}`;
 }
 
-export function stringifyAccess(type: TypeModelAccess) {
+export function stringifyAccess(type: TypeModelAccess): string {
   const right = stringifyNode(type.name);
   const left = stringifyNode(type.object);
   return `${left}.${right}`;
 }
 
-export function stringifyIndexedAccess(type: TypeModelIndexedAccess) {
+export function stringifyIndexedAccess(type: TypeModelIndexedAccess): string {
   const right = stringifyNode(type.index);
   const left = stringifyNode(type.object);
   return `${left}[${right}]`;
 }
 
-export function stringifyInterface(type: TypeModelInterface) {
+export function stringifyInterface(type: TypeModelInterface): string {
   const lines = type.props.map((p) => stringifyNode(p, StringifyMode.property));
 
   if (type.mapped) {
@@ -148,31 +148,31 @@ export function stringifyInterface(type: TypeModelInterface) {
   return toBlock(lines, ';');
 }
 
-export function stringifyClass(type: TypeModelClass) {
+export function stringifyClass(type: TypeModelClass): string {
   const lines = type.props.map((p) => stringifyNode(p));
   return toBlock(lines, ';');
 }
 
-export function stringifyEnum(values: Array<TypeModel>) {
+export function stringifyEnum(values: Array<TypeModel>): string {
   const lines: Array<string> = values.map((p) => stringifyNode(p));
   return toBlock(lines, ',');
 }
 
-export function stringifyExtends(type: WithTypeExtends) {
+export function stringifyExtends(type: WithTypeExtends): string {
   const { extends: es } = type;
   return es.length ? ` extends ${es.map((t) => stringifyNode(t)).join(', ')}` : '';
 }
 
-export function stringifyImplements(type: WithTypeImplements) {
+export function stringifyImplements(type: WithTypeImplements): string {
   const { implements: is } = type;
   return is.length ? ` implements ${is.map((t) => stringifyNode(t)).join(', ')}` : '';
 }
 
-export function stringifyTypes(types: Array<TypeModel>) {
+export function stringifyTypes(types: Array<TypeModel>): string {
   return types.map((t) => stringifyNode(t)).join(', ');
 }
 
-export function stringifyTypeArgs(type: WithTypeArgs) {
+export function stringifyTypeArgs(type: WithTypeArgs): string {
   if (type.types?.length > 0) {
     return `<${stringifyTypes(type.types)}>`;
   }
@@ -180,7 +180,7 @@ export function stringifyTypeArgs(type: WithTypeArgs) {
   return '';
 }
 
-export function stringifyTypeParameter(type: TypeModelTypeParameter) {
+export function stringifyTypeParameter(type: TypeModelTypeParameter): string {
   const name = stringifyNode(type.parameter);
   const constraint = stringifyNode(type.constraint);
   const defaults = stringifyNode(type.default);
@@ -189,7 +189,7 @@ export function stringifyTypeParameter(type: TypeModelTypeParameter) {
   return `${name}${constraintClause}${defaultsClause}`;
 }
 
-export function stringifyTernary(condition: TypeModelConditional) {
+export function stringifyTernary(condition: TypeModelConditional): string {
   const t = stringifyNode(condition.check);
   const e = stringifyNode(condition.extends);
   const p = stringifyNode(condition.primary);
@@ -197,7 +197,7 @@ export function stringifyTernary(condition: TypeModelConditional) {
   return `${t} extends ${e} ? ${p} : ${a}`;
 }
 
-export function stringifyMember(member: TypeMemberModel) {
+export function stringifyMember(member: TypeMemberModel): string {
   const key = stringifyPropName(member.name);
   const name = `${stringifyComment(member)}${key}`;
 
@@ -208,26 +208,26 @@ export function stringifyMember(member: TypeMemberModel) {
   return name;
 }
 
-export function stringifySetAccessor(accessor: TypeModelSetAccessor) {
+export function stringifySetAccessor(accessor: TypeModelSetAccessor): string {
   const comment = stringifyComment(accessor);
   const modifier = accessor.modifiers ? `${accessor.modifiers} ` : '';
   const args = stringifyParameters(accessor.parameters);
   return `${comment}${modifier}set ${accessor.name}(${args})`;
 }
 
-export function stringifyGetAccessor(accessor: TypeModelGetAccessor) {
+export function stringifyGetAccessor(accessor: TypeModelGetAccessor): string {
   const comment = stringifyComment(accessor);
   const modifier = accessor.modifiers ? `${accessor.modifiers} ` : '';
   const result = stringifyNode(accessor.type);
   return `${comment}${modifier}get ${accessor.name}(): ${result}`;
 }
 
-export function stringifyPredicate(predicate: TypeModelPredicate) {
+export function stringifyPredicate(predicate: TypeModelPredicate): string {
   const type = stringifyNode(predicate.value);
   return `${predicate.name} is ${type}`;
 }
 
-export function stringifyImport(type: TypeModelImport) {
+export function stringifyImport(type: TypeModelImport): string {
   const head = `import(${stringifyNode(type.value)})`;
 
   if (type.qualifier) {
@@ -237,7 +237,7 @@ export function stringifyImport(type: TypeModelImport) {
   return head;
 }
 
-export function stringifyReadonly(type: TypeModelPrefixReadonly) {
+export function stringifyReadonly(type: TypeModelPrefixReadonly): string {
   const value = type.value;
 
   if (value.kind === 'ref' && value.refName === 'Array' && value.types.length === 1) {
@@ -254,7 +254,7 @@ export const enum StringifyMode {
   parenthesis = 2,
 }
 
-export function stringifyNode(type: TypeModel, mode = StringifyMode.default) {
+export function stringifyNode(type: TypeModel | undefined, mode = StringifyMode.default): string {
   switch (type?.kind) {
     case 'interface':
       return stringifyInterface(type);

@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
 import { resolve } from 'path';
+
 import { stringifyDeclaration } from './output';
 import { findAppRoot, getLibName } from './helpers';
 import { defaultLogger, wrapLogger } from './logger';
@@ -45,7 +46,7 @@ export function setupVisitorContext(
     flags,
     forEachResolvedModule(cb, file) {
       if ('forEachResolvedModule' in program) {
-        context.program.forEachResolvedModule(cb, file);
+        context.program.forEachResolvedModule?.(cb, file);
       } else {
         file.resolvedModules?.forEach(cb);
       }
@@ -136,7 +137,7 @@ export function addAmbientModules(context: DeclVisitorContext, imports: Array<st
     const file = module.declarations?.[0]?.getSourceFile()?.fileName;
     const lib = getLibName(file, context.root);
 
-    if (imports.includes(lib)) {
+    if (lib && imports.includes(lib)) {
       includeExports(context, module.name, module);
     }
   }
@@ -221,6 +222,10 @@ export interface DeclOptions extends DetsOptions {
    */
   files?: Array<string>;
   /**
+   * The files to exclude from inspection - if they have been added otherwise.
+   */
+  excluded?: Array<string>;
+  /**
    * The additional type modules to consider for API generation.
    */
   types?: Array<string>;
@@ -252,6 +257,7 @@ export async function generateDeclaration(options: DeclOptions) {
     files = [],
     types = [],
     apis = [],
+    excluded = [],
     plugins = [],
     logger = defaultLogger,
     logLevel = 3,
@@ -266,7 +272,7 @@ export async function generateDeclaration(options: DeclOptions) {
     ...files.map((file) => findAppRoot(root, file)),
     ...apis.map((api) => findAppRoot(root, api.file)),
     ...types.map((type) => findAppRoot(root, type)),
-  ];
+  ].filter((m) => !excluded.includes(m));
 
   log.verbose(`Setting up a visitor context for "${name}".`);
 
@@ -304,6 +310,10 @@ export interface TypingOptions extends DetsOptions {
    * The type modules to inspect for retrieving the typings.
    */
   types: Array<string>;
+  /**
+   * The files to exclude from inspection - if they have been added otherwise.
+   */
+  excluded?: Array<string>;
 }
 
 /**
@@ -316,6 +326,7 @@ export async function retrieveTypings(options: TypingOptions) {
   const {
     root = process.cwd(),
     imports = [],
+    excluded = [],
     files = [],
     types = [],
     plugins = [],
@@ -328,7 +339,10 @@ export async function retrieveTypings(options: TypingOptions) {
 
   log.verbose(`Aggregating the sources from "${root}".`);
 
-  const sources = [...files.map((file) => findAppRoot(root, file)), ...types.map((type) => findAppRoot(root, type))];
+  const sources = [
+    ...files.map((file) => findAppRoot(root, file)),
+    ...types.map((type) => findAppRoot(root, type)),
+  ].filter((m) => !excluded.includes(m));
 
   log.verbose(`Setting up a visitor context for "${name}".`);
 

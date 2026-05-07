@@ -2,13 +2,15 @@ import { Symbol, SymbolFlags } from 'typescript';
 import { globalIndicator } from './constants';
 import { isPrivate, isPublic, isProtected, isStatic, isReadonly } from './node';
 
-export function fullyQualifiedName(symbol: Symbol, delimiter: string) {
+export function fullyQualifiedName(symbol: Symbol | undefined, delimiter: string) {
   const parts: Array<string> = [];
 
-  do {
-    parts.push(symbol.name);
-    symbol = symbol.parent;
-  } while (symbol && symbol.flags === SymbolFlags.NamespaceModule && symbol.name !== globalIndicator);
+  if (symbol) {
+    do {
+      parts.push(symbol.name);
+      symbol = symbol.parent;
+    } while (symbol && symbol.flags === SymbolFlags.NamespaceModule && symbol.name !== globalIndicator);
+  }
 
   return parts.reverse().join(delimiter);
 }
@@ -29,7 +31,7 @@ export function isGlobal(symbol: Symbol) {
 
 export function getSymbolName(symbol: Symbol): string {
   if (symbol.flags === SymbolFlags.EnumMember) {
-    return `${symbol.parent.name}.${symbol.name}`;
+    return `${symbol.parent?.name}.${symbol.name}`;
   } else if (symbol.parent?.flags === SymbolFlags.NamespaceModule) {
     return fullyQualifiedName(symbol, '.');
   }

@@ -1,3 +1,4 @@
+import { relative, extname } from 'path';
 import {
   Identifier,
   IndexInfo,
@@ -15,7 +16,7 @@ import {
   StringLiteral,
   NumericLiteral,
 } from 'typescript';
-import { relative, extname } from 'path';
+
 import { typesRoot, modulesRoot, anonymousIndicator, globalIndicator } from './constants';
 
 export function isAnonymous(name: string) {
@@ -28,7 +29,7 @@ export function getLibRefName(libName: string) {
   }
 
   const parts = libName.split(/[\/\-\.]/g);
-  return parts.map(p => p[0].toUpperCase() + p.substring(1)).join('');
+  return parts.map((p) => p[0].toUpperCase() + p.substring(1)).join('');
 }
 
 export function getTypeRefName(name: EntityName): string {
@@ -49,7 +50,7 @@ export function getPredicateName(name: Identifier | ThisTypeNode): string {
   }
 }
 
-export function getExportName(name: Identifier | StringLiteral | NumericLiteral): string {
+export function getExportName(name: Identifier | StringLiteral | NumericLiteral): string | undefined {
   if (!name) {
     return undefined;
   } else if (isIdentifier(name)) {
@@ -88,16 +89,13 @@ function makeModule(fileName: string, root: string) {
   return file.substring(0, file.length - ext.length);
 }
 
-export function getLibName(fileName: string, root: string) {
+export function getLibName(fileName: string | undefined, root: string) {
   if (fileName) {
     if (fileName.indexOf(typesRoot) !== -1) {
       const start = fileName.lastIndexOf(typesRoot) + typesRoot.length;
-      const name = fileName
-        .substring(start)
-        .split('/')
-        .shift();
+      const name = fileName.substring(start).split('/').shift();
 
-      if (name.indexOf('__') !== -1) {
+      if (name && name.indexOf('__') !== -1) {
         const [scope, lib] = name.split('__');
         return `@${scope}/${lib}`;
       }
@@ -129,10 +127,10 @@ export function getKeyName(info: IndexInfo) {
   return (<Identifier>info?.declaration?.parameters?.[0].name)?.text ?? 'index';
 }
 
-export function getGlobalName(symbol: Symbol) {
+export function getGlobalName(symbol: Symbol): string {
   const { parent, name } = symbol;
 
-  if (parent.name !== globalIndicator) {
+  if (parent && parent.name !== globalIndicator) {
     return `${getGlobalName(parent)}.${name}`;
   }
 

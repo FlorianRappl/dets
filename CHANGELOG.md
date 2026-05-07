@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 0.18.0
+
+- Removed Node 18 compatibility
+- Updated required engine to be Node.js `20` or later
+
 ## 0.17.0
 
 - Removed Node 16 compatibility

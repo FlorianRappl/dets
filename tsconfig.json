@@ -1,17 +1,18 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "es2022",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "declaration": false,
-    "target": "es6",
-    "outDir": "lib"
+    "lib": ["ES2020"],
+    "types": ["node"],
+    "target": "es6"
   },
   "include": [
-    "src/**/*"
+    "src"
   ],
   "exclude": [
-    "node_modules/**/*",
+    "node_modules",
   ]
 }

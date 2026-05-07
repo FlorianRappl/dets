@@ -1,9 +1,10 @@
 import * as ts from 'typescript';
-import { getDeclarationFromNode, getParameterName, isDefaultExport } from '../helpers';
-import { DeclVisitorContext } from '../types';
 
-export function includeExports(context: DeclVisitorContext, key: string, symbol: ts.Symbol) {
-  const defs = {};
+import { getDeclarationFromNode, getParameterName, isDefaultExport } from '../helpers';
+import { DeclVisitorContext, ImportDefs } from '../types';
+
+export function includeExports(context: DeclVisitorContext, key: string, symbol: ts.Symbol | undefined) {
+  const defs: ImportDefs = {};
 
   if (symbol) {
     context.checker.getExportsOfModule(symbol).forEach((exp) => {

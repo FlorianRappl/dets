@@ -1,9 +1,10 @@
 import { dirname } from 'path';
+
 import { retrieveTypings } from './commands';
 import { stringifyNode } from './output/stringify';
 import { stringifyExport } from './output/exports';
 import { findRefs, updateImports } from './refs';
-import type { DeclVisitorContext, TypeModel } from './types';
+import type { DeclVisitorContext, TypeModel, TypeModelInterface } from './types';
 
 function stringifyNodeInternal(node: TypeModel) {
   if (node.kind === 'interface' || node.kind === 'class') {
@@ -97,7 +98,9 @@ export function createDiffPlugin(originalFile: string): DetsPlugin {
           mod.splice(i, 1);
         } else if (node.kind === 'interface') {
           // identify the merged base interface
-          const mergedInterface = state.types.find((m) => m.kind === 'interface' && m.name === node.name);
+          const mergedInterface: TypeModelInterface = state.types.find(
+            (m: TypeModel) => m.kind === 'interface' && m.name === node.name,
+          );
 
           // if this one exists look at it
           if (mergedInterface) {

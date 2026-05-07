@@ -25,7 +25,7 @@ export function findRefs(types: Array<TypeModel>) {
         queue.push(type.value);
         break;
       case 'interface':
-        queue.push(...type.extends, type.mapped, ...type.props, ...type.types);
+        queue.push(...type.extends, type.mapped!, ...type.props, ...type.types);
         break;
       case 'class':
         queue.push(...type.extends, ...type.implements, ...type.props, ...type.types);
@@ -40,7 +40,7 @@ export function findRefs(types: Array<TypeModel>) {
         queue.push(type.valueType);
         break;
       case 'typeParameter':
-        queue.push(type.constraint, type.parameter);
+        queue.push(type.constraint!, type.parameter);
         break;
       case 'parameter':
         queue.push(type.value);
@@ -106,7 +106,7 @@ export function findRefs(types: Array<TypeModel>) {
         queue.push(type.value);
         break;
       case 'template':
-        queue.push(...type.parts.map((m) => (typeof m !== 'string' ? m : undefined)).filter(Boolean));
+        queue.push(...type.parts.map((m) => (typeof m !== 'string' ? m : undefined!)).filter(Boolean));
         break;
       default:
         break;
