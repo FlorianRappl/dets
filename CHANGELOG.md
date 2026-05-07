@@ -4,6 +4,8 @@
 
 - Removed Node 18 compatibility
 - Updated required engine to be Node.js `20` or later
+- Updated to use trusted publishing via GitHub actions
+- Added `excluded` to API to remove unwanted modules
 
 ## 0.17.0
 
