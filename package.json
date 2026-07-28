@@ -60,7 +60,7 @@
     "@types/yargs": "^17",
     "deox": "4.0.0",
     "esbuild": "0.28.1",
-    "glob": "^8",
+    "glob": "^13",
     "piral-core": "^0.11.8",
     "redux-saga": "1.2.3",
     "sample-piral": "0.13.9",
