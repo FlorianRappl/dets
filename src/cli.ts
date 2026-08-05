@@ -107,7 +107,8 @@ async function runCli() {
 (async () => {
   try {
     await runCli();
-  } catch {
+  } catch (ex) {
+    console.error('Error while generating declaration file.', ex);
     process.exit(1);
   }
 
