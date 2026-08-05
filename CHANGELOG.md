@@ -1,5 +1,10 @@
 # Changelog for dets
 
+## 1.0.0
+
+- Improved TypeScript version independence
+- Added compatibility with recent (or any) TypeScript release
+
 ## 0.18.0
 
 - Removed Node 18 compatibility
