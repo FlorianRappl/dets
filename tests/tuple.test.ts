@@ -14,3 +14,10 @@ test('should be able to correctly represent named tuples', async () => {
   export type BlazorRootConfig = [root: HTMLDivElement, capabilities: Array<string>, applyChanges: (pilet: string) => void];
 }`);
 });
+
+test('should be able to correctly represent optional tuple elements', async () => {
+  const result = await runTestFor('optional-tuple.ts');
+  expect(result).toEqual(`declare module "test" {
+  export type LatLngTuple = [number, number, number?];
+}`);
+});

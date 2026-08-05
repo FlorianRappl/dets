@@ -45,6 +45,7 @@ import {
   TypeModelPredicate,
   TypeModelGetAccessor,
   TypeModelSetAccessor,
+  TypeModelOptional,
   TypeModelParenthesis,
   TypeModelRest,
   TypeModelTemplate,
@@ -100,6 +101,7 @@ export type TypeModel =
   | TypeModelNew
   | TypeModelGetAccessor
   | TypeModelSetAccessor
+  | TypeModelOptional
   | TypeModelParenthesis
   | TypeModelRest
   | TypeModelTemplate;

@@ -723,6 +723,13 @@ export class DeclVisitor {
     };
   }
 
+  private getOptionalTypeNode(node: ts.OptionalTypeNode): TypeModel {
+    return {
+      kind: 'optional',
+      value: this.getTypeNode(node.type),
+    };
+  }
+
   private getNamedTuple(node: ts.NamedTupleMember): TypeModel {
     const model: TypeModel = {
       kind: 'tuple-prop',
@@ -878,6 +885,8 @@ export class DeclVisitor {
       return this.getTypeQueryNode(node);
     } else if ('isRestTypeNode' in ts && ts.isRestTypeNode(node)) {
       return this.getTypeRestNode(node);
+    } else if ('isOptionalTypeNode' in ts && ts.isOptionalTypeNode(node)) {
+      return this.getOptionalTypeNode(node);
     } else if ('isTemplateLiteralTypeNode' in ts && ts.isTemplateLiteralTypeNode(node)) {
       return this.getTemplateLiteralNode(node);
     } else if (ts.isNamedTupleMember(node)) {

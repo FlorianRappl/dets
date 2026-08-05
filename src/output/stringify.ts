@@ -317,6 +317,8 @@ export function stringifyNode(type: TypeModel | undefined, mode = StringifyMode.
       return stringifyMapped(type);
     case 'substitution':
       return stringifyNode(type.variable);
+    case 'optional':
+      return `${stringifyNode(type.value)}?`;
     case 'rest':
       return `...${stringifyNode(type.value)}`;
     case 'new':

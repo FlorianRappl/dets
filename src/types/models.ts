@@ -270,6 +270,11 @@ export interface TypeModelParenthesis {
   readonly value: TypeModel;
 }
 
+export interface TypeModelOptional {
+  readonly kind: 'optional';
+  readonly value: TypeModel;
+}
+
 export interface TypeModelTuple extends WithTypeArgs {
   readonly kind: 'tuple';
 }

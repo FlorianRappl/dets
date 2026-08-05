@@ -4,6 +4,7 @@
 
 - Improved TypeScript version independence
 - Added compatibility with recent (or any) TypeScript release
+- Added support for optional entries in tuples
 
 ## 0.18.0
 

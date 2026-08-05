@@ -63,6 +63,9 @@ export function findRefs(types: Array<TypeModel>) {
       case 'substitution':
         queue.push(type.variable);
         break;
+      case 'optional':
+        queue.push(type.value);
+        break;
       case 'tuple-prop':
         queue.push(type.valueType);
         break;
