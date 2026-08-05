@@ -1,6 +1,7 @@
 import { test, expect } from 'vitest';
-import { writeFileSync, unlinkSync } from 'fs';
+import { mkdirSync, rmSync, writeFileSync, unlinkSync } from 'fs';
 import { fail } from 'assert';
+import { join, resolve } from 'path';
 import { runTestFor } from './helper';
 
 test('should handle imports from externals (deox)', async () => {
@@ -189,16 +190,53 @@ declare module "test" {
 });
 
 test('should import inferred types from hidden dependency submodules', async () => {
-  const result = await runTestFor('import-hidden.ts', {
-    imports: ['hidden-lib'],
+  const fixtureRoot = resolve(__dirname, 'assets/node_modules/hidden-lib');
+
+  mkdirSync(fixtureRoot, {
+    recursive: true,
   });
-  expect(result).toBe(`import * as HiddenLibInternal from 'hidden-lib/internal';
+  writeFileSync(
+    join(fixtureRoot, 'package.json'),
+    JSON.stringify({
+      name: 'hidden-lib',
+      version: '1.0.0',
+      types: 'index.d.ts',
+    }),
+  );
+  writeFileSync(
+    join(fixtureRoot, 'index.d.ts'),
+    `import type { HiddenThing } from './internal';
+
+export interface PublicApi {
+  value: HiddenThing;
+}
+`,
+  );
+  writeFileSync(
+    join(fixtureRoot, 'internal.d.ts'),
+    `export interface HiddenThing {
+  id: string;
+}
+`,
+  );
+
+  try {
+    const result = await runTestFor('import-hidden.ts', {
+      imports: ['hidden-lib'],
+    });
+    expect(result).toBe(`import * as HiddenLibInternal from 'hidden-lib/internal';
 
 declare module "test" {
   export interface Foo {
     value: HiddenLibInternal.HiddenThing;
   }
 }`);
+  } finally {
+    rmSync(fixtureRoot, {
+      recursive: true,
+      force: true,
+    });
+  }
 });
 
 test('should avoid name clashes when importing', async () => {
@@ -575,10 +613,8 @@ test('should handle scoped imports', async () => {
     imports: ['@jdeurt/math.ts'],
   });
 
-  const path = require('path');
-
   // Path to the TypeScript file to check
-  const fileName = path.resolve('./src/scopedResult.d.ts');
+  const fileName = resolve('./src/scopedResult.d.ts');
   writeFileSync(fileName, result);
 
   
