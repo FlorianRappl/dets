@@ -4,7 +4,6 @@
 
 - Improved TypeScript version independence
 - Fixed importing types of hidden submodules (#9)
-- Added compatibility with recent (or any) TypeScript release
 - Added support for optional entries in tuples
 
 ## 0.18.0
