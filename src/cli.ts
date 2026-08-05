@@ -2,8 +2,7 @@
 
 import yargs from 'yargs';
 import { dirname, resolve } from 'path';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { exec } from 'child_process';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 
 const root = process.cwd();
 
@@ -55,7 +54,8 @@ function getName(dir: string) {
     return undefined;
   }
 
-  return require(location).name;
+  const content = readFileSync(location, 'utf8');
+  return JSON.parse(content).name;
 }
 
 function getApiDecl(api: string) {
@@ -74,13 +74,6 @@ function writeFile(path: string, content: string) {
   writeFileSync(full, content, 'utf8');
 }
 
-function runScript(script: string, cwd: string) {
-  return new Promise<void>((resolve, reject) => {
-    const cp = exec(script, { cwd });
-    cp.on('close', (code, signal) => (code === 0 ? resolve() : reject(new Error(signal))));
-  });
-}
-
 async function runCli() {
   const args = await asyncArgs;
 
@@ -97,7 +90,7 @@ async function runCli() {
     process.exit(1);
   }
 
-  const { generateDeclaration } = require('./index');
+  const { generateDeclaration } = await import('./index');
   const content = await generateDeclaration({
     root,
     files,
@@ -112,13 +105,6 @@ async function runCli() {
 }
 
 (async () => {
-  try {
-    require('typescript');
-  } catch {
-    console.warn(`TypeScript is missing. Trying to install ...`);
-    await runScript('npm install typescript@^5', resolve(__dirname, '..'));
-  }
-
   try {
     await runCli();
   } catch {

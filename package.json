@@ -2,14 +2,13 @@
   "name": "dets",
   "version": "1.0.0",
   "description": "A TypeScript declaration file bundler.",
-  "main": "dist/index.js",
+  "type": "module",
+  "module": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
     "start": "ts-node example/play.ts",
     "build": "npm run bundle && npm run check && npm run declare",
-    "bundle:lib": "esbuild src/index.ts --bundle --outfile=dist/index.js --format=cjs --platform=node --target=es2023",
-    "bundle:cli": "esbuild src/cli.ts --bundle --outfile=dist/cli.js --format=cjs --platform=node --target=es2023",
-    "bundle": "npm run bundle:lib && npm run bundle:cli",
+    "bundle": "esbuild src/index.ts src/cli.ts --bundle --outdir=dist --format=esm --splitting --platform=node --target=es2023",
     "declare": "node dist/cli.js --files src/index.ts --imports typescript --types src/index.ts --out dist/index.d.ts",
     "check": "tsc --noEmit",
     "test": "vitest"
