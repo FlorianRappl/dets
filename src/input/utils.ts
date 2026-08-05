@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { isBaseLib, isGlobal, getLibRefName, getModule, getLibName } from '../helpers';
+import { isBaseLib, isGlobal, getLibRefName, getModule, getLibName, getModuleName } from '../helpers';
 import {
   DeclVisitorContext,
   TypeModelRef,
@@ -65,9 +65,11 @@ export function getPackage(node: ts.Node, symbol: ts.Symbol, root: string, impor
 
   if (!base) {
     const libName = getLibName(fn, root);
-    const [lib] = Object.keys(imports).filter((name) => {
+    const moduleName = getModuleName(fn, root);
+    const names = Object.keys(imports);
+    const lib = names.find((name) => {
       if (global) {
-        return name === libName;
+        return name === libName || name === moduleName;
       }
 
       const exports = Object.values(imports[name]);

@@ -188,6 +188,19 @@ declare module "test" {
 }`);
 });
 
+test('should import inferred types from hidden dependency submodules', async () => {
+  const result = await runTestFor('import-hidden.ts', {
+    imports: ['hidden-lib'],
+  });
+  expect(result).toBe(`import * as HiddenLibInternal from 'hidden-lib/internal';
+
+declare module "test" {
+  export interface Foo {
+    value: HiddenLibInternal.HiddenThing;
+  }
+}`);
+});
+
 test('should avoid name clashes when importing', async () => {
   const result = await runTestFor('import3.ts');
   expect(result).toBe(`declare module "test" {

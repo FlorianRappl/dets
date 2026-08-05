@@ -84,35 +84,58 @@ export function getParameterName(name: BindingName | OmittedExpression): string 
 
 function makeModule(fileName: string, root: string) {
   const relFile = relative(root, fileName);
-  const ext = extname(fileName);
   const file = !relFile.startsWith('.') ? `./${relFile}` : relFile;
-  return file.substring(0, file.length - ext.length);
+  return stripFileExtension(file);
 }
 
-export function getLibName(fileName: string | undefined, root: string) {
+function stripFileExtension(fileName: string) {
+  return fileName.replace(/(\.d)?\.[cm]?[jt]sx?$/i, '');
+}
+
+function stripIndex(moduleName: string) {
+  return moduleName.endsWith('/index') ? moduleName.substring(0, moduleName.length - '/index'.length) : moduleName;
+}
+
+export function getModuleName(fileName: string | undefined, root: string) {
   if (fileName) {
     if (fileName.indexOf(typesRoot) !== -1) {
       const start = fileName.lastIndexOf(typesRoot) + typesRoot.length;
-      const name = fileName.substring(start).split('/').shift();
-
-      if (name && name.indexOf('__') !== -1) {
-        const [scope, lib] = name.split('__');
-        return `@${scope}/${lib}`;
-      }
-
-      return name;
+      const [pkg, ...rest] = fileName.substring(start).split('/');
+      const packageName = pkg && pkg.indexOf('__') !== -1 ? `@${pkg.replace('__', '/')}` : pkg;
+      const subpath = rest.join('/');
+      const suffix = subpath ? stripFileExtension(subpath) : '';
+      return stripIndex(suffix ? `${packageName}/${suffix}` : packageName);
     } else if (fileName.indexOf(modulesRoot) !== -1) {
       const start = fileName.lastIndexOf(modulesRoot) + modulesRoot.length;
-      const [scope, lib] = fileName.substring(start).split('/');
-
-      if (scope.indexOf('@') === 0) {
-        return `${scope}/${lib}`;
-      }
-
-      return scope;
+      const parts = fileName.substring(start).split('/');
+      const [head, next, ...rest] = parts;
+      const scoped = head.indexOf('@') === 0;
+      const packageName = scoped ? `${head}/${next}` : head;
+      const subparts = scoped ? rest : [next, ...rest].filter(Boolean);
+      const subpath = subparts.join('/');
+      const suffix = subpath ? stripFileExtension(subpath) : '';
+      return stripIndex(suffix ? `${packageName}/${suffix}` : packageName);
     } else {
       return makeModule(fileName, root);
     }
+  }
+
+  return undefined;
+}
+
+export function getLibName(fileName: string | undefined, root: string) {
+  const moduleName = getModuleName(fileName, root);
+
+  if (moduleName) {
+    if (moduleName.startsWith('./') || moduleName.startsWith('../')) {
+      return moduleName;
+    }
+
+    if (moduleName[0] === '@') {
+      return moduleName.split('/').slice(0, 2).join('/');
+    }
+
+    return moduleName.split('/').shift();
   }
 
   return undefined;

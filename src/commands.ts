@@ -108,22 +108,28 @@ export function addAvailableImports(context: DeclVisitorContext, imports: Array<
   context.log.verbose(`Adding ${imports.length} imports from ${sourceFiles.length} source files.`);
 
   for (const sourceFile of sourceFiles) {
-    if (remaining.length === 0) {
+    if (remaining.length === 0 && sourceFile.fileName.indexOf('/node_modules/') !== -1) {
       break;
     }
 
     context.forEachResolvedModule((value, key) => {
       const index = remaining.indexOf(key);
+      const hidden = imports.find((name) => key.startsWith(`${name}/`));
       const fileName = value?.resolvedModule?.resolvedFileName ?? value?.resolvedFileName;
 
       if (!fileName) {
         context.log.verbose(`Skipping module without filename: ${value}.`);
-      } else if (index === -1) {
+      } else if (index === -1 && !hidden) {
         context.log.verbose(`Skipping module "${fileName}" as it does not match.`);
+      } else if (context.availableImports[key]) {
+        context.log.verbose(`Skipping already included module "${key}".`);
       } else {
         const file = context.program.getSourceFile(fileName);
         includeExports(context, key, file?.symbol);
-        remaining.splice(index, 1);
+
+        if (index !== -1) {
+          remaining.splice(index, 1);
+        }
       }
     }, sourceFile);
   }
