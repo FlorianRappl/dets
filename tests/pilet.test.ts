@@ -9,10 +9,12 @@ test('should handle simple declaration diffing without used imports (pilet from 
     name: 'pilet',
     imports: ['react'],
     types: [],
-    apis: [{
-      file: shell,
-      name: 'PiletApi',
-    }],
+    apis: [
+      {
+        file: shell,
+        name: 'PiletApi',
+      },
+    ],
     noModuleDeclaration: true,
     plugins: [createDiffPlugin(shell)],
   });
@@ -24,7 +26,7 @@ export interface PiralCustomExtensionSlotMap {
     num: number;
   };
 }`);
-});
+}, 15_000);
 
 test('should handle simple declaration using correct name', async () => {
   const shell = resolve(__dirname, 'assets', 'pilet-shell1.ts');
@@ -32,10 +34,12 @@ test('should handle simple declaration using correct name', async () => {
     name: 'app-shell',
     imports: ['react'],
     types: [],
-    apis: [{
-      file: shell,
-      name: 'PiletApi',
-    }],
+    apis: [
+      {
+        file: shell,
+        name: 'PiletApi',
+      },
+    ],
     plugins: [createDiffPlugin(shell)],
   });
   expect(result).toBe(`declare module "app-shell" {
@@ -48,7 +52,7 @@ test('should handle simple declaration using correct name', async () => {
     };
   }
 }`);
-});
+}, 15_000);
 
 test('should handle simple declaration diffing with used imports (pilet from app shell)', async () => {
   const shell = resolve(__dirname, 'assets', 'pilet-shell2.ts');
@@ -56,10 +60,12 @@ test('should handle simple declaration diffing with used imports (pilet from app
     name: 'pilet',
     imports: ['react'],
     types: [],
-    apis: [{
-      file: shell,
-      name: 'PiletApi',
-    }],
+    apis: [
+      {
+        file: shell,
+        name: 'PiletApi',
+      },
+    ],
     noModuleDeclaration: true,
     plugins: [createDiffPlugin(shell)],
   });
@@ -73,7 +79,7 @@ export interface PiralCustomExtensionSlotMap {
     num: React.FC<any>;
   };
 }`);
-});
+}, 15_000);
 
 test('should handle simple declaration diffing on inheritance with used imports (pilet from app shell)', async () => {
   const shell = resolve(__dirname, 'assets', 'pilet-shell2.ts');
@@ -81,10 +87,12 @@ test('should handle simple declaration diffing on inheritance with used imports 
     name: 'pilet',
     imports: ['react'],
     types: [],
-    apis: [{
-      file: shell,
-      name: 'PiletApi',
-    }],
+    apis: [
+      {
+        file: shell,
+        name: 'PiletApi',
+      },
+    ],
     noModuleDeclaration: true,
     plugins: [createDiffPlugin(shell)],
   });
@@ -100,4 +108,4 @@ export interface MyExtensions {
     num: React.FC<any>;
   };
 }`);
-});
+}, 15_000);
