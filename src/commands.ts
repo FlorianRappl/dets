@@ -25,6 +25,7 @@ export function setupVisitorContext(
     module: ts.ModuleKind.ESNext,
     moduleResolution: supportsBundler ? ts.ModuleResolutionKind.Bundler : ts.ModuleResolutionKind.Node10,
     jsx: ts.JsxEmit.React,
+    preserveSymlinks: true,
   });
   const checker = program.getTypeChecker();
   const context: DeclVisitorContext = {
