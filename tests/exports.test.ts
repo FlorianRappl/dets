@@ -42,3 +42,14 @@ test('should handle nested selected export with rename', async () => {
   export interface Qxz {}
 }`);
 });
+
+test('should not emit a queued selected export twice', async () => {
+  const result = await runTestFor('exports5.ts');
+  expect(result).toBe(`declare module "test" {
+  export interface Props {
+    value: typeof value;
+  }
+
+  export const value: string;
+}`);
+});

@@ -156,9 +156,11 @@ export class DeclVisitor {
   private normalizeName(node: ts.Node) {
     const c = this.context;
     const symbol = node.symbol ?? node.aliasSymbol ?? c.checker.getSymbolAtLocation(node);
-    const { moduleName, lib, symbolName, global } = getPackage(node, symbol, c.root, c.availableImports);
+    const { moduleName, lib, symbolName, global, base } = getPackage(node, symbol, c.root, c.availableImports);
 
-    if (!lib) {
+    if (base) {
+      return fullyQualifiedName(symbol, '.');
+    } else if (!lib) {
       const name = global ? fullyQualifiedName(symbol, '_') : getSymbolName(symbol);
       return this.getName(node, name);
     } else if (global) {
@@ -1106,13 +1108,17 @@ export class DeclVisitor {
     };
   }
 
-  private includeInContext(node: ts.Node, createType: () => TypeModelExport) {
+  private includeInContext(node: ts.Node, createType: () => TypeModelExport | undefined) {
     const c = this.context;
     const symbol = getSymbol(c.checker, node);
     const { external, fn } = getPackage(node, symbol, c.root, c.availableImports);
 
     if (!external) {
-      this.refs.push(createType());
+      const type = createType();
+
+      if (type) {
+        this.refs.push(type);
+      }
     } else {
       this.logVerbose(`Node from "${fn}" is external and should not be included.`);
     }
@@ -1150,14 +1156,17 @@ export class DeclVisitor {
   }
 
   private includeExportedInterface(node: ts.InterfaceDeclaration) {
-    const name = this.getName(node, node.name.text);
-    const exists = this.refs.some((m) => m.kind === 'interface' && m.name === name);
+    this.includeInContext(node, () => {
+      const name = this.getName(node, node.name.text);
+      const exists = this.refs.some((m) => m.kind === 'interface' && m.name === name);
 
-    if (!exists) {
-      this.includeInContext(node, () => this.getInterface(node));
-    } else {
+      if (!exists) {
+        return this.getInterface(node);
+      }
+
       this.logVerbose(`Skipping already included interface "${name}".`);
-    }
+      return undefined;
+    });
   }
 
   private includeExportedVariable(node: ts.VariableDeclaration) {
@@ -1256,6 +1265,12 @@ export class DeclVisitor {
   }
 
   private processNode(node: ts.Node) {
+    const queuedIndex = this.queue.indexOf(node);
+
+    if (queuedIndex !== -1) {
+      this.queue.splice(queuedIndex, 1);
+    }
+
     this.processed.push(node);
 
     if (ts.isTypeAliasDeclaration(node)) {

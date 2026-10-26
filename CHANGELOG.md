@@ -1,5 +1,11 @@
 # Changelog for dets
 
+## 1.0.1
+
+- Updated dependencies
+- Fixed issue with duplicated types
+- Fixed unnecessary collision renaming of external interfaces and TypeScript library globals
+
 ## 1.0.0
 
 - Improved TypeScript version independence
