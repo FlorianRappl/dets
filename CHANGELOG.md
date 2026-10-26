@@ -5,6 +5,7 @@
 - Updated dependencies
 - Fixed issue with duplicated types
 - Fixed unnecessary collision renaming of external interfaces and TypeScript library globals
+- Fixed renamed references and generic arguments in `typeof` queries
 
 ## 1.0.0
 

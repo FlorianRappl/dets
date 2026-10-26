@@ -715,7 +715,8 @@ export class DeclVisitor {
 
     const decl = getDeclarationFromNode(this.context.checker, node.exprName);
     this.enqueue(decl);
-    return getRef(`typeof ${getTypeRefName(node.exprName)}`);
+    const name = decl ? this.normalizeName(decl) : getTypeRefName(node.exprName);
+    return getRef(`typeof ${name}`, this.getTypeArguments(node.typeArguments));
   }
 
   private getTypeRestNode(node: ts.RestTypeNode): TypeModel {
