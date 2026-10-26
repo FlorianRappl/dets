@@ -41,3 +41,29 @@ test('should use the renamed class in a typeof reference when its name collides'
   }
 }`);
 });
+
+test('should inline a namespace-imported value with non-exported props', async () => {
+  const result = await runTestFor('typeof-namespace.ts');
+  expect(result).toBe(`declare module "test" {
+  export type Props = ContentProps;
+
+  export interface ContentProps {
+    side: string;
+  }
+}`);
+});
+
+test('should include a namespace-imported value when a local export has the same name', async () => {
+  const result = await runTestFor('typeof-namespace-collision.ts');
+  expect(result).toBe(`declare module "test" {
+  export const Content: boolean;
+
+  export type Props = typeof Content___1;
+
+  export const Content___1: ContentProps;
+
+  export interface ContentProps {
+    side: string;
+  }
+}`);
+});
