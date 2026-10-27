@@ -830,11 +830,18 @@ export class DeclVisitor {
       return {
         kind: 'any',
       };
-    } else if ('type' in node.parent) {
+    } else if (!node.typeArguments?.length && !node.isTypeOf && 'type' in node.parent) {
       const type = this.convertToTypeNodeFromNode(node.parent);
       return this.getTypeNode(type);
     } else if (node.qualifier) {
       const decl = getDeclarationFromNode(this.context.checker, node.qualifier);
+
+      if (node.typeArguments?.length || node.isTypeOf) {
+        this.enqueue(decl);
+        const name = this.normalizeName(decl);
+        return getRef(node.isTypeOf ? `typeof ${name}` : name, this.getTypeArguments(node.typeArguments));
+      }
+
       const type = this.convertToTypeNodeFromNode(decl);
       return this.getTypeNode(type);
     } else {

@@ -1,5 +1,9 @@
 # Changelog for dets
 
+## 1.0.2
+
+- Fixed lost generic arguments in qualified import types
+
 ## 1.0.1
 
 - Updated dependencies
