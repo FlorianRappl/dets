@@ -23,6 +23,8 @@ import {
   isSourceFile,
   isStringLiteral,
   isExportDeclaration,
+  isInterfaceDeclaration,
+  isExpressionWithTypeArguments,
 } from 'typescript';
 
 export function getModule(node: Node): string {
@@ -38,26 +40,35 @@ export function getModule(node: Node): string {
   return undefined;
 }
 
-export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol): Declaration {
+export function getDeclarationFromSymbol(checker: TypeChecker, symbol: Symbol, typeOnly = false): Declaration {
   if (!symbol) {
     return undefined;
   } else if (symbol.flags === SymbolFlags.Alias) {
     const aliasSymbol = checker.getAliasedSymbol(symbol);
-    return getDeclarationFromSymbol(checker, aliasSymbol);
+    return getDeclarationFromSymbol(checker, aliasSymbol, typeOnly);
   } else {
-    const decl = symbol.valueDeclaration || symbol.declarations?.[0];
+    const typeDeclaration =
+      typeOnly &&
+      symbol.valueDeclaration &&
+      isModuleDeclaration(symbol.valueDeclaration) &&
+      symbol.declarations?.find(isInterfaceDeclaration);
+    const decl = typeDeclaration || symbol.valueDeclaration || symbol.declarations?.[0];
 
     if (decl && isImportSpecifier(decl)) {
-      return getDeclarationFromNode(checker, decl.name);
+      return getDeclarationFromNode(checker, decl.name, typeOnly);
     }
 
     return decl;
   }
 }
 
-export function getDeclarationFromNode(checker: TypeChecker, node: Node): Declaration {
+export function getDeclarationFromNode(
+  checker: TypeChecker,
+  node: Node,
+  typeOnly = isTypeReferenceNode(node) || isExpressionWithTypeArguments(node),
+): Declaration {
   const symbol = getSymbol(checker, node);
-  return getDeclarationFromSymbol(checker, symbol);
+  return getDeclarationFromSymbol(checker, symbol, typeOnly);
 }
 
 export function getSymbol(checker: TypeChecker, node: Node): Symbol {

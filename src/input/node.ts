@@ -620,7 +620,7 @@ export class DeclVisitor {
   }
 
   private getExpressionWithTypeArguments(node: ts.ExpressionWithTypeArguments): TypeModelRef {
-    const decl = getDeclarationFromNode(this.context.checker, node.expression);
+    const decl = getDeclarationFromNode(this.context.checker, node.expression, true);
 
     if (decl) {
       this.enqueue(decl);
@@ -834,7 +834,7 @@ export class DeclVisitor {
       const type = this.convertToTypeNodeFromNode(node.parent);
       return this.getTypeNode(type);
     } else if (node.qualifier) {
-      const decl = getDeclarationFromNode(this.context.checker, node.qualifier);
+      const decl = getDeclarationFromNode(this.context.checker, node.qualifier, !node.isTypeOf);
 
       if (node.typeArguments?.length || node.isTypeOf) {
         this.enqueue(decl);

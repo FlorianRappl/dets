@@ -3,6 +3,7 @@
 ## 1.0.2
 
 - Fixed lost generic arguments in qualified import types
+- Fixed missing referenced interfaces merged with namespaces
 
 ## 1.0.1
 
